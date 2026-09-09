@@ -1365,6 +1365,19 @@ export interface components {
             error: string;
             /** Enabled */
             enabled: boolean;
+            /**
+             * Consecutive Failures
+             * @default 0
+             */
+            consecutive_failures: number;
+            /** Next Attempt At */
+            next_attempt_at?: string | null;
+            /**
+             * Activity
+             * @default idle
+             * @enum {string}
+             */
+            activity: "idle" | "queued" | "running" | "waiting";
         };
         /** ResolveCreator */
         ResolveCreator: {

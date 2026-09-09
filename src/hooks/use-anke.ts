@@ -11,6 +11,13 @@ export function useAnke() {
   const [error, setError] = useState("");
   const [epoch, setEpoch] = useState(0);
   const [busy, setBusy] = useState(false);
+  const statusReady = status !== null;
+  const userReady = user !== null;
+  const personalPending = Boolean(
+    user &&
+      (user.feed.status === "updating" ||
+        user.creators.some((c) => c.enabled && c.sync_status === "syncing")),
+  );
   const refresh = useCallback(() => setEpoch((x) => x + 1), []);
   const refreshUser = useCallback(async () => {
     try {
@@ -39,7 +46,7 @@ export function useAnke() {
         .catch(() => {});
   }, [refreshUser, epoch]);
   useEffect(() => {
-    if (!status) return;
+    if (!statusReady) return;
     const controller = new AbortController();
     api<{ items: Source[] }>(`/sources?dataset=${dataset}`, {
       signal: controller.signal,
@@ -49,17 +56,45 @@ export function useAnke() {
         if (e.name !== "AbortError") setError(e.message);
       });
     return () => controller.abort();
-  }, [dataset, status, epoch]);
+  }, [dataset, statusReady, epoch]);
   useEffect(() => {
-    if (
-      !user ||
-      (user.feed.status !== "updating" &&
-        !user.creators.some((c) => c.enabled && c.sync_status === "syncing"))
-    )
+    const activeProvider = status?.providers.some(
+      (p) => p.activity === "queued" || p.activity === "running",
+    );
+    const waitingProvider = status?.providers.some(
+      (p) => p.activity === "waiting",
+    );
+    if (!userReady || (!personalPending && !activeProvider && !waitingProvider))
       return;
-    const timer = setInterval(refreshUser, 2000);
-    return () => clearInterval(timer);
-  }, [user, refreshUser]);
+    let cancelled = false;
+    const timer = setInterval(
+      () => {
+        void refreshUser();
+        if (activeProvider || waitingProvider)
+          void api<ServiceStatus>("/status")
+            .then((next) => {
+              if (!cancelled) {
+                setStatus(next);
+                if (
+                  next.providers.some(
+                    (p) =>
+                      p.last_success !==
+                      status?.providers.find((old) => old.id === p.id)
+                        ?.last_success,
+                  )
+                )
+                  refresh();
+              }
+            })
+            .catch(() => {});
+      },
+      personalPending || activeProvider ? 2000 : 30000,
+    );
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [userReady, personalPending, status, refreshUser, refresh]);
   const run = useCallback(
     async (action: () => Promise<unknown>, success?: () => void) => {
       setBusy(true);

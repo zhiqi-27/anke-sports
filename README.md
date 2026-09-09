@@ -49,3 +49,5 @@ npm run contracts
 创作者管理已接入频道预览确认、范围和内容偏好、暂停/恢复、检查更新、删除影响、待确认视频与固定链接。本地合成端到端验证见 `../anke-sports-cloud/docs/content-pipeline.md`；主预览不会伪造 YouTube 结果。
 
 维护者可在 `/maintenance` 保存直播草稿、审核来源与地区/观看条件、发布、撤回及记录设备观察。身份由后端白名单控制，默认不授予本机账号。隔离合成验收页面为 http://localhost:3001/maintenance ，复现说明与证据见相邻服务仓的 `docs/broadcasts.md`、`evidence/local-2026-09-10.md`；主体验库不插入合成官方入口。
+
+设置中的数据源状态会随后台任务更新，显示处理中、等待、失败与最早重试；无需手动刷新。后台来源更新不代表手机日历已显示。缺少配置时保留最后有效赛程，恢复说明见相邻服务仓的 `docs/job-recovery.md`。

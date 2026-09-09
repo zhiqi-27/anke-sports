@@ -900,11 +900,20 @@ export function Dashboard({ page }: { page: string }) {
                           : "足球 · football-data.org"
                     }
                     text={
-                      p.error
+                      (p.error
                         ? `上次更新未完成：${p.error}`
                         : p.last_success
                           ? `上次获取：${new Date(p.last_success).toLocaleString("zh-CN")}`
-                          : "尚未获取真实赛程"
+                          : "尚未获取真实赛程") +
+                      (p.activity === "queued" || p.activity === "running"
+                        ? " · 后台正在处理"
+                        : p.activity === "waiting"
+                          ? " · 已排队，等待重试"
+                          : "") +
+                      (p.next_attempt_at &&
+                      new Date(p.next_attempt_at).getTime() > Date.now()
+                        ? ` · 最早重试：${new Date(p.next_attempt_at).toLocaleString("zh-CN")}`
+                        : "")
                     }
                   >
                     {status.local_preview && (
