@@ -6,7 +6,7 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "contracts": "openapi-typescript ../anke-sports-cloud/contracts/openapi.json -o src/lib/generated.ts"
   },
   "dependencies": {
