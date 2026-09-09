@@ -148,3 +148,8 @@ HTTP/MCP/后台 Data API 请求在独立 SQL 短事务预留额度，按项目�
 主API8787 session45462/PID34189、worker session77294/PID34200运行最终源码，四个显式local/preview/public/web参数与关闭访问日志保持。production Web3002 session65485/PID33834、主Web3000 session43940/PID53698。旧API32417/worker32428/production31177已停止；隔离配额API3004 session40885已停止并清理，临时22/23/24已关闭，原草稿16/公共订阅12/旧维护10保留，viewport已重置。
 
 说明anke-sports-cloud/docs/youtube-budget.md，证据evidence/youtube-budget-2026-09-10.md及youtube-budget-main-2026-09-10.json。预算为本服务预留值，不是Google真实额度/余额。T13/T14/T15/T33仍in_progress；下一步仍需同时多频道/积压、Codex真实业务调用，真实Firebase/MySQL/Azure/YouTube、Chrome安装和设备验收。M6 Google直连未实现。完整目标保持active，本回合有实现和验收进展。用户未来托管Chrome创建配置独立云资源、负责登录的授权有效；无push、部署或云资源变更。
+
+
+## 2026-09-10 · 独立云身份接入中
+
+用户再次确认Azure Functions后端。新Google账号已建立anke-sports-dev Firebase免费项目、Web应用与Google登录提供商，本地授权域名localhost/127.0.0.1读回通过。真实Firebase登录尚未验收，主Web3000仍使用原本地预览，现有关注草稿保留。后端真实MySQL模式179项通过、默认SQLite177通过/2跳过，契约不变；客户端本批仅状态记录，未修改业务源码或重复构建。后端主API27072/PID37845、worker29987/PID37859；无push或Azure部署。
