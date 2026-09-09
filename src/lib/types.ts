@@ -18,3 +18,4 @@ export type CreatorIdentity = Schemas["CreatorIdentity"];
 export type CreatorRemovalImpact = Schemas["CreatorRemovalImpact"];
 export type Review = Schemas["ReviewView"];
 export type PublicFeed = Schemas["PublicFeedView"];
+export type FollowPreviewView = Schemas["FollowPreviewView"];

@@ -278,6 +278,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/follows/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Follows Preview */
+        post: operations["follows_preview_api_v1_me_follows_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/follows": {
         parameters: {
             query?: never;
@@ -1216,6 +1233,76 @@ export interface components {
             /** Source Key */
             source_key: string;
         };
+        /** FollowChangeSource */
+        FollowChangeSource: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "team" | "competition" | "event" | "series";
+            /** Source Key */
+            source_key: string;
+            /** Name */
+            name: string;
+            /** Demo */
+            demo: boolean | null;
+        };
+        /** FollowImpactEvent */
+        FollowImpactEvent: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Starts At */
+            starts_at: string | null;
+            /** Local Date */
+            local_date: string | null;
+            /** Time Precision */
+            time_precision: string;
+            /** Past */
+            past: boolean;
+            /** Demo */
+            demo: boolean | null;
+        };
+        /** FollowImpactGroup */
+        FollowImpactGroup: {
+            /** Total */
+            total: number;
+            /** Future */
+            future: number;
+            /** Past */
+            past: number;
+            /** Items */
+            items: components["schemas"]["FollowImpactEvent"][];
+        };
+        /** FollowPreviewView */
+        FollowPreviewView: {
+            /** Revision */
+            revision: number;
+            /** Confirmation */
+            confirmation: string;
+            /** Added Sources */
+            added_sources: components["schemas"]["FollowChangeSource"][];
+            /** Removed Sources */
+            removed_sources: components["schemas"]["FollowChangeSource"][];
+            added: components["schemas"]["FollowImpactGroup"];
+            removed: components["schemas"]["FollowImpactGroup"];
+            retained: components["schemas"]["FollowImpactGroup"];
+            /** Historical Retained */
+            historical_retained: number;
+            /** Result Count */
+            result_count: number;
+            /** Undated Count */
+            undated_count: number;
+            /** Window Start */
+            window_start: string;
+            /** Window End */
+            window_end: string;
+            /** Feed Paused */
+            feed_paused: boolean;
+            /** Publication Pending */
+            publication_pending: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1480,6 +1567,8 @@ export interface components {
             expected_revision: number;
             /** Follows */
             follows: components["schemas"]["Follow"][];
+            /** Confirmation */
+            confirmation?: string | null;
         };
         /** SavePreferences */
         SavePreferences: {
@@ -2075,6 +2164,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarUserView"];
+                };
+            };
+        };
+    };
+    follows_preview_api_v1_me_follows_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveFollows"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowPreviewView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

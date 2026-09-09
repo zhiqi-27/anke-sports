@@ -47,6 +47,7 @@ import type {
 } from "@/lib/types";
 import { BroadcastManager } from "./broadcast-manager";
 import { PublicSubscription } from "./public-subscription";
+import { FollowPreview } from "./follow-preview";
 import { CreatorManager } from "./creator-manager";
 import { ConnectionManager } from "./connections";
 import { useAnke } from "@/hooks/use-anke";
@@ -91,11 +92,13 @@ function Modal({
   onClose,
   title,
   drawer = false,
+  wide = false,
 }: {
   children: React.ReactNode;
   onClose: () => void;
   title: string;
   drawer?: boolean;
+  wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -111,8 +114,11 @@ function Modal({
     <dialog
       ref={ref}
       aria-label={title}
-      className={drawer ? "drawer-dialog" : "modal"}
-      onCancel={onClose}
+      className={drawer ? "drawer-dialog" : `modal${wide ? " modal-wide" : ""}`}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -142,6 +148,11 @@ export function Dashboard({ page }: { page: string }) {
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState("");
   const [followDraft, setFollowDraft] = useState<Follow[]>([]);
+  const [followReview, setFollowReview] = useState<{
+    follows: Follow[];
+    revision: number;
+  } | null>(null);
+  const [followSaving, setFollowSaving] = useState(false);
   const pendingGuestFollows = useRef<Follow[] | null>(null);
   const [followSearch, setFollowSearch] = useState("");
   const [preferences, setPreferences] = useState<Preferences>({
@@ -433,19 +444,15 @@ export function Dashboard({ page }: { page: string }) {
                 disabled={busy || (!!user && !followChanged)}
                 onClick={() =>
                   requireUser(() =>
-                    run(
-                      () =>
-                        mutate("/me/follows", "PUT", {
-                          expected_revision: user!.revision,
-                          follows: followDraft,
-                        }),
-                      savedMessage,
-                    ),
+                    setFollowReview({
+                      follows: [...followDraft],
+                      revision: user!.revision,
+                    }),
                   )
                 }
               >
                 <Check size={16} />
-                {followChanged ? "保存关注" : "已保存"}
+                {!user ? "保存我的关注" : followChanged ? "预览变更" : "已保存"}
               </button>
             </div>
             <label className="search-field">
@@ -961,6 +968,33 @@ export function Dashboard({ page }: { page: string }) {
           <Check size={18} />
           {toast}
         </div>
+      )}
+      {followReview && (
+        <Modal
+          title="关注变更预览"
+          wide
+          onClose={() => {
+            if (!followSaving) setFollowReview(null);
+          }}
+        >
+          <FollowPreview
+            {...followReview}
+            timezone={timezone}
+            onSaving={setFollowSaving}
+            onClose={() => {
+              if (!followSaving) setFollowReview(null);
+            }}
+            onSaved={() => {
+              setFollowReview(null);
+              refresh();
+              savedMessage();
+            }}
+            onReload={() => {
+              setFollowReview(null);
+              refresh();
+            }}
+          />
+        </Modal>
       )}
       {login && (
         <Modal title="登录 Anke Sports" onClose={() => setLogin(false)}>
