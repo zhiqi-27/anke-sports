@@ -498,6 +498,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/connections/requests/{pending}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Connection Preview */
+        get: operations["connection_preview_api_v1_me_connections_requests__pending__get"];
+        put?: never;
+        /** Connection Consent */
+        post: operations["connection_consent_api_v1_me_connections_requests__pending__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Connections */
+        get: operations["connections_api_v1_me_connections_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/connections/{grant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Connection Revoke */
+        delete: operations["connection_revoke_api_v1_me_connections__grant_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -584,6 +636,53 @@ export interface components {
             event_overrides: components["schemas"]["EventOverride"][];
             /** Link Overrides */
             link_overrides: components["schemas"]["LinkOverride"][];
+        };
+        /** ConnectionList */
+        ConnectionList: {
+            /** Items */
+            items: components["schemas"]["ConnectionView"][];
+        };
+        /** ConnectionView */
+        ConnectionView: {
+            /** Id */
+            id: string;
+            /** Client Name */
+            client_name: string;
+            /** Scopes */
+            scopes: string[];
+            /** Resource */
+            resource: string;
+            /** Created At */
+            created_at: string;
+            /** Expires At */
+            expires_at: number;
+        };
+        /** ConsentDecision */
+        ConsentDecision: {
+            /** Approved */
+            approved: boolean;
+            /** Scopes */
+            scopes: ("calendar:read" | "calendar:write" | "feed:read")[];
+        };
+        /** ConsentRedirectView */
+        ConsentRedirectView: {
+            /** Redirect Url */
+            redirect_url: string;
+        };
+        /** ConsentRequestView */
+        ConsentRequestView: {
+            /** Client Id */
+            client_id: string;
+            /** Client Name */
+            client_name: string;
+            /** Redirect Uri */
+            redirect_uri: string;
+            /** Scopes */
+            scopes: string[];
+            /** Resource */
+            resource: string;
+            /** Expires At */
+            expires_at: number;
         };
         /** CoverageView */
         CoverageView: {
@@ -1202,6 +1301,8 @@ export interface operations {
                 dataset?: string;
                 followed?: boolean;
                 q?: string;
+                limit?: number;
+                cursor?: string | null;
             };
             header?: never;
             path?: never;
@@ -1283,7 +1384,9 @@ export interface operations {
     follows_api_v1_me_follows_put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1384,7 +1487,9 @@ export interface operations {
     add_link_api_v1_events__event_id__links_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
             path: {
                 event_id: string;
             };
@@ -1419,7 +1524,9 @@ export interface operations {
     block_api_v1_me_links__link_id__block_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
             path: {
                 link_id: string;
             };
@@ -1483,7 +1590,9 @@ export interface operations {
     creator_add_api_v1_me_creators_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1753,7 +1862,9 @@ export interface operations {
     import_config_api_v1_me_config_import_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1932,6 +2043,123 @@ export interface operations {
                 "application/json": components["schemas"]["FeedAction"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    connection_preview_api_v1_me_connections_requests__pending__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pending: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentRequestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    connection_consent_api_v1_me_connections_requests__pending__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pending: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentRedirectView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    connections_api_v1_me_connections_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionList"];
+                };
+            };
+        };
+    };
+    connection_revoke_api_v1_me_connections__grant_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

@@ -36,7 +36,9 @@ npm run contracts
 
 ## 当前边界
 
-本地体验身份与 SQLite 只用于本机检查。Firebase 真实登录、YouTube 自动通知/匹配、官方直播审核、Chrome 扩展和 MCP、手机日历刷新、Azure 环境尚未完成验收。
+本地体验身份与 SQLite 只用于本机检查。Firebase 真实登录、YouTube 自动通知/匹配、官方直播审核、Chrome 扩展、目标 MCP 客户端、手机日历刷新、Azure 环境尚未完成验收。
+
+`/connect` 与设置中的「已连接的应用」已接入共用授权服务。支持逐项权限确认、独立私人地址权限、到期显示与撤销；官方 SDK 的本地 HTTP 授权流程已验证。复现命令和 MCP 入口见相邻服务仓的 `docs/mcp-and-connections.md`。
 
 `AGENTS.md` 定义结果、不变量和工作边界，避免重复许可与僵硬步骤。`STATE.md` 记录当前证据与下一步。CI 只检查，不部署；两个仓库分别提交和发布。
 

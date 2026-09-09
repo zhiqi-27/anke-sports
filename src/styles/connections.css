@@ -1,0 +1,138 @@
+.connect-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 48px 24px;
+}
+.connect-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 650;
+}
+.consent-card {
+  width: min(100%, 580px);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 32px;
+  border-radius: 24px;
+}
+.consent-card > svg {
+  color: var(--accent);
+}
+.consent-card h1 {
+  font-size: 28px;
+  margin: 20px 0 12px;
+  letter-spacing: -0.7px;
+}
+.consent-card p {
+  line-height: 1.7;
+}
+.connection-muted,
+.connection-row small {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.connection-local {
+  color: var(--accent);
+  font-size: 12px;
+}
+.connection-error {
+  color: #ffc0af;
+  line-height: 1.6;
+}
+.connection-destination {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 8px 12px;
+  border-top: 1px solid var(--line);
+  padding: 18px 0 0;
+  font-size: 12px;
+}
+.connection-destination dt {
+  color: var(--muted);
+}
+.connection-destination dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.consent-permissions {
+  border: 0;
+  padding: 0;
+  margin: 28px 0 20px;
+}
+.consent-permissions legend {
+  font-weight: 650;
+  margin-bottom: 10px;
+}
+.consent-permissions label {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.consent-permissions input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  accent-color: var(--accent);
+  margin: 2px 0 0;
+}
+.consent-permissions small {
+  display: block;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 5px;
+}
+.consent-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}
+.connect-login {
+  display: grid;
+  gap: 12px;
+}
+.connections-section {
+  margin: 32px 0;
+}
+.connections-section > h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.connections-empty {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.connection-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.connection-row:last-child {
+  border-bottom: 0;
+}
+.connection-row h3 {
+  margin: 0 0 6px;
+}
+.connection-row p {
+  margin: 0 0 5px;
+  color: var(--muted);
+}
+.connection-row button {
+  flex-shrink: 0;
+}

@@ -46,6 +46,7 @@ import type {
   SportEvent,
 } from "@/lib/types";
 import { CreatorManager } from "./creator-manager";
+import { ConnectionManager } from "./connections";
 import { useAnke } from "@/hooks/use-anke";
 import { TeamMark, leagueOf, timeOf } from "./calendar-view";
 
@@ -911,15 +912,7 @@ export function Dashboard({ page }: { page: string }) {
                   </Setting>
                 ))}
             </div>
-            <div className="integration-note">
-              <Code size={22} />
-              <div>
-                <h3>MCP 与 Chrome 扩展</h3>
-                <p>
-                  它们将使用同一账号、关注和链接规则。当前连接与安装说明见项目文档，未完成的授权路径不会标为已连接。
-                </p>
-              </div>
-            </div>
+            <ConnectionManager key={user?.id || "guest"} userId={user?.id} />
             <div className="settings-list danger-zone">
               <Setting
                 title="删除账号与个人数据"

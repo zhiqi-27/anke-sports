@@ -142,9 +142,22 @@ export default function CalendarView({
       dataset,
       followed: String(followed && signedIn),
     });
-    api<{ items: SportEvent[] }>(`/events?${query}`, { signal: abort.signal })
-      .then((data) => {
-        setItems(data.items);
+    async function loadPages() {
+      const items: SportEvent[] = [];
+      for (let page = 0; page < 20; page++) {
+        const data = await api<{
+          items: SportEvent[];
+          next_cursor: string | null;
+        }>(`/events?${query}`, { signal: abort.signal });
+        items.push(...data.items);
+        if (!data.next_cursor) return items;
+        query.set("cursor", data.next_cursor);
+      }
+      throw new Error("这个范围的比赛过多，请切换到周视图或我的关注");
+    }
+    loadPages()
+      .then((items) => {
+        setItems(items);
         setLoadedDataset(dataset);
       })
       .catch((e) => {
