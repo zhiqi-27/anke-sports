@@ -1590,6 +1590,7 @@ export interface components {
         };
         /** ServiceStatusView */
         ServiceStatusView: {
+            youtube_budget: components["schemas"]["YouTubeBudgetView"];
             /** Local Preview */
             local_preview: boolean;
             /** Firebase Configured */
@@ -1648,6 +1649,26 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** YouTubeBudgetView */
+        YouTubeBudgetView: {
+            /** Configured */
+            configured: boolean;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "unconfigured" | "available" | "waiting";
+            /** Daily Limit */
+            daily_limit: number;
+            /** Reserved Units */
+            reserved_units: number;
+            /** Available Units */
+            available_units: number | null;
+            /** Reset At */
+            reset_at: string | null;
+            /** Resume At */
+            resume_at: string | null;
         };
     };
     responses: never;

@@ -84,13 +84,25 @@ export function useAnke() {
     const waitingProvider = status?.providers.some(
       (p) => p.activity === "waiting",
     );
-    if (!userReady || (!personalPending && !activeProvider && !waitingProvider))
+    const waitingYouTube = status?.youtube_budget?.state === "waiting";
+    if (
+      !userReady ||
+      (!personalPending &&
+        !activeProvider &&
+        !waitingProvider &&
+        !waitingYouTube)
+    )
       return;
     let cancelled = false;
     const timer = setInterval(
       () => {
         void refreshUser();
-        if (activeProvider || waitingProvider)
+        if (
+          activeProvider ||
+          waitingProvider ||
+          personalPending ||
+          waitingYouTube
+        )
           void api<ServiceStatus>("/status")
             .then((next) => {
               if (!cancelled) {
@@ -108,7 +120,7 @@ export function useAnke() {
             })
             .catch(() => {});
       },
-      personalPending || activeProvider ? 2000 : 30000,
+      activeProvider || (personalPending && !waitingYouTube) ? 2000 : 30000,
     );
     return () => {
       cancelled = true;
@@ -126,6 +138,10 @@ export function useAnke() {
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "操作失败，请重试");
+        // Also reveal service-wide waits caused by an interactive request.
+        void api<ServiceStatus>("/status")
+          .then(setStatus)
+          .catch(() => {});
         return false;
       } finally {
         setBusy(false);

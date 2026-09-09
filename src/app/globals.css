@@ -1828,3 +1828,7 @@ dialog::backdrop {
     width: 100%;
   }
 }
+
+.creators-page .creator-wait {
+  margin-bottom: 16px;
+}

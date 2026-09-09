@@ -581,6 +581,7 @@ export function Dashboard({ page }: { page: string }) {
         )}
         {page === "creators" && (
           <CreatorManager
+            budget={status?.youtube_budget}
             key={user?.id || "guest"}
             user={user}
             sources={sources}

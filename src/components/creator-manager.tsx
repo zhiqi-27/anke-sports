@@ -18,6 +18,7 @@ import type {
   CreatorRemovalImpact,
   CreatorFollow,
   Review,
+  ServiceStatus,
   Source,
 } from "@/lib/types";
 
@@ -45,6 +46,7 @@ const defaults: Draft = {
 };
 type Props = {
   user: CalendarUser | null;
+  budget?: ServiceStatus["youtube_budget"];
   sources: Source[];
   epoch: number;
   busy: boolean;
@@ -126,6 +128,7 @@ function ScopeFields({
 
 export function CreatorManager({
   user,
+  budget,
   sources,
   epoch,
   busy,
@@ -193,6 +196,17 @@ export function CreatorManager({
           {user?.creators.length || 0} 位创作者
         </span>
       </div>
+      {budget?.state === "waiting" && (
+        <div className="info-note creator-wait" role="status">
+          <Pause size={18} />
+          <span>
+            YouTube 更新暂缓。
+            {budget.resume_at &&
+              `最早于 ${new Date(budget.resume_at).toLocaleString("zh-CN", { timeZone: user?.config.preferences.timezone || "Asia/Shanghai", hour12: false })}（${user?.config.preferences.timezone || "Asia/Shanghai"}）自动重试。`}
+            已有日历与视频链接继续保留，待确认内容仍可处理。
+          </span>
+        </div>
+      )}
       <form
         className="creator-form"
         onSubmit={(e) => {
@@ -295,7 +309,9 @@ export function CreatorManager({
                     {!creator.enabled
                       ? "已暂停新视频关联，保留已有链接"
                       : creator.sync_status === "syncing"
-                        ? "正在检查频道更新…"
+                        ? budget?.state === "waiting"
+                          ? "等待 YouTube 恢复更新"
+                          : "正在检查频道更新…"
                         : creator.last_error
                           ? creator.last_error === "YOUTUBE_KEY_REQUIRED"
                             ? "尚未配置 YouTube 服务，暂时无法更新"

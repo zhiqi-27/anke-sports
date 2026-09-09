@@ -59,3 +59,5 @@ npm run contracts
 账号删除包含确认、SDK退出及游客提示，账号失效时清空个人界面；本地共享体验账号的删除按钮保持禁用。隔离合成账号网页与并发验收见 [删除验收](../anke-sports-cloud/evidence/privacy-2026-09-10.md)，真实Firebase删除及设备缓存仍待测试。
 
 后台已完成本机20k比赛、1,000账号的共享视频通知到Feed容量实验，UI与API契约保持一致。完整数据、重复发布和云端限制见 [内容容量验收](../anke-sports-cloud/evidence/content-capacity-2026-09-10.md)。
+
+创作者页已接入共享YouTube等待状态与自动恢复提示；本机仍缺真实项目/Key。状态由后端提供，界面不计算配额或匹配规则。详见 [本地验收](../anke-sports-cloud/evidence/youtube-budget-2026-09-10.md)。
