@@ -39,3 +39,5 @@ npm run contracts
 本地体验身份与 SQLite 只用于本机检查。Firebase 真实登录、YouTube 自动通知/匹配、官方直播审核、Chrome 扩展和 MCP、手机日历刷新、Azure 环境尚未完成验收。
 
 `AGENTS.md` 定义结果、不变量和工作边界，避免重复许可与僵硬步骤。`STATE.md` 记录当前证据与下一步。CI 只检查，不部署；两个仓库分别提交和发布。
+
+创作者管理已接入频道预览确认、范围和内容偏好、暂停/恢复、检查更新、删除影响、待确认视频与固定链接。本地合成端到端验证见 `../anke-sports-cloud/docs/content-pipeline.md`；主预览不会伪造 YouTube 结果。

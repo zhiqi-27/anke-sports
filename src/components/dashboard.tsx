@@ -29,7 +29,7 @@ import {
   SignOut,
   Code,
   EyeSlash,
-  Trash,
+  PushPin,
   FlagCheckered,
   CalendarCheck,
   WarningCircle,
@@ -45,6 +45,7 @@ import type {
   Source,
   SportEvent,
 } from "@/lib/types";
+import { CreatorManager } from "./creator-manager";
 import { useAnke } from "@/hooks/use-anke";
 import { TeamMark, leagueOf, timeOf } from "./calendar-view";
 
@@ -136,8 +137,6 @@ export function Dashboard({ page }: { page: string }) {
   const [followDraft, setFollowDraft] = useState<Follow[]>([]);
   const pendingGuestFollows = useRef<Follow[] | null>(null);
   const [followSearch, setFollowSearch] = useState("");
-  const [creatorUrl, setCreatorUrl] = useState("");
-  const [creatorScope, setCreatorScope] = useState("");
   const [preferences, setPreferences] = useState<Preferences>({
     timezone: "Asia/Shanghai",
     locale: "zh-CN",
@@ -506,122 +505,14 @@ export function Dashboard({ page }: { page: string }) {
           </div>
         )}
         {page === "creators" && (
-          <div className="management-page">
-            <div className="section-toolbar">
-              <div>
-                <h2>我的创作者</h2>
-                <p>只收录原视频链接，不生成文章或转录视频。</p>
-              </div>
-              <span className="count-label">
-                {user?.creators.length || 0} 位创作者
-              </span>
-            </div>
-            <form
-              className="creator-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                requireUser(() =>
-                  run(
-                    () =>
-                      mutate("/me/creators", "POST", {
-                        url: creatorUrl,
-                        scope_keys: creatorScope ? [creatorScope] : [],
-                        preview: true,
-                        recap: true,
-                        expected_revision: user!.revision,
-                      }),
-                    () => {
-                      setCreatorUrl("");
-                      flash("创作者已添加");
-                    },
-                  ),
-                );
-              }}
-            >
-              <YoutubeLogo size={26} weight="duotone" />
-              <input
-                required
-                placeholder="YouTube 频道链接、@handle 或视频链接"
-                value={creatorUrl}
-                onChange={(e) => setCreatorUrl(e.target.value)}
-                aria-label="创作者链接"
-              />
-              <select
-                aria-label="创作者关联范围"
-                value={creatorScope}
-                onChange={(e) => setCreatorScope(e.target.value)}
-              >
-                <option value="">我的所有关注</option>
-                {sources.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-              <button className="primary-button" disabled={busy}>
-                <Plus size={16} />
-                添加创作者
-              </button>
-            </form>
-            {user?.creators.length ? (
-              <div className="creator-list">
-                {user.creators.map((c) => (
-                  <div className="creator-row" key={c.channel_id}>
-                    <span className="creator-avatar">
-                      <YoutubeLogo size={26} />
-                    </span>
-                    <div>
-                      <b>{c.name}</b>
-                      <p>
-                        {c.scope_keys
-                          .map(
-                            (k) => sources.find((s) => s.id === k)?.name || k,
-                          )
-                          .join("、") || "我的所有关注"}
-                      </p>
-                    </div>
-                    <span>前瞻 · 复盘</span>
-                    <button
-                      className="icon-button"
-                      aria-label={`删除 ${c.name}`}
-                      onClick={() =>
-                        run(
-                          () =>
-                            mutate(
-                              `/me/creators/${c.channel_id}?expected_revision=${user.revision}`,
-                              "DELETE",
-                            ),
-                          savedMessage,
-                        )
-                      }
-                    >
-                      <Trash size={17} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Empty
-                icon={<YoutubeLogo size={42} weight="duotone" />}
-                title="比赛之外，听听他们怎么说。"
-                text="添加你关注的创作者。明确对应比赛的前瞻与复盘，会以原视频链接补充到日历中。"
-              />
-            )}
-            <div className="explanation-grid">
-              <div>
-                <CalendarCheck size={22} />
-                <h3>附在同一场比赛里</h3>
-                <p>赛前前瞻与赛后复盘跟随比赛事件，不再散落在收藏夹里。</p>
-              </div>
-              <div>
-                <EyeSlash size={22} />
-                <h3>给期待留一点悬念</h3>
-                <p>
-                  默认隐藏复盘标题中的剧透。只有你点开原链接，才进入平台观看。
-                </p>
-              </div>
-            </div>
-          </div>
+          <CreatorManager
+            user={user}
+            sources={sources}
+            epoch={epoch}
+            busy={busy}
+            run={run}
+            requireUser={requireUser}
+          />
         )}
         {page === "subscription" && (
           <div className="management-page subscription-page">
@@ -1122,6 +1013,17 @@ export function Dashboard({ page }: { page: string }) {
                 }, savedMessage),
               )
             }
+            onPin={(id) =>
+              requireUser(() =>
+                run(
+                  async () => {
+                    await mutate(`/me/links/${id}/pin`, "POST");
+                    await reloadEvent();
+                  },
+                  () => flash("链接已固定，停止关注创作者后仍会保留"),
+                ),
+              )
+            }
             onBlock={(id) =>
               requireUser(() =>
                 run(
@@ -1275,6 +1177,7 @@ function EventDrawer({
   onAdd,
   onToggle,
   onBlock,
+  onPin,
   busy,
 }: {
   event: SportEvent;
@@ -1285,6 +1188,7 @@ function EventDrawer({
   onAdd: () => void;
   onToggle: () => void;
   onBlock: (id: string) => void;
+  onPin: (id: string) => void;
   busy: boolean;
 }) {
   const eventDate = event.starts_at
@@ -1410,9 +1314,11 @@ function EventDrawer({
                         {link.creator || link.platform} ·{" "}
                         {link.origin === "manual"
                           ? "手动添加"
-                          : link.origin === "official"
-                            ? "官方审核"
-                            : "自动关联"}
+                          : link.origin === "confirmed"
+                            ? "已人工确认"
+                            : link.origin === "official"
+                              ? "官方审核"
+                              : "自动关联"}
                       </small>
                       {kind === "live" && (
                         <small>
@@ -1424,6 +1330,18 @@ function EventDrawer({
                         </small>
                       )}
                     </a>
+                    <button
+                      className="icon-button"
+                      aria-label={`${link.pinned ? "已固定" : "固定链接"} ${link.title}`}
+                      title={link.pinned ? "已固定" : "固定链接"}
+                      disabled={busy || link.pinned}
+                      onClick={() => onPin(link.id)}
+                    >
+                      <PushPin
+                        size={13}
+                        weight={link.pinned ? "fill" : "regular"}
+                      />
+                    </button>
                     <button
                       className="icon-button"
                       aria-label={`移除链接 ${link.title}`}
@@ -1473,7 +1391,7 @@ function EventDrawer({
         <div>
           来源：{event.provider}
           <small>
-            内容更新于 {new Date(event.updated_at).toLocaleString("zh-CN")}
+            赛程更新于 {new Date(event.updated_at).toLocaleString("zh-CN")}
           </small>
           {event.demo && <small>合成比赛，用于界面与订阅测试</small>}
         </div>

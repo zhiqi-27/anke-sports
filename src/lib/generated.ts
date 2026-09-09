@@ -225,6 +225,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/creators/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creator Resolve */
+        post: operations["creator_resolve_api_v1_me_creators_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/creators": {
         parameters: {
             query?: never;
@@ -254,6 +271,92 @@ export interface paths {
         post?: never;
         /** Creator Delete */
         delete: operations["creator_delete_api_v1_me_creators__channel_id__delete"];
+        options?: never;
+        head?: never;
+        /** Creator Update */
+        patch: operations["creator_update_api_v1_me_creators__channel_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/me/creators/{channel_id}/impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Creator Impact */
+        get: operations["creator_impact_api_v1_me_creators__channel_id__impact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/creators/{channel_id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creator Refresh */
+        post: operations["creator_refresh_api_v1_me_creators__channel_id__refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reviews */
+        get: operations["reviews_api_v1_me_reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/reviews/{match_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Review Decide */
+        post: operations["review_decide_api_v1_me_reviews__match_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/links/{link_id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link Pin */
+        post: operations["link_pin_api_v1_me_links__link_id__pin_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -535,6 +638,24 @@ export interface components {
              */
             enabled: boolean;
         };
+        /** CreatorIdentity */
+        CreatorIdentity: {
+            /** Channel Id */
+            channel_id: string;
+            /** Name */
+            name: string;
+            /** Url */
+            url: string;
+        };
+        /** CreatorRemovalImpact */
+        CreatorRemovalImpact: {
+            /** Automatic Removed */
+            automatic_removed: number;
+            /** Manual Retained */
+            manual_retained: number;
+            /** Revision */
+            revision: number;
+        };
         /** CreatorView */
         CreatorView: {
             /** Channel Id */
@@ -560,6 +681,12 @@ export interface components {
             name: string;
             /** Last Error */
             last_error: string;
+            /** Sync Status */
+            sync_status: string;
+            /** Last Synced At */
+            last_synced_at: string | null;
+            /** Websub Status */
+            websub_status: string;
         };
         /** EventList */
         EventList: {
@@ -818,6 +945,60 @@ export interface components {
             /** Enabled */
             enabled: boolean;
         };
+        /** ResolveCreator */
+        ResolveCreator: {
+            /** Url */
+            url: string;
+        };
+        /** ReviewDecision */
+        ReviewDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "confirm" | "ignore";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "preview" | "recap";
+            /** Expected Updated At */
+            expected_updated_at: string;
+        };
+        /** ReviewList */
+        ReviewList: {
+            /** Items */
+            items: components["schemas"]["ReviewView"][];
+        };
+        /** ReviewView */
+        ReviewView: {
+            /** Id */
+            id: string;
+            /** Video Id */
+            video_id: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Creator */
+            creator: string;
+            /** Published At */
+            published_at: string;
+            /** Event Id */
+            event_id: string;
+            /** Event Title */
+            event_title: string;
+            /** Starts At */
+            starts_at: string | null;
+            /** Kind */
+            kind: string;
+            /** Reason Codes */
+            reason_codes: string[];
+            /** Rule Version */
+            rule_version: string;
+            /** Updated At */
+            updated_at: string;
+        };
         /** SaveFollows */
         SaveFollows: {
             /** Expected Revision */
@@ -865,6 +1046,19 @@ export interface components {
             kind: string;
             /** Demo */
             demo: boolean;
+        };
+        /** UpdateCreator */
+        UpdateCreator: {
+            /** Expected Revision */
+            expected_revision: number;
+            /** Scope Keys */
+            scope_keys: string[];
+            /** Preview */
+            preview: boolean;
+            /** Recap */
+            recap: boolean;
+            /** Enabled */
+            enabled: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -1253,6 +1447,39 @@ export interface operations {
             };
         };
     };
+    creator_resolve_api_v1_me_creators_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveCreator"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatorIdentity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     creator_add_api_v1_me_creators_post: {
         parameters: {
             query?: never;
@@ -1290,6 +1517,7 @@ export interface operations {
         parameters: {
             query: {
                 expected_revision: number;
+                confirmed?: boolean;
             };
             header?: never;
             path: {
@@ -1306,6 +1534,189 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarUserView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    creator_update_api_v1_me_creators__channel_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCreator"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarUserView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    creator_impact_api_v1_me_creators__channel_id__impact_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatorRemovalImpact"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    creator_refresh_api_v1_me_creators__channel_id__refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reviews_api_v1_me_reviews_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewList"];
+                };
+            };
+        };
+    };
+    review_decide_api_v1_me_reviews__match_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                match_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_pin_api_v1_me_links__link_id__pin_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

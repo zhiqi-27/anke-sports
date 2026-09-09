@@ -51,7 +51,12 @@ export function useAnke() {
     return () => controller.abort();
   }, [dataset, status, epoch]);
   useEffect(() => {
-    if (!user || user.feed.status !== "updating") return;
+    if (
+      !user ||
+      (user.feed.status !== "updating" &&
+        !user.creators.some((c) => c.enabled && c.sync_status === "syncing"))
+    )
+      return;
     const timer = setInterval(refreshUser, 2000);
     return () => clearInterval(timer);
   }, [user, refreshUser]);

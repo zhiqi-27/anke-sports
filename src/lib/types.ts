@@ -13,3 +13,7 @@ export type Config = Schemas["Config-Output"];
 export type CalendarUser = Schemas["CalendarUserView"];
 export type ServiceStatus = Schemas["ServiceStatusView"];
 export type ImportPreview = Schemas["ImportPreviewView"];
+
+export type CreatorIdentity = Schemas["CreatorIdentity"];
+export type CreatorRemovalImpact = Schemas["CreatorRemovalImpact"];
+export type Review = Schemas["ReviewView"];
