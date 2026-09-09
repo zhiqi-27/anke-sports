@@ -57,3 +57,5 @@ npm run contracts
 订阅页新增无需登录的公共球队/赛事日历：选择来源、复制公开地址、下载一次性ICS。切换到个人日历时提示在系统日历移除旧公共订阅。真实游客操作与下载文件校验见 `../anke-sports-cloud/evidence/public-feeds-2026-09-10.md`。
 
 账号删除包含确认、SDK退出及游客提示，账号失效时清空个人界面；本地共享体验账号的删除按钮保持禁用。隔离合成账号网页与并发验收见 [删除验收](../anke-sports-cloud/evidence/privacy-2026-09-10.md)，真实Firebase删除及设备缓存仍待测试。
+
+后台已完成本机20k比赛、1,000账号的共享视频通知到Feed容量实验，UI与API契约保持一致。完整数据、重复发布和云端限制见 [内容容量验收](../anke-sports-cloud/evidence/content-capacity-2026-09-10.md)。
