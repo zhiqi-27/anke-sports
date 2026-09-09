@@ -709,6 +709,18 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AccountDeletionView */
+        AccountDeletionView: {
+            /** Deleted */
+            deleted: boolean;
+            /**
+             * Identity Cleanup
+             * @enum {string}
+             */
+            identity_cleanup: "queued" | "not_applicable";
+            /** External Cache */
+            external_cache: string;
+        };
         /** AddCreator */
         AddCreator: {
             /** Url */
@@ -2870,7 +2882,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AccountDeletionView"];
                 };
             };
             /** @description Validation Error */

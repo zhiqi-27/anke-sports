@@ -885,6 +885,16 @@ a svg {
   font-size: 12px;
   margin-bottom: 20px;
 }
+.account-notice {
+  margin: 20px 0;
+  padding: 14px 18px;
+  border: 1px solid #415c40;
+  border-radius: 12px;
+  background: #1c3429;
+  color: #d6e7c5;
+  font-size: 13px;
+  line-height: 1.7;
+}
 .error-banner span {
   flex: 1;
 }

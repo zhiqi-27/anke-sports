@@ -11,6 +11,7 @@ export type Follow = Schemas["Follow"];
 export type CreatorFollow = Schemas["CreatorFollow-Output"];
 export type Config = Schemas["Config-Output"];
 export type CalendarUser = Schemas["CalendarUserView"];
+export type AccountDeletion = Schemas["AccountDeletionView"];
 export type ServiceStatus = Schemas["ServiceStatusView"];
 export type ImportPreview = Schemas["ImportPreviewView"];
 

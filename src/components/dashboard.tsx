@@ -36,7 +36,7 @@ import {
   SoccerBall,
   SlidersHorizontal,
 } from "@phosphor-icons/react";
-import { api, download, googleLogin, logout } from "@/lib/api";
+import { api, deleteAccount, download, googleLogin, logout } from "@/lib/api";
 import type {
   Config,
   Follow,
@@ -168,6 +168,52 @@ export function Dashboard({ page }: { page: string }) {
   );
   const [importMode, setImportMode] = useState("merge");
   const [confirm, setConfirm] = useState<"rotate" | "delete" | null>(null);
+  const [accountNotice, setAccountNotice] = useState("");
+  const previousAccount = useRef<string | null>(null);
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("anke-account-deleted");
+      sessionStorage.removeItem("anke-account-deleted");
+      if (saved) {
+        const result = JSON.parse(saved);
+        setAccountNotice(
+          "账号数据已删除。请在系统日历中移除旧订阅。" +
+            (result.identity_cleanup === "queued"
+              ? "登录账号正在后台清理。"
+              : "") +
+            (result.sessionCleared === false
+              ? "浏览器退出未完成，请关闭此窗口。"
+              : ""),
+        );
+      }
+    } catch {
+      /* Storage can be unavailable; deletion has already completed. */
+    }
+  }, []);
+  useEffect(() => {
+    if (previousAccount.current && previousAccount.current !== user?.id) {
+      setSelected(null);
+      setFollowDraft([]);
+      setFollowReview(null);
+      setImportText("");
+      setImportPreview(null);
+      setImportMode("merge");
+      setFollowSearch("");
+      setFollowSaving(false);
+      setAdding(false);
+      setConfirm(null);
+      setTimezone("Asia/Shanghai");
+      setPreferences({
+        timezone: "Asia/Shanghai",
+        locale: "zh-CN",
+        watch_region: null,
+        spoiler_free: true,
+        transparent: true,
+      });
+      pendingGuestFollows.current = null;
+    }
+    previousAccount.current = user?.id ?? null;
+  }, [user?.id]);
   const flash = useCallback((text: string) => setToast(text), []);
   useEffect(() => {
     if (!toast) return;
@@ -382,6 +428,11 @@ export function Dashboard({ page }: { page: string }) {
             </Link>
           </div>
         </header>
+        {accountNotice && (
+          <div className="account-notice" role="status">
+            {accountNotice}
+          </div>
+        )}
         <div className="page-heading">
           <div>
             <h1>{pageInfo[page][0]}</h1>
@@ -530,6 +581,7 @@ export function Dashboard({ page }: { page: string }) {
         )}
         {page === "creators" && (
           <CreatorManager
+            key={user?.id || "guest"}
             user={user}
             sources={sources}
             epoch={epoch}
@@ -949,7 +1001,7 @@ export function Dashboard({ page }: { page: string }) {
             <div className="settings-list danger-zone">
               <Setting
                 title="删除账号与个人数据"
-                text="停止私人订阅。已缓存到系统日历的内容需要在那里删除。"
+                text="删除关注、私人链接与应用授权，停止私人订阅。系统日历中的缓存需要在那里删除。"
               >
                 <button
                   className="danger-button"
@@ -1127,7 +1179,7 @@ export function Dashboard({ page }: { page: string }) {
           <p>
             {confirm === "rotate"
               ? "旧地址将立即失效。请在系统日历中移除旧订阅，再添加新地址；比赛 UID 保持不变。"
-              : "此操作会删除你的关注和私人链接，并停止新的日历获取。已缓存内容需在系统日历中删除。"}
+              : "此操作会删除你的关注、私人链接与应用授权，停止私人订阅，并清理登录账号。已缓存内容需在系统日历中删除。"}
           </p>
           <div className="modal-actions">
             <button
@@ -1141,12 +1193,24 @@ export function Dashboard({ page }: { page: string }) {
               disabled={busy}
               onClick={() =>
                 run(
-                  () =>
-                    mutate(
-                      confirm === "rotate" ? "/me/feed/rotate" : "/me",
-                      confirm === "rotate" ? "POST" : "DELETE",
-                      { confirmed: true },
-                    ),
+                  async () => {
+                    if (confirm === "rotate") {
+                      await mutate("/me/feed/rotate", "POST", {
+                        confirmed: true,
+                      });
+                    } else {
+                      const result = await deleteAccount();
+                      try {
+                        sessionStorage.setItem(
+                          "anke-account-deleted",
+                          JSON.stringify(result),
+                        );
+                      } catch {
+                        /* Continue to discard all mounted personal UI state. */
+                      }
+                      window.location.replace("/calendar");
+                    }
+                  },
                   () => {
                     setConfirm(null);
                     flash("操作已完成");

@@ -1,4 +1,5 @@
 import { getApps, initializeApp } from "firebase/app";
+import type { AccountDeletion } from "./types";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -73,6 +74,22 @@ export async function logout() {
   const auth = firebaseAuth();
   if (auth) await signOut(auth);
   await api("/auth/logout", { method: "POST" });
+}
+export async function deleteAccount() {
+  const result = await api<AccountDeletion>("/me", {
+    method: "DELETE",
+    body: JSON.stringify({ confirmed: true }),
+  });
+  let sessionCleared = true;
+  try {
+    const auth = firebaseAuth();
+    if (auth) await signOut(auth);
+  } catch {
+    // The server already erased the account. Do not report the whole deletion
+    // as failed or encourage retrying it because local sign-out failed.
+    sessionCleared = false;
+  }
+  return { ...result, sessionCleared };
 }
 export async function download(path: string, name: string) {
   const response = await request(path);

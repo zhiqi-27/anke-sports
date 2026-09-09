@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import type { CalendarUser, ServiceStatus, Source } from "@/lib/types";
 
@@ -11,19 +11,27 @@ export function useAnke() {
   const [error, setError] = useState("");
   const [epoch, setEpoch] = useState(0);
   const [busy, setBusy] = useState(false);
+  const userRequest = useRef(0);
   const statusReady = status !== null;
   const userReady = user !== null;
   const personalPending = Boolean(
     user &&
-      (user.feed.status === "updating" ||
-        user.creators.some((c) => c.enabled && c.sync_status === "syncing")),
+    (user.feed.status === "updating" ||
+      user.creators.some((c) => c.enabled && c.sync_status === "syncing")),
   );
   const refresh = useCallback(() => setEpoch((x) => x + 1), []);
   const refreshUser = useCallback(async () => {
+    const request = ++userRequest.current;
     try {
-      setUser(await api<CalendarUser>("/me/calendar"));
+      const account = await api<CalendarUser>("/me/calendar");
+      if (request === userRequest.current) setUser(account);
     } catch (e) {
-      if (e instanceof ApiError && e.status === 401) setUser(null);
+      if (request !== userRequest.current) return;
+      if (
+        e instanceof ApiError &&
+        (e.status === 401 || e.code === "ACCOUNT_DELETED")
+      )
+        setUser(null);
       else setError(e instanceof Error ? e.message : "连接失败");
     }
   }, []);
@@ -45,6 +53,18 @@ export function useAnke() {
         .then(setStatus)
         .catch(() => {});
   }, [refreshUser, epoch]);
+  useEffect(() => {
+    const revisit = () => {
+      void refreshUser();
+    };
+    window.addEventListener("focus", revisit);
+    window.addEventListener("pageshow", revisit);
+    return () => {
+      window.removeEventListener("focus", revisit);
+      window.removeEventListener("pageshow", revisit);
+      userRequest.current++;
+    };
+  }, [refreshUser]);
   useEffect(() => {
     if (!statusReady) return;
     const controller = new AbortController();
