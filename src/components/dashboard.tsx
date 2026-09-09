@@ -36,7 +36,7 @@ import {
   SoccerBall,
   SlidersHorizontal,
 } from "@phosphor-icons/react";
-import { api, deleteAccount, download, googleLogin, logout } from "@/lib/api";
+import { api, deleteAccount, download, logout } from "@/lib/api";
 import type {
   Config,
   Follow,
@@ -50,6 +50,7 @@ import { PublicSubscription } from "./public-subscription";
 import { FollowPreview } from "./follow-preview";
 import { CreatorManager } from "./creator-manager";
 import { ConnectionManager } from "./connections";
+import { GoogleSignIn } from "./google-sign-in";
 import { useAnke } from "@/hooks/use-anke";
 import { TeamMark, leagueOf, timeOf } from "./calendar-view";
 
@@ -1064,13 +1065,14 @@ export function Dashboard({ page }: { page: string }) {
           <h2>你的热爱，值得一个位置。</h2>
           <p>登录后保存关注，创建持续更新的个人体育日历。</p>
           {status?.firebase_configured && (
-            <button
-              className="primary-button full-width"
+            <GoogleSignIn
               disabled={busy}
-              onClick={() => run(googleLogin, () => setLogin(false))}
-            >
-              使用 Google 登录
-            </button>
+              onSignedIn={() => {
+                setError("");
+                refresh();
+                setLogin(false);
+              }}
+            />
           )}
           {status?.local_preview && (
             <>

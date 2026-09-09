@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Basketball, PlugsConnected, ShieldCheck } from "@phosphor-icons/react";
-import { api, ApiError, googleLogin } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import { GoogleSignIn } from "./google-sign-in";
 import type { components } from "@/lib/generated";
 import type { CalendarUser, ServiceStatus } from "@/lib/types";
 
@@ -76,12 +77,11 @@ export function ConnectionConsent() {
     return () => controller.abort();
   }, [user, pending]);
 
-  async function login(local: boolean) {
+  async function loginLocal() {
     setBusy(true);
     setError("");
     try {
-      if (local) await api("/auth/local", { method: "POST" });
-      else await googleLogin();
+      await api("/auth/local", { method: "POST" });
       setUser(await api<CalendarUser>("/me/calendar"));
     } catch (e) {
       setError(e instanceof Error ? e.message : "登录未完成");
@@ -134,19 +134,19 @@ export function ConnectionConsent() {
           <div className="connect-login">
             <p>登录 Anke Sports 后，查看应用请求的权限。</p>
             {status?.firebase_configured && (
-              <button
-                className="primary-button"
+              <GoogleSignIn
                 disabled={busy}
-                onClick={() => login(false)}
-              >
-                使用 Google 登录
-              </button>
+                onSignedIn={(account) => {
+                  setError("");
+                  setUser(account);
+                }}
+              />
             )}
             {status?.local_preview && (
               <button
                 className="primary-button"
                 disabled={busy}
-                onClick={() => login(true)}
+                onClick={loginLocal}
               >
                 使用本地体验账号
               </button>

@@ -1,5 +1,5 @@
 import { getApps, initializeApp } from "firebase/app";
-import type { AccountDeletion } from "./types";
+import type { AccountDeletion, CalendarUser } from "./types";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -68,7 +68,33 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 export async function googleLogin() {
   const auth = firebaseAuth();
   if (!auth) throw new Error("Firebase 登录尚未配置");
-  await signInWithPopup(auth, new GoogleAuthProvider());
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (error) {
+    const code = (error as { code?: string })?.code;
+    const messages: Record<string, string> = {
+      "auth/popup-closed-by-user":
+        "登录窗口已关闭，尚未完成登录。请重试，或在 Chrome、Safari 中打开此页面。",
+      "auth/popup-blocked":
+        "浏览器未能打开登录窗口。请允许弹出窗口，或在 Chrome、Safari 中打开此页面。",
+      "auth/cancelled-popup-request":
+        "另一条登录请求已开始，请在最新的登录窗口中继续。",
+      "auth/network-request-failed":
+        "暂时无法连接 Google 登录服务，请检查网络后重试。",
+      "auth/unauthorized-domain":
+        "此地址尚未开通 Google 登录，请联系维护者配置登录域名。",
+      "auth/operation-not-supported-in-this-environment":
+        "当前浏览器无法完成 Google 登录，请在 Chrome、Safari 中打开此页面。",
+      "auth/web-storage-unsupported":
+        "浏览器无法保存登录状态，请允许网站存储，或在 Chrome、Safari 中打开此页面。",
+    };
+    throw new Error(
+      messages[code || ""] ||
+        "Google 登录未完成，请重试或在 Chrome、Safari 中打开此页面。",
+    );
+  }
+  // A provider popup succeeding is not proof that our API accepts the identity.
+  return api<CalendarUser>("/me/calendar");
 }
 export async function logout() {
   const auth = firebaseAuth();

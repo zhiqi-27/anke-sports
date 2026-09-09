@@ -1088,6 +1088,26 @@ dialog::backdrop {
   line-height: 1.85;
   margin-top: 17px;
 }
+.google-sign-in {
+  display: grid;
+  gap: 12px;
+}
+.google-sign-in .google-sign-in-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.google-sign-in .google-sign-in-error {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #905447;
+  border-radius: 10px;
+  background: #392821;
+  color: #ffd2c3;
+  font-size: 13px;
+  line-height: 1.7;
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;

@@ -158,3 +158,10 @@ HTTP/MCP/后台 Data API 请求在独立 SQL 短事务预留额度，按项目�
 ## 2026-09-10 · 真实Google登录验收通过
 
 独立Firebase项目anke-sports-dev完成Google登录、后台验签、偏好写入、新页面会话/配置恢复及退出。验收Web http://localhost:3003/calendar 使用当前源码的独立副本，API8788/独立空库且关闭本地体验身份；主3000预览与草稿保持。Web session91087/PID38482、API85403/PID38459、worker73541/PID38782；详情见后端docs/cloud-development.md和evidence/firebase-login-2026-09-10.json。最后验收页已退出，允许用户重新登录。没有客户端业务代码变化、没有push或Azure部署。Azure Functions方向已由用户再次确认，独立云资源待配置。
+
+
+## 2026-09-10 · 登录反馈收尾，转入 Functions 验证
+
+Codex内置浏览器未完成Google弹窗，曾返回auth/popup-closed-by-user；确切宿主原因未定位，不能认定Google拦截。Chrome实际账号状态刷新后保留，标签210263706保留给用户；两个浏览器不共享登录状态。用户明确停止排查内置浏览器。已完成的前端调整保留：登录错误显示在对话框内、等待时仍可复制地址、收到后端/me/calendar身份结果才进入成功回调；MCP/扩展网页授权共用组件。实际Chrome关闭弹窗后出现中文错误，重试可用；内置浏览器复制地址通过系统剪贴板核对。Web/扩展typecheck和production build通过。
+
+主3000预览保留；真实Firebase实例仍Web3003 session91087/PID38482、API8788 session85403/PID38459、worker73541/PID38782，五个修改过的客户端文件已同步到隔离源码副本。无后端身份逻辑、云配置或数据库变更。下一批继续Functions安全打包与真实Core Tools/Azurite宿主验证，云部署与设备验收仍未完成。无push/部署。
