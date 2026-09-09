@@ -47,3 +47,5 @@ npm run contracts
 `AGENTS.md` 定义结果、不变量和工作边界，避免重复许可与僵硬步骤。`STATE.md` 记录当前证据与下一步。CI 只检查，不部署；两个仓库分别提交和发布。
 
 创作者管理已接入频道预览确认、范围和内容偏好、暂停/恢复、检查更新、删除影响、待确认视频与固定链接。本地合成端到端验证见 `../anke-sports-cloud/docs/content-pipeline.md`；主预览不会伪造 YouTube 结果。
+
+维护者可在 `/maintenance` 保存直播草稿、审核来源与地区/观看条件、发布、撤回及记录设备观察。身份由后端白名单控制，默认不授予本机账号。隔离合成验收页面为 http://localhost:3001/maintenance ，复现说明与证据见相邻服务仓的 `docs/broadcasts.md`、`evidence/local-2026-09-10.md`；主体验库不插入合成官方入口。

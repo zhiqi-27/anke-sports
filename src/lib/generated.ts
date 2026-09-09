@@ -4,6 +4,127 @@
  */
 
 export interface paths {
+    "/api/v1/platforms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platforms */
+        get: operations["platforms_api_v1_platforms_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/maintenance/broadcasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Records */
+        get: operations["list_records_api_v1_maintenance_broadcasts_get"];
+        put?: never;
+        /** Create Record */
+        post: operations["create_record_api_v1_maintenance_broadcasts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/maintenance/broadcasts/{ident}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Record */
+        get: operations["get_record_api_v1_maintenance_broadcasts__ident__get"];
+        /** Edit Record */
+        put: operations["edit_record_api_v1_maintenance_broadcasts__ident__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/maintenance/broadcasts/{ident}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish */
+        post: operations["publish_api_v1_maintenance_broadcasts__ident__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/maintenance/broadcasts/{ident}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend */
+        post: operations["suspend_api_v1_maintenance_broadcasts__ident__suspend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/maintenance/broadcasts/{ident}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check */
+        post: operations["check_api_v1_maintenance_broadcasts__ident__check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/maintenance/broadcasts/{ident}/device-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Device Evidence */
+        post: operations["device_evidence_api_v1_maintenance_broadcasts__ident__device_evidence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -588,8 +709,169 @@ export interface components {
              */
             kind: "live" | "preview" | "recap" | "watch_along";
         };
+        /** BroadcastAction */
+        BroadcastAction: {
+            /** Expected Revision */
+            expected_revision: number;
+            /** Reason */
+            reason: string;
+        };
+        /** BroadcastDecision */
+        BroadcastDecision: {
+            /** Expected Revision */
+            expected_revision: number;
+            /** Source And Event Confirmed */
+            source_and_event_confirmed: boolean;
+            /**
+             * Valid Until
+             * Format: date-time
+             */
+            valid_until: string;
+        };
+        /** BroadcastDraft */
+        BroadcastDraft: {
+            /** Event Id */
+            event_id: string;
+            /** Url */
+            url: string;
+            /** Title */
+            title: string;
+            /**
+             * Content Type
+             * @enum {string}
+             */
+            content_type: "official_match" | "reservation" | "programme" | "watch_along" | "replay";
+            /**
+             * Access
+             * @default unknown
+             * @enum {string}
+             */
+            access: "unknown" | "free" | "login" | "subscription" | "pay_per_view";
+            /**
+             * Region Mode
+             * @default unknown
+             * @enum {string}
+             */
+            region_mode: "unknown" | "global" | "include" | "exclude";
+            /** Regions */
+            regions?: string[];
+            /** Evidence Url */
+            evidence_url: string;
+            /** Evidence Note */
+            evidence_note: string;
+        };
+        /** BroadcastEdit */
+        BroadcastEdit: {
+            /** Event Id */
+            event_id: string;
+            /** Url */
+            url: string;
+            /** Title */
+            title: string;
+            /**
+             * Content Type
+             * @enum {string}
+             */
+            content_type: "official_match" | "reservation" | "programme" | "watch_along" | "replay";
+            /**
+             * Access
+             * @default unknown
+             * @enum {string}
+             */
+            access: "unknown" | "free" | "login" | "subscription" | "pay_per_view";
+            /**
+             * Region Mode
+             * @default unknown
+             * @enum {string}
+             */
+            region_mode: "unknown" | "global" | "include" | "exclude";
+            /** Regions */
+            regions?: string[];
+            /** Evidence Url */
+            evidence_url: string;
+            /** Evidence Note */
+            evidence_note: string;
+            /** Expected Revision */
+            expected_revision: number;
+        };
+        /** BroadcastList */
+        BroadcastList: {
+            /** Items */
+            items: components["schemas"]["BroadcastView"][];
+            /** Has More */
+            has_more: boolean;
+        };
+        /** BroadcastPublicView */
+        BroadcastPublicView: {
+            /**
+             * Content Type
+             * @enum {string}
+             */
+            content_type: "official_match" | "reservation" | "programme" | "watch_along" | "replay";
+            /** Content Label */
+            content_label: string;
+            /** Access Label */
+            access_label: string;
+            /** Region Label */
+            region_label: string;
+            /** Evidence Url */
+            evidence_url: string;
+            /** Reviewed At */
+            reviewed_at: string;
+            /** Valid Until */
+            valid_until: string;
+            /** Network Status */
+            network_status: string;
+            /** Network Checked At */
+            network_checked_at: string | null;
+            /** Device Tests */
+            device_tests: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** BroadcastView */
+        BroadcastView: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            /** Status */
+            status: string;
+            draft: components["schemas"]["BroadcastDraft"];
+            /** Published */
+            published: {
+                [key: string]: unknown;
+            } | null;
+            /** Published Revision */
+            published_revision: number | null;
+            /** Draft Changed */
+            draft_changed: boolean;
+            /** Event Title */
+            event_title: string;
+            /** Event Demo */
+            event_demo: boolean;
+            /** Network Status */
+            network_status: string;
+            /** Network Checked At */
+            network_checked_at: string | null;
+            /** Next Check At */
+            next_check_at: string;
+            /** Device Tests */
+            device_tests: {
+                [key: string]: unknown;
+            }[];
+            /** Audit */
+            audit: {
+                [key: string]: unknown;
+            }[];
+        };
         /** CalendarUserView */
         CalendarUserView: {
+            /**
+             * Is Maintainer
+             * @default false
+             */
+            is_maintainer: boolean;
             /** Id */
             id: string;
             /** Display Name */
@@ -787,6 +1069,45 @@ export interface components {
             /** Websub Status */
             websub_status: string;
         };
+        /** DeviceEvidence */
+        DeviceEvidence: {
+            /** Expected Revision */
+            expected_revision: number;
+            /** Platform App */
+            platform_app: string;
+            /** Os Version */
+            os_version: string;
+            /** Calendar Client */
+            calendar_client: string;
+            /** Region */
+            region: string;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /** App Installed */
+            app_installed: boolean;
+            /**
+             * Exact Content
+             * @enum {string}
+             */
+            exact_content: "passed" | "failed" | "not_tested";
+            /**
+             * App Content
+             * @enum {string}
+             */
+            app_content: "passed" | "failed" | "not_tested";
+            /**
+             * Playback
+             * @enum {string}
+             */
+            playback: "passed" | "failed" | "not_tested";
+            /** Conditions */
+            conditions: string;
+            /** Evidence Ref */
+            evidence_ref: string;
+        };
         /** EventList */
         EventList: {
             /** Items */
@@ -937,6 +1258,7 @@ export interface components {
         };
         /** LinkView */
         LinkView: {
+            broadcast?: components["schemas"]["BroadcastPublicView"] | null;
             /** Id */
             id: string;
             /** Url */
@@ -1181,6 +1503,297 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    platforms_api_v1_platforms_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_records_api_v1_maintenance_broadcasts_get: {
+        parameters: {
+            query?: {
+                event_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_record_api_v1_maintenance_broadcasts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BroadcastDraft"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_record_api_v1_maintenance_broadcasts__ident__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ident: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_record_api_v1_maintenance_broadcasts__ident__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ident: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BroadcastEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_api_v1_maintenance_broadcasts__ident__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ident: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BroadcastDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suspend_api_v1_maintenance_broadcasts__ident__suspend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ident: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BroadcastAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_api_v1_maintenance_broadcasts__ident__check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ident: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BroadcastAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    device_evidence_api_v1_maintenance_broadcasts__ident__device_evidence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ident: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceEvidence"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_api_v1_health_get: {
         parameters: {
             query?: never;

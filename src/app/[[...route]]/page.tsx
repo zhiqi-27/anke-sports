@@ -8,9 +8,14 @@ export default async function Page({
 }) {
   const route = (await params).route?.join("/") || "calendar";
   if (
-    !["calendar", "following", "creators", "subscription", "settings"].includes(
-      route,
-    )
+    ![
+      "calendar",
+      "following",
+      "creators",
+      "subscription",
+      "settings",
+      "maintenance",
+    ].includes(route)
   )
     notFound();
   return <Dashboard page={route} />;

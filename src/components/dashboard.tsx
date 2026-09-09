@@ -45,6 +45,7 @@ import type {
   Source,
   SportEvent,
 } from "@/lib/types";
+import { BroadcastManager } from "./broadcast-manager";
 import { CreatorManager } from "./creator-manager";
 import { ConnectionManager } from "./connections";
 import { useAnke } from "@/hooks/use-anke";
@@ -78,6 +79,10 @@ const pageInfo: Record<string, [string, string]> = {
     "比赛改期、前瞻与复盘，持续更新在同一条事件里。",
   ],
   settings: ["按照你的节奏。", "管理时间、观看偏好与个人配置。"],
+  maintenance: [
+    "核对每一个观看入口。",
+    "维护官方来源、场次证据与实际兼容性记录。",
+  ],
 };
 
 function Modal({
@@ -292,6 +297,13 @@ export function Dashboard({ page }: { page: string }) {
           )}
         </div>
         <div className="sidebar-bottom">
+          {user?.is_maintainer && (
+            <Link className="sidebar-docs" href="/maintenance">
+              <ShieldCheck size={17} />
+              直播入口维护
+              <CaretRight size={12} />
+            </Link>
+          )}
           <Link className="sidebar-docs" href="/settings">
             <Code size={17} />
             MCP 与扩展
@@ -391,6 +403,9 @@ export function Dashboard({ page }: { page: string }) {
               <X size={17} />
             </button>
           </div>
+        )}
+        {page === "maintenance" && (
+          <BroadcastManager user={user} dataset={dataset} />
         )}
         {page === "calendar" && (
           <CalendarView
@@ -1315,14 +1330,82 @@ function EventDrawer({
                       </small>
                       {kind === "live" && (
                         <small>
-                          {link.kind === "watch_along"
-                            ? "同步解说，无比赛画面"
-                            : link.access === "unknown"
-                              ? "观看条件未验证"
-                              : link.access}
+                          {link.broadcast
+                            ? `${link.broadcast.content_label} · ${link.broadcast.access_label} · ${link.broadcast.region_label}`
+                            : link.kind === "watch_along"
+                              ? "同步解说，无比赛画面 · 观看条件与地区未验证"
+                              : "手动添加，观看条件与地区未验证"}
                         </small>
                       )}
                     </a>
+                    {link.broadcast && (
+                      <details className="broadcast-evidence">
+                        <summary>来源与核验记录</summary>
+                        <p>
+                          来源核验：
+                          {new Date(
+                            link.broadcast.reviewed_at,
+                          ).toLocaleDateString("zh-CN")}{" "}
+                          · 到期复查：
+                          {new Date(
+                            link.broadcast.valid_until,
+                          ).toLocaleDateString("zh-CN")}
+                        </p>
+                        <a
+                          href={link.broadcast.evidence_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          查看官方来源 ↗
+                        </a>
+                        <p>
+                          网页检查：
+                          {link.broadcast.network_status === "reachable"
+                            ? "网页可达，不代表可播放"
+                            : link.broadcast.network_status === "not_checked"
+                              ? "尚未检查"
+                              : "存在访问限制或待复查"}
+                        </p>
+                        {link.broadcast.device_tests.length ? (
+                          link.broadcast.device_tests.map((test, i) => (
+                            <p key={i}>
+                              {String(test.os_version)} ·{" "}
+                              {String(test.calendar_client)} ·{" "}
+                              {String(test.platform_app)} ·{" "}
+                              {String(test.region)}
+                              <br />
+                              {new Date(String(test.checked_at)).toLocaleString(
+                                "zh-CN",
+                              )}
+                              ： 内容
+                              {test.exact_content === "passed"
+                                ? "通过"
+                                : test.exact_content === "failed"
+                                  ? "未通过"
+                                  : "未测试"}{" "}
+                              / App
+                              {test.app_content === "passed"
+                                ? "通过"
+                                : test.app_content === "failed"
+                                  ? "未通过"
+                                  : "未测试"}{" "}
+                              / 播放
+                              {test.playback === "passed"
+                                ? "通过"
+                                : test.playback === "failed"
+                                  ? "未通过"
+                                  : "未测试"}
+                              <br />
+                              条件：{String(test.conditions)}。仅代表此次观察。
+                            </p>
+                          ))
+                        ) : (
+                          <p>
+                            尚无本链接的实际设备观察，不承诺App内具体内容直达。
+                          </p>
+                        )}
+                      </details>
+                    )}
                     <button
                       className="icon-button"
                       aria-label={`${link.pinned ? "已固定" : "固定链接"} ${link.title}`}
