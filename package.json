@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "next typegen && tsc --noEmit",
-    "contracts": "openapi-typescript ../anke-sports-cloud/contracts/openapi.json -o src/lib/generated.ts"
+    "contracts": "openapi-typescript ../anke-sports-cloud/contracts/openapi.json -o src/lib/generated.ts",
+    "extension:typecheck": "tsc -p extension/tsconfig.json",
+    "extension:build": "node extension/build.mjs",
+    "extension:test": "node --test extension/tests/*.test.mjs",
+    "extension:preview": "node extension/preview/server.mjs"
   },
   "dependencies": {
     "@fullcalendar/react": "7.1.0",
@@ -20,11 +24,14 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
+    "@types/chrome": "0.2.9",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "esbuild": "0.28.2",
     "openapi-typescript": "^7.0.0",
     "prettier": "3.9.6",
+    "sharp": "0.35.4",
     "typescript": "^5.9.0"
   },
   "overrides": {

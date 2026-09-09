@@ -1,0 +1,504 @@
+:root {
+  color-scheme: dark;
+  font:
+    13px -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "PingFang SC",
+    sans-serif;
+  color: #edf2ea;
+  background: #0d201a;
+  --muted: #90a79a;
+  --line: #294034;
+  --accent: #c7eba0;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  width: 380px;
+  height: 560px;
+  margin: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.48;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #1d352b;
+}
+button:hover:not(:disabled) {
+  background: #2b4536;
+}
+a {
+  color: var(--accent);
+}
+input,
+select {
+  background: #142a22;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  width: 100%;
+  min-width: 0;
+}
+input[type="radio"] {
+  width: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+.popup-shell {
+  height: 560px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.brand {
+  padding: 15px 18px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.brand strong {
+  font-size: 17px;
+  letter-spacing: -0.5px;
+}
+.brand > span {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.2px;
+  color: var(--accent);
+}
+.account {
+  margin: 0 18px 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  min-height: 46px;
+  flex-shrink: 0;
+}
+.account > div {
+  flex: 1;
+}
+.account small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 3px;
+}
+.account button {
+  background: none;
+  padding: 6px;
+  color: var(--muted);
+}
+.account .avatar {
+  display: grid;
+  place-items: center;
+  background: #263e2e;
+  color: var(--accent);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 650;
+}
+.feedback {
+  margin: 0 18px 10px;
+  padding: 9px 11px;
+  color: #ffc6b2;
+  background: #3a3026;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.55;
+  flex-shrink: 0;
+  max-height: 82px;
+  overflow: auto;
+}
+.feedback.success {
+  background: #203a2b;
+  color: #c7eba0;
+}
+.feedback[hidden] {
+  display: none;
+}
+main {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0 18px 16px;
+  scrollbar-width: thin;
+}
+h1 {
+  font-size: 23px;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+  margin: 8px 0 12px;
+}
+h2 {
+  font-size: 17px;
+  letter-spacing: -0.3px;
+  margin: 2px 0 0;
+}
+h3 {
+  font-size: 12px;
+  margin: 14px 0 9px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.muted {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.empty {
+  color: var(--muted);
+  padding: 24px 6px;
+  line-height: 1.9;
+  text-align: center;
+}
+.welcome {
+  padding-top: 16px;
+}
+.welcome p {
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 12px 0 22px;
+}
+.primary {
+  background: var(--accent);
+  color: #20321c;
+  font-weight: 650;
+}
+.primary:hover:not(:disabled) {
+  background: #d9f7ba;
+}
+.wide {
+  width: 100%;
+}
+.text-button {
+  background: none;
+  color: var(--accent);
+  padding: 7px 0;
+  font-size: 12px;
+}
+.section-head,
+.filters,
+.search-row,
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.section-head {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-head small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.refresh {
+  font-size: 18px;
+  line-height: 1;
+  padding: 7px 9px;
+  background: none;
+}
+.filters {
+  margin-bottom: 14px;
+  font-size: 11px;
+}
+.segments {
+  display: flex;
+  gap: 2px;
+  background: #142a22;
+  padding: 3px;
+  border-radius: 9px;
+}
+.segments button {
+  background: none;
+  padding: 6px 10px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.segments .selected {
+  background: #294333;
+  color: var(--accent);
+}
+.filters select {
+  margin-left: auto;
+  width: 107px;
+  font-size: 10px;
+  padding: 7px 4px;
+}
+.game {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  background: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 11px 0;
+}
+.game:hover:not(:disabled) {
+  background: #142a22;
+}
+.game .time {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 45px;
+}
+.game .detail {
+  min-width: 0;
+  flex: 1;
+}
+.game strong {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.game small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 4px;
+}
+.game .chevron {
+  color: var(--muted);
+}
+.read-video {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 20px;
+}
+.read-video p {
+  margin: 5px 0 11px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.read-video h3 {
+  font-size: 12px;
+  color: #edf2ea;
+  font-weight: 600;
+  margin: 0;
+}
+.read-video button {
+  width: 100%;
+  font-size: 12px;
+}
+.stamp {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 14px 0 0;
+  line-height: 1.6;
+}
+.draft-top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 1px 0 12px;
+}
+.back {
+  background: none;
+  padding: 4px 8px 4px 0;
+  font-size: 18px;
+}
+.video-card {
+  padding: 12px;
+  background: #142a22;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+.video-card small {
+  color: #d5bda8;
+  font-size: 10px;
+}
+.video-card label {
+  display: block;
+  margin: 7px 0;
+}
+.video-card input {
+  font-size: 12px;
+}
+.video-url {
+  font-size: 10px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.search-label,
+.kind-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 13px 0 7px;
+}
+.search-row input {
+  font-size: 12px;
+}
+.search-row button {
+  flex-shrink: 0;
+}
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.date-row input {
+  width: 145px;
+  font-size: 10px;
+  padding: 6px;
+}
+.match-list {
+  max-height: 154px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  scrollbar-width: thin;
+  margin: 9px 0;
+}
+.match-list:empty {
+  display: none;
+}
+.match {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 11px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+}
+.match:last-child {
+  border: 0;
+}
+.match > span {
+  min-width: 0;
+  flex: 1;
+}
+.match strong {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+.match small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 3px;
+}
+.chosen {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.chosen strong {
+  color: var(--accent);
+}
+.actions {
+  margin-top: 16px;
+}
+.actions .primary {
+  flex: 1;
+}
+.saved {
+  padding: 18px 0;
+}
+.saved .check {
+  font-size: 28px;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 12px;
+}
+.saved p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+footer {
+  padding: 10px 18px 13px;
+  border-top: 1px solid var(--line);
+  background: #0d201a;
+  flex-shrink: 0;
+}
+footer button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 0;
+  background: none;
+  color: var(--accent);
+  font-size: 12px;
+}
+footer span {
+  font-size: 17px;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Keep the current-page action visible while the event list scrolls. */
+main.calendar-view {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.calendar-view > .section-head,
+.calendar-view > .filters,
+.calendar-view > .read-video {
+  flex-shrink: 0;
+}
+.games-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.calendar-view > .read-video {
+  margin-top: 12px;
+  padding: 11px 12px;
+}
+.games-scroll > h3:first-child {
+  margin-top: 0;
+}
+.games-scroll .empty {
+  padding: 10px 6px;
+  margin: 0;
+}

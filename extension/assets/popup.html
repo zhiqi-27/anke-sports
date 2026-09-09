@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Anke Sports</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup-shell">
+      <header class="brand">
+        <img src="icons/icon-32.png" alt="" width="26" height="26" /><strong
+          >Anke Sports</strong
+        ><span id="environment"></span>
+      </header>
+      <div id="account" class="account"></div>
+      <div id="feedback" class="feedback" role="status" hidden></div>
+      <main id="main" aria-busy="true">
+        <p class="empty">正在打开你的日历…</p>
+      </main>
+      <footer>
+        <button id="open-calendar" type="button">
+          打开完整日历 <span aria-hidden="true">↗</span>
+        </button>
+      </footer>
+    </div>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

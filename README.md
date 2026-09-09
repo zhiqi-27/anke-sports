@@ -2,7 +2,7 @@
 
 选择球队与赛事，以个人日历订阅交付赛程和原始观看链接。原产品名 SportsCal。
 
-本仓拥有桌面 Web、后续 Chrome 扩展与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，权威业务使用 Firebase Authentication、FastAPI、Azure Functions/MySQL/Storage Queue。
+本仓拥有桌面 Web、Chrome 扩展本地实现与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，权威业务使用 Firebase Authentication、FastAPI、Azure Functions/MySQL/Storage Queue。
 
 ## 本机检查
 
@@ -33,6 +33,10 @@ npm run contracts
 ```
 
 依赖精确解析结果在 `package-lock.json`；`js-yaml` override 使用已修复版本，当前安装审计为 0 vulnerabilities。
+
+## Chrome 扩展
+
+运行 `npm run extension:build` 生成本地 MV3 安装目录与 ZIP；`npm run extension:test` 执行边界与打包检查。运行 `npm run extension:preview` 后可在 http://127.0.0.1:18792 检查380×560合成界面。账号、当前视频和保存结果在这个预览中均为合成，不会访问真实数据。安装、权限与会话说明见 [extension/README.md](extension/README.md)，证据见 [extension/evidence.md](extension/evidence.md)。
 
 ## 当前边界
 
