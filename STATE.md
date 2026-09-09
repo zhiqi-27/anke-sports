@@ -153,3 +153,8 @@ HTTP/MCP/后台 Data API 请求在独立 SQL 短事务预留额度，按项目�
 ## 2026-09-10 · 独立云身份接入中
 
 用户再次确认Azure Functions后端。新Google账号已建立anke-sports-dev Firebase免费项目、Web应用与Google登录提供商，本地授权域名localhost/127.0.0.1读回通过。真实Firebase登录尚未验收，主Web3000仍使用原本地预览，现有关注草稿保留。后端真实MySQL模式179项通过、默认SQLite177通过/2跳过，契约不变；客户端本批仅状态记录，未修改业务源码或重复构建。后端主API27072/PID37845、worker29987/PID37859；无push或Azure部署。
+
+
+## 2026-09-10 · 真实Google登录验收通过
+
+独立Firebase项目anke-sports-dev完成Google登录、后台验签、偏好写入、新页面会话/配置恢复及退出。验收Web http://localhost:3003/calendar 使用当前源码的独立副本，API8788/独立空库且关闭本地体验身份；主3000预览与草稿保持。Web session91087/PID38482、API85403/PID38459、worker73541/PID38782；详情见后端docs/cloud-development.md和evidence/firebase-login-2026-09-10.json。最后验收页已退出，允许用户重新登录。没有客户端业务代码变化、没有push或Azure部署。Azure Functions方向已由用户再次确认，独立云资源待配置。
