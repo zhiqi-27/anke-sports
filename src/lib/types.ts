@@ -17,3 +17,4 @@ export type ImportPreview = Schemas["ImportPreviewView"];
 export type CreatorIdentity = Schemas["CreatorIdentity"];
 export type CreatorRemovalImpact = Schemas["CreatorRemovalImpact"];
 export type Review = Schemas["ReviewView"];
+export type PublicFeed = Schemas["PublicFeedView"];

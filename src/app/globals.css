@@ -1669,3 +1669,68 @@ dialog::backdrop {
     grid-template-columns: 140px minmax(0, 1fr);
   }
 }
+
+.public-subscription {
+  padding: 0 0 28px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+.public-subscription-heading {
+  display: flex;
+  align-items: end;
+  gap: 24px;
+  justify-content: space-between;
+}
+.public-subscription-heading > div {
+  max-width: 570px;
+}
+.public-subscription h2 {
+  font-size: 20px;
+  margin: 8px 0 12px;
+}
+.public-subscription p {
+  font-size: 12px;
+}
+.public-subscription label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+}
+.public-subscription select {
+  width: 240px;
+  max-width: 100%;
+}
+.public-feed-state {
+  margin: 20px 0 14px;
+}
+.public-feed-url input {
+  width: 100%;
+  font-size: 12px;
+}
+.public-feed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.subscription-migration {
+  margin-top: 22px;
+  max-width: 800px;
+}
+.subscription-migration a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .public-subscription-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .public-subscription select {
+    width: 100%;
+  }
+}
