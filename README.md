@@ -6,6 +6,8 @@
 
 新存储验收：[日历](http://localhost:3007/calendar) / [我的关注](http://localhost:3007/following)，独立临时文档库、12条标注的演示比赛与单独worker；现已载入F1关注及85条窗口内ICS，重新进入本地体验并切换“真实赛程”。已覆盖日历/关注/私人ICS、个人链接/屏蔽/固定、单场选择、配置导入和Provider更新；创作者/直播/OAuth 等功能尚未迁移。见 [服务端证据](../anke-sports-cloud/evidence/document-providers-2026-09-10.md)。
 
+后续服务端已接入新存储的YouTube额度记录与只读频道解析，327项回归及真实频道ID/handle读取通过；创作者保存、持续发现和匹配仍待迁移。本批客户端没有源码、契约或依赖变化，3007预览未重启，见 [新存储YouTube证据](../anke-sports-cloud/evidence/document-youtube-2026-09-10.md)。
+
 ## 本机检查
 
 Node.js 24，先按后端 README 启动 API 与 worker。
