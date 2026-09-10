@@ -40,7 +40,7 @@ npm run contracts
 
 ## 当前边界
 
-本地体验身份与 SQLite 只用于本机检查。Firebase 真实登录、YouTube 自动通知/匹配、官方直播审核、Chrome 扩展、目标 MCP 客户端、手机日历刷新、Azure 环境尚未完成验收。
+本地体验身份与 SQLite 只用于本机检查。Chrome 真实 Firebase 登录及独立合成环境的 Codex MCP 业务调用已验证；真实 YouTube 应用自动更新、官方直播审核、Chrome 扩展安装、手机日历刷新与 Azure 环境仍待验收。各项证据与剩余范围见下文及 `STATE.md`。
 
 `/connect` 与设置中的「已连接的应用」已接入共用授权服务。支持逐项权限确认、独立私人地址权限、到期显示与撤销；官方 SDK 的本地 HTTP 授权流程已验证。安装的 Codex CLI 0.153.4 已完成本地只读授权、私人11个/公共3个工具发现，Web撤销后私人工具为0；后续独立合成环境已完成实际Codex查询/关注与链接写入/幂等/权限拒绝/导入导出/模拟到期刷新/撤销、HTTP ICS稳定UID与200/304共25项检查；自然时间过期、Firebase与MCP组合及云端仍待验收。复现命令和 MCP 入口见相邻服务仓的 `docs/mcp-and-connections.md`。
 
@@ -60,4 +60,4 @@ npm run contracts
 
 后台已完成本机20k比赛、1,000账号的共享视频通知到Feed容量实验，UI与API契约保持一致。完整数据、重复发布和云端限制见 [内容容量验收](../anke-sports-cloud/evidence/content-capacity-2026-09-10.md)。
 
-创作者页已接入共享YouTube等待状态与自动恢复提示；本机仍缺真实项目/Key。状态由后端提供，界面不计算配额或匹配规则。详见 [本地验收](../anke-sports-cloud/evidence/youtube-budget-2026-09-10.md)。
+创作者页已接入共享YouTube等待状态与自动恢复提示；独立项目/Key 已创建并在 Cloud Shell 完成三次真实公共读取，本机安全下载和应用联调仍待完成，见 [接入进度](../anke-sports-cloud/docs/youtube-development.md)。状态由后端提供，界面不计算配额或匹配规则。详见 [本地验收](../anke-sports-cloud/evidence/youtube-budget-2026-09-10.md)。
