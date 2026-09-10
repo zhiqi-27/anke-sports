@@ -6,7 +6,10 @@
 
 新存储赛程验收：[日历](http://localhost:3007/calendar) / [我的关注](http://localhost:3007/following)，独立临时文档库、12条标注的演示比赛与单独worker；已载入F1关注及85条窗口内ICS，重新进入本地体验并切换“真实赛程”。此实例保留Provider批次代码，已覆盖日历/关注/私人ICS、个人链接/屏蔽/固定、单场选择、配置导入和Provider更新。见 [服务端证据](../anke-sports-cloud/evidence/document-providers-2026-09-10.md)。
 
-最新新存储验收：[创作者](http://localhost:3008/creators)。进入本地体验后，可检查合成频道、待确认与已附日历链接。服务端已接入保存/暂停/删除、共享频道轮询、自动匹配、人工确认/忽略和屏蔽保持；完整342项回归通过，最后兼容修正后16项相关测试与独立HTTP/worker的6项检查通过。见 [新存储创作者证据](../anke-sports-cloud/evidence/document-creators-2026-09-10.md)。本批没有客户端源码、契约或依赖变化，没有重复构建；Mac锁定期间未操作浏览器，实际渲染待检查。WebSub、真实视频匹配、直播/OAuth等剩余迁移与Azure/手机验收继续。
+最新新存储验收：[创作者](http://localhost:3008/creators)。进入本地体验后，可检查合成频道、待确认与已附日历链接。服务端已接入保存/暂停/删除、共享频道轮询、自动匹配、人工确认/忽略和屏蔽保持；完整342项回归通过，最后兼容修正后16项相关测试与独立HTTP/worker的6项检查通过。见 [新存储创作者证据](../anke-sports-cloud/evidence/document-creators-2026-09-10.md)。本批没有客户端源码、契约或依赖变化，没有重复构建；Mac锁定期间未操作浏览器，实际渲染待检查。真实Hub、视频匹配、直播/OAuth等剩余迁移与Azure/手机验收继续。
+
+
+服务端最新完成文档WebSub订阅/续订/退订及通知到ICS的本地路径：完整361项回归和独立API/worker的4组HTTP检查通过，真实Hub/云端尚未验收。实验进程已清理，原3008预览未重启；[服务端证据](../anke-sports-cloud/evidence/document-websub-2026-09-10.md)。本批客户端仅同步README/STATE。
 
 ## 本机检查
 
