@@ -1,72 +1,54 @@
 # Anke Sports
 
-选择球队与赛事，以个人日历订阅交付赛程和原始观看链接。原产品名 SportsCal。
+选择球队、赛事和YouTube创作者，通过持续更新的日历交付赛程与原始观看链接。原名SportsCal。桌面Web采用Apple Sports视觉语言；不开发原生手机App或播放器。
 
-本仓拥有桌面 Web、Chrome 扩展本地实现与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，开发、生产目标均为 Firebase Authentication、FastAPI、Azure Functions、Cosmos Serverless + Periodic 与 Storage Queue；文档日历接口、后台投递和 Feed 发布已通过独立本地流程，主预览仍保留 SQL，完整 Cosmos 迁移尚未完成。
+当前为**本地MVP可试用**，未云端公测。最新进度见[STATE](STATE.md)，总体顺序见[实施计划](<../anke-sports 文档/Anke_Sports_实施计划.md>)。本仓拥有Web、Chrome扩展和生成的客户端契约；权威业务在独立仓`anke-sports-cloud`。
 
-新存储赛程验收：[日历](http://localhost:3007/calendar) / [我的关注](http://localhost:3007/following)，独立临时文档库、12条标注的演示比赛与单独worker；已载入F1关注及85条窗口内ICS，重新进入本地体验并切换“真实赛程”。此实例保留Provider批次代码，已覆盖日历/关注/私人ICS、个人链接/屏蔽/固定、单场选择、配置导入和Provider更新。见 [服务端证据](../anke-sports-cloud/evidence/document-providers-2026-09-10.md)。
+## 本地启动
 
-最新新存储验收：[创作者](http://localhost:3008/creators)。进入本地体验后，可检查合成频道、待确认与已附日历链接。服务端已接入保存/暂停/删除、共享频道轮询、自动匹配、人工确认/忽略和屏蔽保持；完整342项回归通过，最后兼容修正后16项相关测试与独立HTTP/worker的6项检查通过。见 [新存储创作者证据](../anke-sports-cloud/evidence/document-creators-2026-09-10.md)。本批没有客户端源码、契约或依赖变化，没有重复构建；Mac锁定期间未操作浏览器，实际渲染待检查。真实Hub、视频匹配、直播/OAuth等剩余迁移与Azure/手机验收继续。
-
-
-服务端最新完成文档WebSub订阅/续订/退订及通知到ICS的本地路径：完整361项回归和独立API/worker的4组HTTP检查通过，真实Hub/云端尚未验收。实验进程已清理，原3008预览未重启；[服务端证据](../anke-sports-cloud/evidence/document-websub-2026-09-10.md)。本批客户端仅同步README/STATE。
-
-## 本机检查
-
-Node.js 24，先按后端 README 启动 API 与 worker。
+需要Node.js 24。先按服务端README启动API和worker，然后：
 
 ```sh
 npm ci
 npm run dev
 ```
 
-打开 http://127.0.0.1:3000/calendar 。首次通过「进入本地体验」保存关注。合成 NBA/足球/F1 赛程标记为演示；真实赛程独立切换，当前已接入 Jolpica F1 样本。浏览时区与筛选不修改持久关注。
+打开[日历](http://127.0.0.1:3000/calendar)，进入明确标注的本地体验。默认通过同源`/api/`转发到127.0.0.1:8787；`ANKE_SPORTS_BACKEND_URL`可指定独立实例。本地配置不要用于公网。
 
-可检查：月/周/日程切换，比赛抽屉，关注变更预览与确认保存，手动链接，个人 Feed 复制/下载/暂停/轮换，设置与导入预览。关注预览显示新增、移除、重叠保留和历史比赛，赛程变化后要求重新预览。下载 ICS 为单次快照；持续订阅需要 URL，手机订阅需要正式可达的 HTTPS 环境。
+可检查月/周/日程、关注预览、事件抽屉、手动链接、创作者/待确认、订阅与配置。合成数据明确标示，真实F1样本单独选择。下载ICS是一次性快照；手机持续订阅需要可达的正式地址与客户端验证。
 
-Apple Sports 作为视觉语言参考；信息架构仍是桌面日历，不包含原生手机 App 或体育资讯门户。
+## 现有检查入口
+
+- [3000主日历](http://127.0.0.1:3000/calendar)：SQL本地基线。
+- [3008创作者](http://localhost:3008/creators)与[个人订阅](http://localhost:3008/subscription)：文档模式合成预览，不是全功能云端版。公共订阅尚未开放时明确引导个人订阅。
+- [3007 F1样本](http://localhost:3007/calendar)：独立Provider批次后端；进入本地体验并选择真实赛程。
+
+这些是已启动的本机实例，不是部署地址；端口/进程与数据边界见STATE。最新[UI/ICS证据](output/playwright/lean-check-2026-09-10.md)包含三种桌面尺寸与12条唯一事件下载。
 
 ## 检查与契约
 
 ```sh
 npm run typecheck
 npm run build
-```
-
-类型由后端 OpenAPI 生成，已生成文件随仓库保存，独立 checkout 可构建。两仓并列开发、后端契约更新后执行：
-
-```sh
 npm run contracts
 ```
 
-依赖精确解析结果在 `package-lock.json`；`js-yaml` override 使用已修复版本，当前安装审计为 0 vulnerabilities。
+最后一条在相邻服务仓更新`contracts/openapi.json`后运行；不要在没有契约变化时重复生成。依赖解析锁定于`package-lock.json`。CI只检查不部署，当前远端运行结果未在本次刷新中查询。
 
-## Chrome 扩展
+## Chrome与MCP
 
-运行 `npm run extension:build` 生成本地 MV3 安装目录与 ZIP；`npm run extension:test` 执行边界与打包检查。运行 `npm run extension:preview` 后可在 http://127.0.0.1:18792 检查380×560合成界面。账号、当前视频和保存结果在这个预览中均为合成，不会访问真实数据。安装、权限与会话说明见 [extension/README.md](extension/README.md)，证据见 [extension/evidence.md](extension/evidence.md)。
+```sh
+npm run extension:build
+npm run extension:test
+npm run extension:preview
+```
 
-## 当前边界
+Chrome有本地包与380×560合成弹窗，实际安装/身份/当前页面权限/休眠仍待验收，详见[扩展说明](extension/README.md)和[证据](extension/evidence.md)。合成预览不具备实际Chrome权限。
 
-本地体验身份与 SQLite 只用于本机检查。Chrome 真实 Firebase 登录、专用真实 Firebase 测试身份的撤销/删除清理，以及独立合成环境的 Codex MCP 业务调用已验证。本机隔离 API/worker 已读取 69 条真实 YouTube 视频，尚未自动附入日历；Hub、官方直播、Chrome 扩展安装、手机刷新与 Azure 环境仍待验收。Cosmos 模板已通过 Azure validate，资源尚未创建；后续按实测负载评估原地转 Provisioned → Autoscale。各项证据与剩余范围见 `STATE.md` 及相邻服务仓 `docs/cosmos-storage-design.md`。
+MCP在服务端实现，已有本地Codex实际调用证据；[连接说明](../anke-sports-cloud/docs/mcp-and-connections.md)。文档模式OAuth/MCP与Firebase/HTTPS组合尚未闭环。
 
-`/connect` 与设置中的「已连接的应用」已接入共用授权服务。支持逐项权限确认、独立私人地址权限、到期显示与撤销；官方 SDK 的本地 HTTP 授权流程已验证。安装的 Codex CLI 0.153.4 已完成本地只读授权、私人11个/公共3个工具发现，Web撤销后私人工具为0；后续独立合成环境已完成实际Codex查询/关注与链接写入/幂等/权限拒绝/导入导出/模拟到期刷新/撤销、HTTP ICS稳定UID与200/304共25项检查；自然时间过期、Firebase与MCP组合及云端仍待验收。复现命令和 MCP 入口见相邻服务仓的 `docs/mcp-and-connections.md`。
+## 当前范围
 
-服务端赛程查询已改为按日期筛选、分页后批量读取链接；本机两万场活动数据的HTTP实测与边界见相邻服务仓 `evidence/schedule-queries-2026-09-10.md`。本批接口和客户端源码未变，当前月历及事件抽屉已在运行页面检查。
+Firebase真实Google登录曾在Chrome验证，用户取消的IAB登录排查不恢复。真实YouTube读取与F1样本有证据，真实视频自动附到手机、官方场次直播和Azure部署仍未完成。
 
-`AGENTS.md` 定义结果、不变量和工作边界，避免重复许可与僵硬步骤。`STATE.md` 记录当前证据与下一步。CI 只检查，不部署；两个仓库分别提交和发布。
-
-创作者管理已接入频道预览确认、范围和内容偏好、暂停/恢复、检查更新、删除影响、待确认视频与固定链接。本地合成端到端验证见 `../anke-sports-cloud/docs/content-pipeline.md`；主预览不会伪造 YouTube 结果。
-
-维护者可在 `/maintenance` 保存直播草稿、审核来源与地区/观看条件、发布、撤回及记录设备观察。身份由后端白名单控制，默认不授予本机账号。隔离合成验收页面为 http://localhost:3001/maintenance ，复现说明与证据见相邻服务仓的 `docs/broadcasts.md`、`evidence/local-2026-09-10.md`；主体验库不插入合成官方入口。
-
-设置中的数据源状态会随后台任务更新，显示处理中、等待、失败与最早重试；无需手动刷新。后台来源更新不代表手机日历已显示。缺少配置时保留最后有效赛程，恢复说明见相邻服务仓的 `docs/job-recovery.md`。
-
-订阅页新增无需登录的公共球队/赛事日历：选择来源、复制公开地址、下载一次性ICS。切换到个人日历时提示在系统日历移除旧公共订阅。真实游客操作与下载文件校验见 `../anke-sports-cloud/evidence/public-feeds-2026-09-10.md`。
-
-账号删除包含确认、SDK退出及游客提示，账号失效时清空个人界面；本地共享体验账号的删除按钮保持禁用。隔离合成账号网页与并发验收见 [删除验收](../anke-sports-cloud/evidence/privacy-2026-09-10.md)，真实Firebase删除及设备缓存仍待测试。
-
-后台已完成本机20k比赛、1,000账号的共享视频通知到Feed容量实验，UI与API契约保持一致。完整数据、重复发布和云端限制见 [内容容量验收](../anke-sports-cloud/evidence/content-capacity-2026-09-10.md)。
-
-创作者页已接入共享YouTube等待状态与自动恢复提示；独立项目/Key 已创建并在 Cloud Shell 完成三次真实公共读取，本机安全下载和应用联调仍待完成，见 [接入进度](../anke-sports-cloud/docs/youtube-development.md)。状态由后端提供，界面不计算配额或匹配规则。详见 [本地验收](../anke-sports-cloud/evidence/youtube-budget-2026-09-10.md)。
-
-Provider批次只有服务端实现和本仓说明变化；HTTP/独立worker已验收，用户Mac锁定期间未操作浏览器，新实例渲染尚未重查。
+服务端目标是Firebase、FastAPI/Azure Functions、Cosmos **Serverless + Periodic**及Storage Queue；主预览仍用SQL，不能把本地结果称为Cosmos部署。早期只修实际主流程阻塞，后续模块按需要推进。下一步只以当前STATE和任务表为准。
