@@ -3,6 +3,7 @@
 Use the parent workspace agreement when present. This repository owns the desktop Web, Chrome extension, UI and generated API client. Product scope: sports calendar and original viewing links, Apple Sports-inspired desktop design; no native mobile app, AI content or player.
 
 - Backend contract authority is `anke-sports-cloud/contracts/openapi.json`. Consume API results through services/hooks; personal matching and ICS rendering stay on the server.
+- Early-stage priority (2026-09-10): make the existing core flow directly usable and easy for the owner to inspect. Fix observed user-facing blockers before adding scope, abstractions or exhaustive variants. Later phases are backlog, not prerequisites for the first usable version; wait on blocked GUI/login work without inventing unrelated engineering tasks.
 - Support month/week/agenda, timezone, all/followed filtering and event drawer. Filtering must never mutate subscriptions. Official event times are read-only.
 - Inspect UI at 1440×1000, 1280×800 and 1024 desktop width. Verify overflow, empty/error/loading states and keyboard focus. A working build alone does not prove layout quality.
 - Firebase client identity authenticates API calls. Never embed Admin credentials or provider keys. Local preview mode must be visibly labeled and unavailable in production.
