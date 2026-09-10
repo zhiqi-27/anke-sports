@@ -1,5 +1,7 @@
 # Anke Sports 客户端状态
 
+当前摘要：2026-09-10，真实Firebase登录在Chrome通过；Core Tools/Azurite本机宿主通过，Azure尚未部署。最新进程与证据见文末；下列旧批次保留当时状态。
+
 更新：2026-09-10。主 Web：http://127.0.0.1:3000/calendar ，session 43940。
 
 桌面日历（月/周/日程）、关注、事件抽屉、链接/固定/屏蔽、订阅、创作者管理与人工确认、配置导入导出、应用授权与连接撤销已实现本地流程。Apple Sports 视觉语言，桌面日历信息架构；无原生手机 App。
@@ -165,3 +167,14 @@ HTTP/MCP/后台 Data API 请求在独立 SQL 短事务预留额度，按项目�
 Codex内置浏览器未完成Google弹窗，曾返回auth/popup-closed-by-user；确切宿主原因未定位，不能认定Google拦截。Chrome实际账号状态刷新后保留，标签210263706保留给用户；两个浏览器不共享登录状态。用户明确停止排查内置浏览器。已完成的前端调整保留：登录错误显示在对话框内、等待时仍可复制地址、收到后端/me/calendar身份结果才进入成功回调；MCP/扩展网页授权共用组件。实际Chrome关闭弹窗后出现中文错误，重试可用；内置浏览器复制地址通过系统剪贴板核对。Web/扩展typecheck和production build通过。
 
 主3000预览保留；真实Firebase实例仍Web3003 session91087/PID38482、API8788 session85403/PID38459、worker73541/PID38782，五个修改过的客户端文件已同步到隔离源码副本。无后端身份逻辑、云配置或数据库变更。下一批继续Functions安全打包与真实Core Tools/Azurite宿主验证，云部署与设备验收仍未完成。无push/部署。
+
+
+## 2026-09-10 · Functions 本机真实宿主与安全打包（T05/T13/T28/T33）
+
+已用Core Tools4.13.0、Python3.12、Azurite3.36.0运行43文件的实际源码归档；独立SQLite、一次性模拟器账号和合成比赛，无云凭据/真实上游。真实分钟Timer→Queue→outbox→ICS通过，重复消息不重做、304/正文/ETag保持；公共MCP工具发现与get_event调用通过，经宿主管理接口触发内容维护后过期请求实际删除。测试日志不含Feed令牌/存储密钥；不等同Azure平台日志证明。脚本正常退出，临时进程、数据和日志已清理。
+
+补充.funcignore和显式运行时白名单打包脚本，拒绝符号链接与缺失入口；归档SHA256为0a54a4a8d9fb14d67e1c1d785eb3cb48ee7962bba63fa901b190e67b4df6552c。修复SDK默认请求版本高于Azurite的400问题，固定双方支持的2025-11-05；未关闭版本检查。180项pytest通过/2项MySQL条件跳过，ruff通过，依赖导出一致。CI新增打包检查，未push/远程运行。docs/functions-runtime.md及evidence/functions-runtime-2026-09-10.json保留证据。
+
+主API8787 session27072/PID37845、worker29987/PID37859、Web3000 session43940/PID53698继续；本批仅Functions投递入口变化，主uvicorn/worker无需重启。production构建预览3002已重启为session20042/PID40149；真实FirebaseWeb3003 session91087/PID38482、API8788 session85403/PID38459、worker73541/PID38782保留。用户明确停止Codex内置浏览器登录排查，Chrome现有登录页保留。
+
+下一批继续独立Azure开发资源与费用边界、远端Linux构建、MySQL TLS、Functions真实Firebase、Queue死信/告警/遥测，再推进YouTube/真实日历设备。Azure未创建/部署，无push，任务保持in_progress，完整产品尚未完成。
