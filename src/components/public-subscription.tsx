@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Copy, DownloadSimple, ArrowClockwise } from "@phosphor-icons/react";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import type { PublicFeed, Source } from "@/lib/types";
 
 export function PublicSubscription({
@@ -16,6 +16,7 @@ export function PublicSubscription({
   const [selected, setSelected] = useState("");
   const [feed, setFeed] = useState<PublicFeed | null>(null);
   const [error, setError] = useState("");
+  const [unavailable, setUnavailable] = useState(false);
   const [retry, setRetry] = useState(0);
   const sourceId = sources.some((s) => s.id === selected)
     ? selected
@@ -23,6 +24,7 @@ export function PublicSubscription({
   useEffect(() => {
     setFeed(null);
     setError("");
+    setUnavailable(false);
     if (!sourceId) return;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -39,8 +41,10 @@ export function PublicSubscription({
         if (next.status === "pending" || next.status === "updating")
           timer = setTimeout(load, 2000);
       } catch (e) {
-        if (!controller.signal.aborted)
-          setError(e instanceof Error ? e.message : "公共日历暂时无法读取");
+        if (controller.signal.aborted) return;
+        if (e instanceof ApiError && e.code === "DOCUMENT_FEATURE_UNAVAILABLE")
+          setUnavailable(true);
+        else setError(e instanceof Error ? e.message : "公共日历暂时无法读取");
       }
     };
     void load();
@@ -64,6 +68,22 @@ export function PublicSubscription({
       setError("未能复制，请选中下方地址手动复制");
     }
   };
+  if (unavailable)
+    return (
+      <section
+        className="public-subscription"
+        aria-labelledby="public-subscription-title"
+      >
+        <div className="public-subscription-heading">
+          <div>
+            <h2 id="public-subscription-title">公共日历尚未开放</h2>
+            <p>
+              当前环境可使用下方的个人日历。登录并保存关注后，即可获取个人订阅地址。
+            </p>
+          </div>
+        </div>
+      </section>
+    );
   return (
     <section
       className="public-subscription"
