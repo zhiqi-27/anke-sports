@@ -2,7 +2,9 @@
 
 选择球队与赛事，以个人日历订阅交付赛程和原始观看链接。原产品名 SportsCal。
 
-本仓拥有桌面 Web、Chrome 扩展本地实现与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，目标为 Firebase Authentication、FastAPI、Azure Functions、Cosmos Serverless + Periodic 与 Storage Queue；首批文档仓储/Feed发布器已有本地证据，当前产品入口仍运行 SQL，Cosmos 迁移尚未完成。
+本仓拥有桌面 Web、Chrome 扩展本地实现与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，目标为 Firebase Authentication、FastAPI、Azure Functions、Cosmos Serverless + Periodic 与 Storage Queue；文档日历接口、后台投递和 Feed 发布已通过独立本地流程，主预览仍保留 SQL，完整 Cosmos 迁移尚未完成。
+
+新存储验收：[日历](http://localhost:3006/calendar) / [我的关注](http://localhost:3006/following)，独立临时文档库、12条演示比赛与单独 worker。仅覆盖日历/关注/私人 ICS 基础路径；内容、OAuth 等功能尚未迁移。见 [服务端证据](../anke-sports-cloud/evidence/document-runtime-2026-09-10.md)。
 
 ## 本机检查
 
