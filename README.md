@@ -2,7 +2,7 @@
 
 选择球队与赛事，以个人日历订阅交付赛程和原始观看链接。原产品名 SportsCal。
 
-本仓拥有桌面 Web、Chrome 扩展本地实现与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，权威业务使用 Firebase Authentication、FastAPI、Azure Functions/MySQL/Storage Queue。
+本仓拥有桌面 Web、Chrome 扩展本地实现与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，目标为 Firebase Authentication、FastAPI、Azure Functions、Cosmos Serverless + Periodic 与 Storage Queue；当前业务代码仍运行 SQL，Cosmos 迁移尚未完成。
 
 ## 本机检查
 
@@ -40,7 +40,7 @@ npm run contracts
 
 ## 当前边界
 
-本地体验身份与 SQLite 只用于本机检查。Chrome 真实 Firebase 登录及独立合成环境的 Codex MCP 业务调用已验证；真实 YouTube 应用自动更新、官方直播审核、Chrome 扩展安装、手机日历刷新与 Azure 环境仍待验收。各项证据与剩余范围见下文及 `STATE.md`。
+本地体验身份与 SQLite 只用于本机检查。Chrome 真实 Firebase 登录、专用真实 Firebase 测试身份的撤销/删除清理，以及独立合成环境的 Codex MCP 业务调用已验证。本机隔离 API/worker 已读取 69 条真实 YouTube 视频，尚未自动附入日历；Hub、官方直播、Chrome 扩展安装、手机刷新与 Azure 环境仍待验收。Cosmos 模板已通过 Azure validate，资源尚未创建；后续按实测负载评估原地转 Provisioned → Autoscale。各项证据与剩余范围见 `STATE.md` 及相邻服务仓 `docs/cosmos-storage-design.md`。
 
 `/connect` 与设置中的「已连接的应用」已接入共用授权服务。支持逐项权限确认、独立私人地址权限、到期显示与撤销；官方 SDK 的本地 HTTP 授权流程已验证。安装的 Codex CLI 0.153.4 已完成本地只读授权、私人11个/公共3个工具发现，Web撤销后私人工具为0；后续独立合成环境已完成实际Codex查询/关注与链接写入/幂等/权限拒绝/导入导出/模拟到期刷新/撤销、HTTP ICS稳定UID与200/304共25项检查；自然时间过期、Firebase与MCP组合及云端仍待验收。复现命令和 MCP 入口见相邻服务仓的 `docs/mcp-and-connections.md`。
 
