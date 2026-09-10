@@ -4,7 +4,7 @@
 
 本仓拥有桌面 Web、Chrome 扩展本地实现与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，开发、生产目标均为 Firebase Authentication、FastAPI、Azure Functions、Cosmos Serverless + Periodic 与 Storage Queue；文档日历接口、后台投递和 Feed 发布已通过独立本地流程，主预览仍保留 SQL，完整 Cosmos 迁移尚未完成。
 
-新存储验收：[日历](http://localhost:3007/calendar) / [我的关注](http://localhost:3007/following)，独立临时文档库、12条演示比赛与单独 worker。已覆盖日历/关注/私人 ICS、个人链接/屏蔽/固定、单场选择与配置导入；创作者/直播/OAuth 等功能尚未迁移。见 [服务端证据](../anke-sports-cloud/evidence/document-content-2026-09-10.md)。
+新存储验收：[日历](http://localhost:3007/calendar) / [我的关注](http://localhost:3007/following)，独立临时文档库、12条标注的演示比赛与单独worker；现已载入F1关注及85条窗口内ICS，重新进入本地体验并切换“真实赛程”。已覆盖日历/关注/私人ICS、个人链接/屏蔽/固定、单场选择、配置导入和Provider更新；创作者/直播/OAuth 等功能尚未迁移。见 [服务端证据](../anke-sports-cloud/evidence/document-providers-2026-09-10.md)。
 
 ## 本机检查
 
@@ -63,3 +63,5 @@ npm run contracts
 后台已完成本机20k比赛、1,000账号的共享视频通知到Feed容量实验，UI与API契约保持一致。完整数据、重复发布和云端限制见 [内容容量验收](../anke-sports-cloud/evidence/content-capacity-2026-09-10.md)。
 
 创作者页已接入共享YouTube等待状态与自动恢复提示；独立项目/Key 已创建并在 Cloud Shell 完成三次真实公共读取，本机安全下载和应用联调仍待完成，见 [接入进度](../anke-sports-cloud/docs/youtube-development.md)。状态由后端提供，界面不计算配额或匹配规则。详见 [本地验收](../anke-sports-cloud/evidence/youtube-budget-2026-09-10.md)。
+
+Provider批次只有服务端实现和本仓说明变化；HTTP/独立worker已验收，用户Mac锁定期间未操作浏览器，新实例渲染尚未重查。
