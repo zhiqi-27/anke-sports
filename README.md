@@ -4,9 +4,9 @@
 
 本仓拥有桌面 Web、Chrome 扩展本地实现与生成的 API 契约。后端独立仓库为 `anke-sports-cloud`，开发、生产目标均为 Firebase Authentication、FastAPI、Azure Functions、Cosmos Serverless + Periodic 与 Storage Queue；文档日历接口、后台投递和 Feed 发布已通过独立本地流程，主预览仍保留 SQL，完整 Cosmos 迁移尚未完成。
 
-新存储验收：[日历](http://localhost:3007/calendar) / [我的关注](http://localhost:3007/following)，独立临时文档库、12条标注的演示比赛与单独worker；现已载入F1关注及85条窗口内ICS，重新进入本地体验并切换“真实赛程”。已覆盖日历/关注/私人ICS、个人链接/屏蔽/固定、单场选择、配置导入和Provider更新；创作者/直播/OAuth 等功能尚未迁移。见 [服务端证据](../anke-sports-cloud/evidence/document-providers-2026-09-10.md)。
+新存储赛程验收：[日历](http://localhost:3007/calendar) / [我的关注](http://localhost:3007/following)，独立临时文档库、12条标注的演示比赛与单独worker；已载入F1关注及85条窗口内ICS，重新进入本地体验并切换“真实赛程”。此实例保留Provider批次代码，已覆盖日历/关注/私人ICS、个人链接/屏蔽/固定、单场选择、配置导入和Provider更新。见 [服务端证据](../anke-sports-cloud/evidence/document-providers-2026-09-10.md)。
 
-后续服务端已接入新存储的YouTube额度记录与只读频道解析，327项回归及真实频道ID/handle读取通过；创作者保存、持续发现和匹配仍待迁移。本批客户端没有源码、契约或依赖变化，3007预览未重启，见 [新存储YouTube证据](../anke-sports-cloud/evidence/document-youtube-2026-09-10.md)。
+最新新存储验收：[创作者](http://localhost:3008/creators)。进入本地体验后，可检查合成频道、待确认与已附日历链接。服务端已接入保存/暂停/删除、共享频道轮询、自动匹配、人工确认/忽略和屏蔽保持；完整342项回归通过，最后兼容修正后16项相关测试与独立HTTP/worker的6项检查通过。见 [新存储创作者证据](../anke-sports-cloud/evidence/document-creators-2026-09-10.md)。本批没有客户端源码、契约或依赖变化，没有重复构建；Mac锁定期间未操作浏览器，实际渲染待检查。WebSub、真实视频匹配、直播/OAuth等剩余迁移与Azure/手机验收继续。
 
 ## 本机检查
 
