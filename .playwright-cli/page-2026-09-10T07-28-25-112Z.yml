@@ -1,0 +1,263 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "Anke Sports 首页" [ref=e4] [cursor=pointer]:
+        - /url: /calendar
+        - generic [ref=e9]: Anke Sports
+      - generic [ref=e10]: 你的体育日历
+      - navigation "主导航" [ref=e11]:
+        - link "日历" [ref=e12] [cursor=pointer]:
+          - /url: /calendar
+        - link "我的关注" [ref=e16] [cursor=pointer]:
+          - /url: /following
+        - link "创作者" [ref=e20] [cursor=pointer]:
+          - /url: /creators
+        - link "日历订阅" [ref=e24] [cursor=pointer]:
+          - /url: /subscription
+        - link "设置" [ref=e28] [cursor=pointer]:
+          - /url: /settings
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]: 我的球队与赛事
+          - link "添加关注" [ref=e35] [cursor=pointer]:
+            - /url: /following
+        - generic [ref=e38]:
+          - text: 让日历里多一点期待。
+          - link "添加你喜欢的球队" [ref=e39] [cursor=pointer]:
+            - /url: /following
+      - generic [ref=e42]:
+        - link "MCP 与扩展" [ref=e43] [cursor=pointer]:
+          - /url: /settings
+        - link "开源项目" [ref=e48] [cursor=pointer]:
+          - /url: https://github.com/zhiqi-27/anke-sports
+        - button "登录 Anke Sports 保存你的关注与订阅" [ref=e53] [cursor=pointer]:
+          - generic [ref=e57]:
+            - generic [ref=e58]: 登录 Anke Sports
+            - generic [ref=e59]: 保存你的关注与订阅
+    - main [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - generic [ref=e63]: Anke Sports
+          - generic [ref=e66]: 日历
+        - generic [ref=e67]:
+          - combobox "显示时区" [ref=e70] [cursor=pointer]:
+            - option "Asia/Shanghai" [selected]
+            - option "America/New_York"
+            - option "America/Los_Angeles"
+            - option "Europe/London"
+            - option "Europe/Paris"
+            - option "Asia/Tokyo"
+            - option "UTC"
+          - link "订阅日历" [ref=e71] [cursor=pointer]:
+            - /url: /subscription
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "每一场热爱，都有安排。" [level=1] [ref=e76]
+          - paragraph [ref=e77]: 你的比赛，你的日历。
+        - generic [ref=e78]:
+          - generic [ref=e79]: 演示数据
+          - combobox "赛程数据" [ref=e83] [cursor=pointer]:
+            - option "演示赛程" [selected]
+            - option "真实赛程"
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - heading "2026年9月" [level=2] [ref=e87]
+            - generic [ref=e88]:
+              - button "上一个日期范围" [ref=e89] [cursor=pointer]
+              - button "下一个日期范围" [ref=e92] [cursor=pointer]
+            - button "今天" [ref=e95] [cursor=pointer]
+          - generic "日历视图" [ref=e96]:
+            - button "月" [pressed] [ref=e97] [cursor=pointer]
+            - button "周" [ref=e98] [cursor=pointer]
+            - button "日程" [ref=e99] [cursor=pointer]
+        - generic [ref=e100]:
+          - generic [ref=e101]:
+            - button "全部赛事" [ref=e102] [cursor=pointer]
+            - button "我的关注" [ref=e103] [cursor=pointer]
+          - combobox "筛选运动" [ref=e105] [cursor=pointer]:
+            - option "所有运动" [selected]
+            - option "篮球"
+            - option "足球"
+            - option "赛车"
+          - textbox "查找比赛" [ref=e109]
+          - generic [ref=e110]: 12 场比赛
+        - grid "2026年9月" [ref=e114]:
+          - rowgroup [ref=e117]:
+            - row [ref=e118]:
+              - columnheader "星期一" [ref=e119]:
+                - generic [ref=e120]: 周一
+              - columnheader "星期二" [ref=e123]:
+                - generic [ref=e124]: 周二
+              - columnheader "星期三" [ref=e127]:
+                - generic [ref=e128]: 周三
+              - columnheader "星期四" [ref=e131]:
+                - generic [ref=e132]: 周四
+              - columnheader "星期五" [ref=e135]:
+                - generic [ref=e136]: 周五
+              - columnheader "星期六" [ref=e139]:
+                - generic [ref=e140]: 周六
+              - columnheader "星期日" [ref=e143]:
+                - generic [ref=e144]: 周日
+          - rowgroup [ref=e148]:
+            - row "周 36" [ref=e149]:
+              - gridcell "2026年8月31日" [ref=e150]:
+                - generic [aria-hidden] [ref=e152]: 31日
+              - gridcell "2026年9月1日" [ref=e155]:
+                - generic [aria-hidden] [ref=e157]: 1日
+              - gridcell "2026年9月2日" [ref=e160]:
+                - generic [aria-hidden] [ref=e162]: 2日
+              - gridcell "2026年9月3日" [ref=e165]:
+                - generic [aria-hidden] [ref=e167]: 3日
+              - gridcell "2026年9月4日" [ref=e170]:
+                - generic [aria-hidden] [ref=e172]: 4日
+              - gridcell "2026年9月5日" [ref=e175]:
+                - generic [aria-hidden] [ref=e177]: 5日
+              - gridcell "2026年9月6日" [ref=e180]:
+                - generic [aria-hidden] [ref=e182]: 6日
+            - row "周 37" [ref=e185]:
+              - gridcell "2026年9月7日" [ref=e186]:
+                - generic [aria-hidden] [ref=e188]: 7日
+              - gridcell "2026年9月8日" [ref=e191]:
+                - generic [aria-hidden] [ref=e193]: 8日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e197] [cursor=pointer]:
+                  - generic [ref=e199]:
+                    - generic [ref=e200]:
+                      - time [ref=e201]: 20:00
+                      - generic [ref=e202]: 演示篮球
+                    - generic [ref=e203]: 蓝队 · 红队
+              - gridcell "2026年9月9日" [ref=e206]:
+                - generic [aria-hidden] [ref=e208]: 9日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e212] [cursor=pointer]:
+                  - generic [ref=e214]:
+                    - generic [ref=e215]:
+                      - time [ref=e216]: 20:00
+                      - generic [ref=e217]: 演示篮球
+                    - generic [ref=e218]: 蓝队 · 红队
+              - gridcell "2026年9月10日" [ref=e221]:
+                - generic [aria-hidden] [ref=e223]: 10日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e227] [cursor=pointer]:
+                  - generic [ref=e229]:
+                    - generic [ref=e230]:
+                      - time [ref=e231]: 20:00
+                      - generic [ref=e232]: 演示篮球
+                    - generic [ref=e233]: 蓝队 · 红队
+              - gridcell "2026年9月11日" [ref=e236]:
+                - generic [aria-hidden] [ref=e238]: 11日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e242] [cursor=pointer]:
+                  - generic [ref=e244]:
+                    - generic [ref=e245]:
+                      - time [ref=e246]: 20:00
+                      - generic [ref=e247]: 演示篮球
+                    - generic [ref=e248]: 蓝队 · 红队
+              - gridcell "2026年9月12日" [ref=e251]:
+                - generic [aria-hidden] [ref=e253]: 12日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e257] [cursor=pointer]:
+                  - generic [ref=e259]:
+                    - generic [ref=e260]:
+                      - time [ref=e261]: 20:00
+                      - generic [ref=e262]: 演示篮球
+                    - generic [ref=e263]: 蓝队 · 红队
+              - gridcell "2026年9月13日" [ref=e266]:
+                - generic [aria-hidden] [ref=e268]: 13日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e272] [cursor=pointer]:
+                  - generic [ref=e274]:
+                    - generic [ref=e275]:
+                      - time [ref=e276]: 20:00
+                      - generic [ref=e277]: 演示篮球
+                    - generic [ref=e278]: 蓝队 · 红队
+            - row "周 38" [ref=e281]:
+              - gridcell "2026年9月14日" [ref=e282]:
+                - generic [aria-hidden] [ref=e284]: 14日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e288] [cursor=pointer]:
+                  - generic [ref=e290]:
+                    - generic [ref=e291]:
+                      - time [ref=e292]: 20:00
+                      - generic [ref=e293]: 演示篮球
+                    - generic [ref=e294]: 蓝队 · 红队
+              - gridcell "2026年9月15日" [ref=e297]:
+                - generic [aria-hidden] [ref=e299]: 15日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e303] [cursor=pointer]:
+                  - generic [ref=e305]:
+                    - generic [ref=e306]:
+                      - time [ref=e307]: 20:00
+                      - generic [ref=e308]: 演示篮球
+                    - generic [ref=e309]: 蓝队 · 红队
+              - gridcell "2026年9月16日" [ref=e312]:
+                - generic [aria-hidden] [ref=e314]: 16日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e318] [cursor=pointer]:
+                  - generic [ref=e320]:
+                    - generic [ref=e321]:
+                      - time [ref=e322]: 20:00
+                      - generic [ref=e323]: 演示篮球
+                    - generic [ref=e324]: 蓝队 · 红队
+              - gridcell "2026年9月17日" [ref=e327]:
+                - generic [aria-hidden] [ref=e329]: 17日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e333] [cursor=pointer]:
+                  - generic [ref=e335]:
+                    - generic [ref=e336]:
+                      - time [ref=e337]: 20:00
+                      - generic [ref=e338]: 演示篮球
+                    - generic [ref=e339]: 蓝队 · 红队
+              - gridcell "2026年9月18日" [ref=e342]:
+                - generic [aria-hidden] [ref=e344]: 18日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e348] [cursor=pointer]:
+                  - generic [ref=e350]:
+                    - generic [ref=e351]:
+                      - time [ref=e352]: 20:00
+                      - generic [ref=e353]: 演示篮球
+                    - generic [ref=e354]: 蓝队 · 红队
+              - gridcell "2026年9月19日" [ref=e357]:
+                - generic [aria-hidden] [ref=e359]: 19日
+                - button "20:00 演示篮球 蓝队 · 红队" [ref=e363] [cursor=pointer]:
+                  - generic [ref=e365]:
+                    - generic [ref=e366]:
+                      - time [ref=e367]: 20:00
+                      - generic [ref=e368]: 演示篮球
+                    - generic [ref=e369]: 蓝队 · 红队
+              - gridcell "2026年9月20日" [ref=e372]:
+                - generic [aria-hidden] [ref=e374]: 20日
+            - row "周 39" [ref=e377]:
+              - gridcell "2026年9月21日" [ref=e378]:
+                - generic [aria-hidden] [ref=e380]: 21日
+              - gridcell "2026年9月22日" [ref=e383]:
+                - generic [aria-hidden] [ref=e385]: 22日
+              - gridcell "2026年9月23日" [ref=e388]:
+                - generic [aria-hidden] [ref=e390]: 23日
+              - gridcell "2026年9月24日" [ref=e393]:
+                - generic [aria-hidden] [ref=e395]: 24日
+              - gridcell "2026年9月25日" [ref=e398]:
+                - generic [aria-hidden] [ref=e400]: 25日
+              - gridcell "2026年9月26日" [ref=e403]:
+                - generic [aria-hidden] [ref=e405]: 26日
+              - gridcell "2026年9月27日" [ref=e408]:
+                - generic [aria-hidden] [ref=e410]: 27日
+            - row "周 40" [ref=e413]:
+              - gridcell "2026年9月28日" [ref=e414]:
+                - generic [aria-hidden] [ref=e416]: 28日
+              - gridcell "2026年9月29日" [ref=e419]:
+                - generic [aria-hidden] [ref=e421]: 29日
+              - gridcell "2026年9月30日" [ref=e424]:
+                - generic [aria-hidden] [ref=e426]: 30日
+              - gridcell "2026年10月1日" [ref=e429]:
+                - generic [aria-hidden] [ref=e431]: 1日
+              - gridcell "2026年10月2日" [ref=e434]:
+                - generic [aria-hidden] [ref=e436]: 2日
+              - gridcell "2026年10月3日" [ref=e439]:
+                - generic [aria-hidden] [ref=e441]: 3日
+              - gridcell "2026年10月4日" [ref=e444]:
+                - generic [aria-hidden] [ref=e446]: 4日
+        - generic [ref=e449]:
+          - generic [ref=e450]:
+            - generic [ref=e451]: 篮球
+            - generic [ref=e453]: 足球
+            - generic [ref=e455]: 赛车
+          - generic [ref=e457]: Asia/Shanghai · 演示赛程，不代表真实比赛
+    - dialog "登录 Anke Sports" [ref=e460]:
+      - generic [ref=e461]:
+        - button "关闭登录" [active] [ref=e462] [cursor=pointer]
+        - heading "你的热爱，值得一个位置。" [level=2] [ref=e469]
+        - paragraph [ref=e470]: 登录后保存关注，创建持续更新的个人体育日历。
+        - button "进入本地体验" [ref=e471] [cursor=pointer]
+        - generic [ref=e474]: 本机独立体验账号。正式账号由 Firebase 提供。
+  - alert [ref=e82]

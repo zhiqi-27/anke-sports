@@ -1,0 +1,120 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - complementary [ref=f2e3]:
+      - link "Anke Sports 首页" [ref=f2e4] [cursor=pointer]:
+        - /url: /calendar
+        - generic [ref=f2e9]: Anke Sports
+      - generic [ref=f2e10]: 你的体育日历
+      - navigation "主导航" [ref=f2e11]:
+        - link "日历" [ref=f2e12] [cursor=pointer]:
+          - /url: /calendar
+        - link "我的关注" [ref=f2e15] [cursor=pointer]:
+          - /url: /following
+        - link "创作者 1" [ref=f2e96] [cursor=pointer]:
+          - /url: /creators
+          - generic [ref=f2e97]: 创作者
+          - generic [ref=f2e98]: "1"
+        - link "日历订阅" [ref=f2e21] [cursor=pointer]:
+          - /url: /subscription
+        - link "设置" [ref=f2e24] [cursor=pointer]:
+          - /url: /settings
+      - generic [ref=f2e27]:
+        - generic [ref=f2e28]:
+          - generic [ref=f2e101]: 我的球队与赛事
+          - link "添加关注" [ref=f2e29] [cursor=pointer]:
+            - /url: /following
+        - link "演示篮 演示篮球联赛" [ref=f2e102] [cursor=pointer]:
+          - /url: /following
+          - generic [ref=f2e103]: 演示篮
+          - generic [ref=f2e104]: 演示篮球联赛
+      - generic [ref=f2e36]:
+        - link "MCP 与扩展" [ref=f2e37] [cursor=pointer]:
+          - /url: /settings
+        - link "开源项目" [ref=f2e42] [cursor=pointer]:
+          - /url: https://github.com/zhiqi-27/anke-sports
+        - button "A Anke Sports 用户 仅本机体验" [ref=f2e105] [cursor=pointer]:
+          - generic [ref=f2e48]: A
+          - generic [ref=f2e51]:
+            - generic [ref=f2e106]: Anke Sports 用户
+            - generic [ref=f2e107]: 仅本机体验
+    - main [ref=f2e52]:
+      - generic [ref=f2e53]:
+        - generic [ref=f2e54]:
+          - generic [ref=f2e110]: Anke Sports
+          - generic [ref=f2e111]: 我的关注
+        - generic [ref=f2e57]:
+          - combobox "显示时区" [ref=f2e60] [cursor=pointer]:
+            - option "Asia/Shanghai" [selected]
+            - option "America/New_York"
+            - option "America/Los_Angeles"
+            - option "Europe/London"
+            - option "Europe/Paris"
+            - option "Asia/Tokyo"
+            - option "UTC"
+          - link "订阅日历" [ref=f2e61] [cursor=pointer]:
+            - /url: /subscription
+      - generic [ref=f2e64]:
+        - generic [ref=f2e65]:
+          - heading "关注你的主场。" [level=1] [ref=f2e66]
+          - paragraph [ref=f2e67]: 选择球队与赛事，一份日历就能收下所有期待。
+        - generic [ref=f2e68]:
+          - generic [ref=f2e112]: 演示数据
+          - combobox "赛程数据" [ref=f2e113] [cursor=pointer]:
+            - option "演示赛程" [selected]
+            - option "真实赛程"
+      - generic [ref=f2e69]:
+        - generic [ref=f2e70]:
+          - generic [ref=f2e71]:
+            - heading "球队与赛事" [level=2] [ref=f2e72]
+            - paragraph [ref=f2e73]: 关注球队，也可以一次订阅整个联赛。
+          - button "预览变更" [ref=f2e145] [cursor=pointer]
+        - textbox [ref=f2e80]:
+          - /placeholder: 搜索球队或赛事
+        - generic [ref=f2e81]:
+          - heading "关注赛事1" [level=3] [ref=f2e115]
+          - button "演示篮 演示篮球联赛 篮球 · 演示" [pressed] [ref=f2e117] [cursor=pointer]:
+            - generic [ref=f2e118]: 演示篮
+            - generic [ref=f2e119]:
+              - generic [ref=f2e120]: 演示篮球联赛
+              - generic [ref=f2e121]: 篮球 · 演示
+        - generic [ref=f2e83]:
+          - heading "关注球队2" [level=3] [ref=f2e125]
+          - generic [ref=f2e126]:
+            - button "红队 演示红队 篮球 · 演示" [pressed] [ref=f2e127] [cursor=pointer]:
+              - generic [ref=f2e128]: 红队
+              - generic [ref=f2e129]:
+                - generic [ref=f2e130]: 演示红队
+                - generic [ref=f2e131]: 篮球 · 演示
+            - button "蓝队 演示蓝队 篮球 · 演示" [ref=f2e135] [cursor=pointer]:
+              - generic [ref=f2e136]: 蓝队
+              - generic [ref=f2e137]:
+                - generic [ref=f2e138]: 演示蓝队
+                - generic [ref=f2e139]: 篮球 · 演示
+        - generic [ref=f2e91]: 同一场比赛命中多个关注时，只会加入日历一次。切换浏览筛选不会改变已保存的关注。
+    - dialog "关注变更预览" [ref=f2e148]:
+      - generic [ref=f2e150]:
+        - button "关闭关注预览" [ref=f2e151] [cursor=pointer]
+        - text: 保存之前
+        - heading "这次关注会改变什么" [active] [level=2] [ref=f2e154]
+        - paragraph [ref=f2e156]:
+          - strong [ref=f2e157]: 新增关注
+          - text: 演示 · 演示红队
+        - generic [ref=f2e158]:
+          - generic [ref=f2e159]:
+            - generic [ref=f2e160]: "0"
+            - text: 新增比赛
+          - generic [ref=f2e161]:
+            - generic [ref=f2e162]: "0"
+            - text: 移除未来比赛
+          - generic [ref=f2e163]:
+            - generic [ref=f2e164]: "0"
+            - text: 其他选择保留
+        - paragraph [ref=f2e165]:
+          - text: 变更后日历包含
+          - strong [ref=f2e166]: 12 场
+          - text: 比赛。
+        - generic [ref=f2e167]: 范围：2026-06-12 至 2027-03-09，时间按 Asia/Shanghai 显示。数量基于当前已接入赛程，保存后由后台更新订阅源；手机日历显示时间由客户端决定。
+        - generic [ref=f2e168]:
+          - button "返回修改" [ref=f2e169] [cursor=pointer]
+          - button "确认保存" [ref=f2e170] [cursor=pointer]
+  - alert [ref=f2e144]

@@ -1,0 +1,72 @@
+- generic [ref=f1e2]:
+  - complementary [ref=f1e3]:
+    - link "Anke Sports 首页" [ref=f1e4] [cursor=pointer]:
+      - /url: /calendar
+      - generic [ref=f1e9]: Anke Sports
+    - generic [ref=f1e10]: 你的体育日历
+    - navigation "主导航" [ref=f1e11]:
+      - link "日历" [ref=f1e12] [cursor=pointer]:
+        - /url: /calendar
+      - link "我的关注" [ref=f1e15] [cursor=pointer]:
+        - /url: /following
+      - link "创作者" [ref=f1e18] [cursor=pointer]:
+        - /url: /creators
+      - link "日历订阅" [ref=f1e21] [cursor=pointer]:
+        - /url: /subscription
+      - link "设置" [ref=f1e24] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f1e27]:
+      - generic [ref=f1e28]:
+        - text: 我的球队与赛事
+        - link "添加关注" [ref=f1e29] [cursor=pointer]:
+          - /url: /following
+      - generic [ref=f1e32]:
+        - text: 让日历里多一点期待。
+        - link "添加你喜欢的球队" [ref=f1e33] [cursor=pointer]:
+          - /url: /following
+    - generic [ref=f1e36]:
+      - link "MCP 与扩展" [ref=f1e37] [cursor=pointer]:
+        - /url: /settings
+      - link "开源项目" [ref=f1e42] [cursor=pointer]:
+        - /url: https://github.com/zhiqi-27/anke-sports
+      - button "登录 Anke Sports保存你的关注与订阅" [ref=f1e47]
+  - main [ref=f1e52]:
+    - generic [ref=f1e53]:
+      - generic [ref=f1e54]: Anke Sports创作者
+      - generic [ref=f1e57]:
+        - combobox "显示时区" [ref=f1e60]:
+          - option "Asia/Shanghai" [selected]
+          - option "America/New_York"
+          - option "America/Los_Angeles"
+          - option "Europe/London"
+          - option "Europe/Paris"
+          - option "Asia/Tokyo"
+          - option "UTC"
+        - link "订阅日历" [ref=f1e61] [cursor=pointer]:
+          - /url: /subscription
+    - generic [ref=f1e64]:
+      - generic [ref=f1e65]:
+        - heading "好比赛，也有好观点。" [level=1] [ref=f1e66]
+        - paragraph [ref=f1e67]: 关注 YouTube 创作者，把原视频链接附在对应比赛里。
+      - generic [ref=f1e68]: 已接入赛事
+    - generic [ref=f1e69]:
+      - generic [ref=f1e70]:
+        - generic [ref=f1e71]:
+          - heading "我的创作者" [level=2] [ref=f1e72]
+          - paragraph [ref=f1e73]: 比赛日历里，也有你关注的声音。
+        - generic [ref=f1e74]: 0 位创作者
+      - generic [ref=f1e75]:
+        - textbox "创作者链接" [ref=f1e78]:
+          - /placeholder: YouTube 频道链接、@handle 或视频链接
+        - button "查找创作者" [ref=f1e79]
+      - generic [ref=f1e82]:
+        - heading "比赛之外，听听他们怎么说。" [level=3] [ref=f1e85]
+        - paragraph [ref=f1e86]: 添加创作者后，明确对应比赛的前瞻与复盘会以原视频链接补充到日历中。
+      - region "待确认视频" [ref=f1e87]:
+        - generic [ref=f1e88]:
+          - generic [ref=f1e89]:
+            - heading "待确认" [level=2] [ref=f1e90]
+            - paragraph [ref=f1e91]: 对应关系不够明确时，由你决定是否附到这场比赛。
+          - generic [ref=f1e92]: 0 项
+        - paragraph [ref=f1e93]: 正在加载…
+      - generic [ref=f1e94]: 仅附加原视频链接。移除的视频不会被自动加回；固定的链接会随比赛保留。

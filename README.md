@@ -52,3 +52,8 @@ MCP在服务端实现，已有本地Codex实际调用证据；[连接说明](../
 Firebase真实Google登录曾在Chrome验证，用户取消的IAB登录排查不恢复。真实YouTube读取与F1样本有证据，真实视频自动附到手机、官方场次直播和Azure部署仍未完成。
 
 服务端目标是Firebase、FastAPI/Azure Functions、Cosmos **Serverless + Periodic**及Storage Queue；主预览仍用SQL，不能把本地结果称为Cosmos部署。早期只修实际主流程阻塞，后续模块按需要推进。下一步只以当前STATE和任务表为准。
+# Cloudflare 静态构建准备
+
+`wrangler.jsonc` 使用静态资源绑定和 `/api/*` Worker 转发。部署时须配置 `AZURE_API_ORIGIN` 为已验证的 Azure HTTPS origin；未配置返回 503。Worker 保留身份、请求体和 Origin，禁用 API 缓存及自动跟随重定向。`node --test worker/index.test.mjs` 验证转发契约；仍需真实 Workers/Azure 联调。配置参考：https://developers.cloudflare.com/workers/static-assets/binding/
+
+桌面域名：`https://sports.anke-ai.com`。`ANKE_SPORTS_STATIC_EXPORT=true npm run build` 可生成 `.next-cloudflare/` 静态产物；默认仍支持本地 Next 服务。静态模式不执行 Next rewrites，部署端必须将 `/api/*` 转发至已验证的 Azure 后端，并禁止缓存认证响应。当前仅构建通过，尚未部署 Cloudflare、绑定 DNS 或验收公网登录。Firebase Web 配置须在正式构建时注入，不能用缺失配置的本地构建冒充生产包。
