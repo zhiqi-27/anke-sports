@@ -1426,13 +1426,20 @@ function EventDrawer({
       <div className={`match-hero ${event.sport}`}>
         {event.participants.length === 2 ? (
           <div className="match-teams">
-            {event.participants.map((p, i) => (
-              <div className="match-team" key={p.id}>
-                <TeamMark short={p.short_name} color={p.color} />
-                <b>{p.name}</b>
-                <small>{i === 0 ? "客队" : "主队"}</small>
-              </div>
-            ))}
+            {event.participants.map((p, i) => {
+              const source = sources.find((item) => item.id === p.id);
+              return (
+                <div className="match-team" key={p.id}>
+                  <TeamMark
+                    short={p.short_name}
+                    color={p.color}
+                    logoUrl={source?.logo_url}
+                  />
+                  <b>{p.name}</b>
+                  <small>{i === 0 ? "客队" : "主队"}</small>
+                </div>
+              );
+            })}
             <span className="versus">vs</span>
           </div>
         ) : (
