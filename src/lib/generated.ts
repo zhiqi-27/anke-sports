@@ -1617,6 +1617,8 @@ export interface components {
             short_name: string;
             /** Color */
             color: string;
+            /** Logo Url */
+            logo_url?: string | null;
             /** Sport */
             sport: string;
             /** Kind */

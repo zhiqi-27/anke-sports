@@ -53,18 +53,31 @@ export function leagueOf(event: SportEvent, sources: Source[]) {
 export function TeamMark({
   short,
   color,
+  logoUrl,
   small = false,
 }: {
   short: string;
   color: string;
+  logoUrl?: string | null;
   small?: boolean;
 }) {
   return (
     <span
-      className={`team-mark ${small ? "small" : ""}`}
+      className={`team-mark ${logoUrl ? "has-logo" : ""} ${small ? "small" : ""}`}
       style={{ "--team-color": color } as React.CSSProperties}
     >
-      {short.slice(0, 3)}
+      <span className="team-mark-fallback">{short.slice(0, 3)}</span>
+      {logoUrl && (
+        <img
+          className="team-mark-logo"
+          src={logoUrl}
+          alt=""
+          aria-hidden="true"
+          onError={(event) => {
+            event.currentTarget.hidden = true;
+          }}
+        />
+      )}
     </span>
   );
 }

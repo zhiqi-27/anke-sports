@@ -373,7 +373,12 @@ export function Dashboard({ page }: { page: string }) {
               .slice(0, 7)
               .map((s) => (
                 <div key={s.id} className="mini-follow">
-                  <TeamMark short={s.short_name} color={s.color} small />
+                  <TeamMark
+                    short={s.short_name}
+                    color={s.color}
+                    logoUrl={s.logo_url}
+                    small
+                  />
                   <span>{s.name}</span>
                 </div>
               ))
@@ -580,6 +585,7 @@ export function Dashboard({ page }: { page: string }) {
                           <TeamMark
                             short={source.short_name}
                             color={source.color}
+                            logoUrl={source.logo_url}
                           />
                           <span>
                             <b>{source.name}</b>
