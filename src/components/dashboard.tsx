@@ -71,21 +71,12 @@ const navigation = [
   { id: "settings", label: "设置", icon: GearSix },
 ];
 const pageInfo: Record<string, [string, string]> = {
-  calendar: ["每一场热爱，都有安排。", "你的比赛，你的日历。"],
-  following: ["关注你的主场。", "选择球队与赛事，一份日历就能收下所有期待。"],
-  creators: [
-    "好比赛，也有好观点。",
-    "关注 YouTube 创作者，把原视频链接附在对应比赛里。",
-  ],
-  subscription: [
-    "把热爱，带进日历。",
-    "比赛改期、前瞻与复盘，持续更新在同一条事件里。",
-  ],
-  settings: ["按照你的节奏。", "管理时间、观看偏好与个人配置。"],
-  maintenance: [
-    "核对每一个观看入口。",
-    "维护官方来源、场次证据与实际兼容性记录。",
-  ],
+  calendar: ["比赛日历", ""],
+  following: ["我的关注", "选择球队或赛事。"],
+  creators: ["创作者", "把 YouTube 原视频链接附到对应比赛。"],
+  subscription: ["日历订阅", "复制地址，在 Apple 或 Google 日历中添加。"],
+  settings: ["设置", ""],
+  maintenance: ["直播入口维护", "核对来源、场次与兼容性证据。"],
 };
 
 function Modal({
@@ -103,9 +94,7 @@ function Modal({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [phase, setPhase] = useState<"opening" | "open" | "closing">(
-    "opening",
-  );
+  const [phase, setPhase] = useState<"opening" | "open" | "closing">("opening");
   const requestClose = useCallback(() => {
     if (phase === "closing") return;
     setPhase("closing");
@@ -390,7 +379,7 @@ export function Dashboard({ page }: { page: string }) {
               ))
           ) : (
             <div className="sidebar-empty">
-              <span>让日历里多一点期待。</span>
+              <span>尚未关注球队或赛事。</span>
               <Link href="/following">
                 添加你喜欢的球队 <Plus size={12} />
               </Link>
@@ -482,7 +471,7 @@ export function Dashboard({ page }: { page: string }) {
         <div className="page-heading">
           <div>
             <h1>{pageInfo[page][0]}</h1>
-            <p>{pageInfo[page][1]}</p>
+            {pageInfo[page][1] && <p>{pageInfo[page][1]}</p>}
           </div>
           <div className="dataset-control">
             {status?.local_preview ? (
@@ -702,36 +691,34 @@ export function Dashboard({ page }: { page: string }) {
                 </span>
               </div>
             )}
-            <h3 className="standalone-title">添加到你正在用的日历</h3>
-            <div className="subscription-guides">
-              <div className="guide-card">
-                <CalendarBlank size={30} />
-                <h3>Apple 日历</h3>
-                <p>
-                  复制订阅地址，在日历中选择「新建日历订阅」。使用 iCloud
-                  账户可在你的设备间查看。
-                </p>
+            <h3 className="standalone-title">添加到日历</h3>
+            <div className="subscription-guide-list">
+              <div className="subscription-guide-row">
+                <CalendarBlank size={22} />
+                <div>
+                  <h3>Apple 日历</h3>
+                  <p>选择「新建日历订阅」；iCloud 可同步到其他设备。</p>
+                </div>
                 <a
                   href="https://support.apple.com/guide/calendar/subscribe-to-calendars-icl1022/mac"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  查看 Apple 官方说明 <ArrowUpRight size={15} />
+                  Apple 说明 <ArrowUpRight size={15} />
                 </a>
               </div>
-              <div className="guide-card">
-                <CalendarCheck size={30} />
-                <h3>Google 日历</h3>
-                <p>
-                  在电脑端打开 Google
-                  日历，在「其他日历」旁选择「通过网址」，粘贴订阅地址。
-                </p>
+              <div className="subscription-guide-row">
+                <CalendarCheck size={22} />
+                <div>
+                  <h3>Google 日历</h3>
+                  <p>在电脑端「其他日历」中选择「通过网址」。</p>
+                </div>
                 <a
                   href="https://support.google.com/calendar/answer/37100?hl=zh-Hans"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  查看 Google 官方说明 <ArrowUpRight size={15} />
+                  Google 说明 <ArrowUpRight size={15} />
                 </a>
               </div>
             </div>
@@ -1112,8 +1099,8 @@ export function Dashboard({ page }: { page: string }) {
               <div className="login-symbol">
                 <Basketball size={38} weight="duotone" />
               </div>
-              <h2>你的热爱，值得一个位置。</h2>
-              <p>登录后保存关注，创建持续更新的个人体育日历。</p>
+              <h2>保存关注与订阅</h2>
+              <p>登录后创建持续更新的个人体育日历。</p>
               {status?.firebase_configured && (
                 <GoogleSignIn
                   disabled={busy}
@@ -1192,72 +1179,76 @@ export function Dashboard({ page }: { page: string }) {
       {selected && (
         <Modal title={selected.title} onClose={closeEvent} drawer>
           {(close) => (
-          <EventDrawer
-            event={selected}
-            sources={sources}
-            timezone={timezone}
-            spoilerFree={preferences.spoiler_free}
-            onClose={close}
-            onAdd={() => requireUser(() => setAdding(true))}
-            onToggle={() =>
-              requireUser(() =>
-                run(async () => {
-                  await mutate(`/events/${selected.id}/selection`, "PUT", {
-                    state: selected.included ? "exclude" : "include",
-                    expected_revision: user!.revision,
-                  });
-                  await reloadEvent();
-                }, savedMessage),
-              )
-            }
-            onPin={(id) =>
-              requireUser(() =>
-                run(
-                  async () => {
-                    await mutate(`/me/links/${id}/pin`, "POST");
+            <EventDrawer
+              event={selected}
+              sources={sources}
+              timezone={timezone}
+              spoilerFree={preferences.spoiler_free}
+              onClose={close}
+              onAdd={() => requireUser(() => setAdding(true))}
+              onToggle={() =>
+                requireUser(() =>
+                  run(async () => {
+                    await mutate(`/events/${selected.id}/selection`, "PUT", {
+                      state: selected.included ? "exclude" : "include",
+                      expected_revision: user!.revision,
+                    });
                     await reloadEvent();
-                  },
-                  () => flash("链接已固定，停止关注创作者后仍会保留"),
-                ),
-              )
-            }
-            onBlock={(id) =>
-              requireUser(() =>
-                run(
-                  async () => {
-                    await mutate(`/me/links/${id}/block`, "POST");
-                    await reloadEvent();
-                  },
-                  () => flash("已移除此链接，自动更新不会将它加回"),
-                ),
-              )
-            }
-            busy={busy}
-          />
+                  }, savedMessage),
+                )
+              }
+              onPin={(id) =>
+                requireUser(() =>
+                  run(
+                    async () => {
+                      await mutate(`/me/links/${id}/pin`, "POST");
+                      await reloadEvent();
+                    },
+                    () => flash("链接已固定，停止关注创作者后仍会保留"),
+                  ),
+                )
+              }
+              onBlock={(id) =>
+                requireUser(() =>
+                  run(
+                    async () => {
+                      await mutate(`/me/links/${id}/block`, "POST");
+                      await reloadEvent();
+                    },
+                    () => flash("已移除此链接，自动更新不会将它加回"),
+                  ),
+                )
+              }
+              busy={busy}
+            />
           )}
         </Modal>
       )}
       {adding && selected && (
         <Modal title="附加原始链接" onClose={() => setAdding(false)}>
           {(close) => (
-          <AddLinkForm
-            event={selected}
-            error={error}
-            busy={busy}
-            close={close}
-            submit={(values) =>
-              run(
-                async () => {
-                  await mutate(`/events/${selected.id}/links`, "POST", values);
-                  await reloadEvent();
-                },
-                () => {
-                  close();
-                  savedMessage();
-                },
-              )
-            }
-          />
+            <AddLinkForm
+              event={selected}
+              error={error}
+              busy={busy}
+              close={close}
+              submit={(values) =>
+                run(
+                  async () => {
+                    await mutate(
+                      `/events/${selected.id}/links`,
+                      "POST",
+                      values,
+                    );
+                    await reloadEvent();
+                  },
+                  () => {
+                    close();
+                    savedMessage();
+                  },
+                )
+              }
+            />
           )}
         </Modal>
       )}
@@ -1267,58 +1258,55 @@ export function Dashboard({ page }: { page: string }) {
           onClose={() => setConfirm(null)}
         >
           {(close) => (
-          <>
-          <h2>
-            {confirm === "rotate"
-              ? "替换现有订阅地址？"
-              : "删除账号与个人数据？"}
-          </h2>
-          <p>
-            {confirm === "rotate"
-              ? "旧地址将立即失效。请在系统日历中移除旧订阅，再添加新地址；比赛 UID 保持不变。"
-              : "此操作会删除你的关注、私人链接与应用授权，停止私人订阅，并清理登录账号。已缓存内容需在系统日历中删除。"}
-          </p>
-          <div className="modal-actions">
-            <button
-              className="secondary-button"
-              onClick={close}
-            >
-              取消
-            </button>
-            <button
-              className="danger-button"
-              disabled={busy}
-              onClick={() =>
-                run(
-                  async () => {
-                    if (confirm === "rotate") {
-                      await mutate("/me/feed/rotate", "POST", {
-                        confirmed: true,
-                      });
-                    } else {
-                      const result = await deleteAccount();
-                      try {
-                        sessionStorage.setItem(
-                          "anke-account-deleted",
-                          JSON.stringify(result),
-                        );
-                      } catch {
-                        /* Continue to discard all mounted personal UI state. */
-                      }
-                      window.location.replace("/calendar");
-                    }
-                  },
-                  () => {
-                    close();
-                    flash("操作已完成");
-                  },
-                )
-              }
-            >
-              确认{confirm === "rotate" ? "重新生成" : "删除"}
-            </button>
-          </div>
-          </>
+            <>
+              <h2>
+                {confirm === "rotate"
+                  ? "替换现有订阅地址？"
+                  : "删除账号与个人数据？"}
+              </h2>
+              <p>
+                {confirm === "rotate"
+                  ? "旧地址将立即失效。请在系统日历中移除旧订阅，再添加新地址；比赛 UID 保持不变。"
+                  : "此操作会删除你的关注、私人链接与应用授权，停止私人订阅，并清理登录账号。已缓存内容需在系统日历中删除。"}
+              </p>
+              <div className="modal-actions">
+                <button className="secondary-button" onClick={close}>
+                  取消
+                </button>
+                <button
+                  className="danger-button"
+                  disabled={busy}
+                  onClick={() =>
+                    run(
+                      async () => {
+                        if (confirm === "rotate") {
+                          await mutate("/me/feed/rotate", "POST", {
+                            confirmed: true,
+                          });
+                        } else {
+                          const result = await deleteAccount();
+                          try {
+                            sessionStorage.setItem(
+                              "anke-account-deleted",
+                              JSON.stringify(result),
+                            );
+                          } catch {
+                            /* Continue to discard all mounted personal UI state. */
+                          }
+                          window.location.replace("/calendar");
+                        }
+                      },
+                      () => {
+                        close();
+                        flash("操作已完成");
+                      },
+                    )
+                  }
+                >
+                  确认{confirm === "rotate" ? "重新生成" : "删除"}
+                </button>
+              </div>
+            </>
           )}
         </Modal>
       )}

@@ -186,8 +186,7 @@ export function CreatorManager({
             let changed = false;
             data.items.forEach((review) => {
               if (!next[review.id]) {
-                next[review.id] =
-                  review.kind === "recap" ? "recap" : "preview";
+                next[review.id] = review.kind === "recap" ? "recap" : "preview";
                 changed = true;
               }
             });
@@ -257,8 +256,7 @@ export function CreatorManager({
     reviewPage * REVIEW_PAGE_SIZE,
   );
   const reviewGroups = useMemo(() => {
-    if (!groupReviews)
-      return [{ key: "all", label: "", items: pagedReviews }];
+    if (!groupReviews) return [{ key: "all", label: "", items: pagedReviews }];
     const grouped = new Map<string, Review[]>();
     pagedReviews.forEach((review) => {
       const key = `${review.event_id}:${review.event_title}`;
@@ -293,7 +291,9 @@ export function CreatorManager({
         ),
       () => {
         const ids = new Set(selected.map((review) => review.id));
-        setReviews((current) => current.filter((review) => !ids.has(review.id)));
+        setReviews((current) =>
+          current.filter((review) => !ids.has(review.id)),
+        );
         setSelectedReviews(new Set());
       },
     );
@@ -312,7 +312,6 @@ export function CreatorManager({
       <div className="section-toolbar">
         <div>
           <h2>我的创作者</h2>
-          <p>比赛日历里，也有你关注的声音。</p>
         </div>
         <span className="count-label">
           {user?.creators.length || 0} 位创作者
@@ -591,10 +590,8 @@ export function CreatorManager({
       ) : (
         <div className="empty-state">
           <YoutubeLogo size={40} />
-          <h3>比赛之外，听听他们怎么说。</h3>
-          <p>
-            添加创作者后，明确对应比赛的前瞻与复盘会以原视频链接补充到日历中。
-          </p>
+          <h3>还没有创作者</h3>
+          <p>添加后，明确对应比赛的前瞻与复盘会以原视频链接补充到日历中。</p>
         </div>
       )}
       <section className="review-section" aria-label="待确认视频">
@@ -703,37 +700,41 @@ export function CreatorManager({
                   </h3>
                 )}
                 <div className="review-list">
-            {group.items.map((review) => (
-              <ReviewCard
-                key={review.id + review.updated_at}
-                review={review}
-                spoilerFree={user?.config.preferences.spoiler_free ?? true}
-                busy={busy}
-                selected={selectedReviews.has(review.id)}
-                onSelected={(selected) => toggleReview(review.id, selected)}
-                kind={reviewKinds[review.id] || "preview"}
-                onKind={(kind) =>
-                  setReviewKinds((current) => ({
-                    ...current,
-                    [review.id]: kind,
-                  }))
-                }
-                onDecide={(decision, kind) =>
-                  run(
-                    () =>
-                      write(`/me/reviews/${review.id}`, "POST", {
-                        decision,
-                        kind,
-                        expected_updated_at: review.updated_at,
-                      }),
-                    () =>
-                      setReviews((current) =>
-                        current.filter((r) => r.id !== review.id),
-                      ),
-                  )
-                }
-              />
-            ))}
+                  {group.items.map((review) => (
+                    <ReviewCard
+                      key={review.id + review.updated_at}
+                      review={review}
+                      spoilerFree={
+                        user?.config.preferences.spoiler_free ?? true
+                      }
+                      busy={busy}
+                      selected={selectedReviews.has(review.id)}
+                      onSelected={(selected) =>
+                        toggleReview(review.id, selected)
+                      }
+                      kind={reviewKinds[review.id] || "preview"}
+                      onKind={(kind) =>
+                        setReviewKinds((current) => ({
+                          ...current,
+                          [review.id]: kind,
+                        }))
+                      }
+                      onDecide={(decision, kind) =>
+                        run(
+                          () =>
+                            write(`/me/reviews/${review.id}`, "POST", {
+                              decision,
+                              kind,
+                              expected_updated_at: review.updated_at,
+                            }),
+                          () =>
+                            setReviews((current) =>
+                              current.filter((r) => r.id !== review.id),
+                            ),
+                        )
+                      }
+                    />
+                  ))}
                 </div>
               </section>
             ))}
@@ -750,7 +751,8 @@ export function CreatorManager({
                   上一页
                 </button>
                 <span>
-                  第 {reviewPage} / {reviewPageCount} 页 · 共 {visibleReviews.length} 项
+                  第 {reviewPage} / {reviewPageCount} 页 · 共{" "}
+                  {visibleReviews.length} 项
                 </span>
                 <button
                   className="secondary-button"
@@ -851,9 +853,7 @@ function ReviewCard({
         <select
           aria-label={`关联类型 ${review.id}`}
           value={kind}
-          onChange={(e) =>
-            onKind(e.target.value as "preview" | "recap")
-          }
+          onChange={(e) => onKind(e.target.value as "preview" | "recap")}
         >
           <option value="preview">赛前前瞻</option>
           <option value="recap">赛后复盘</option>

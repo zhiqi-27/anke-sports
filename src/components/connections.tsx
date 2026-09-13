@@ -267,9 +267,7 @@ export function ConnectionManager({ userId }: { userId?: string }) {
       <h2>
         <PlugsConnected size={22} /> 已连接的应用
       </h2>
-      <p className="connection-muted">
-        管理 Chrome 扩展和外部 Agent 对日历的访问。
-      </p>
+      <p className="connection-muted">管理外部 Agent 对日历的访问。</p>
       {error && (
         <p className="connection-error" role="alert">
           {error}{" "}
@@ -287,7 +285,7 @@ export function ConnectionManager({ userId }: { userId?: string }) {
         <p role="status">正在读取连接…</p>
       ) : !error && !items.length ? (
         <p className="connections-empty">
-          还没有连接应用。从扩展或 MCP 客户端发起连接后，在网页中确认权限。
+          还没有连接应用。从 MCP 客户端发起连接后，在网页中确认权限。
         </p>
       ) : (
         <div className="settings-list">

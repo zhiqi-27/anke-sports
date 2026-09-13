@@ -1,0 +1,11 @@
+{
+  "brief": "Consolidate the existing desktop product UI into semantic tokens, phase in graphite surfaces and acid-lime emphasis, simplify subscription guidance, and compress repeated copy.",
+  "macrostructure": "Workbench",
+  "theme": "custom graphite / acid lime",
+  "tone": "modern-minimal",
+  "scope": "multi-page desktop application",
+  "enrichment": "none",
+  "responsive_allowance": "desktop-only product; verify 1024, 1280, and 1440 pixel widths",
+  "navigation": "existing persistent application sidebar",
+  "footer": "none; fixed-height application shell"
+}

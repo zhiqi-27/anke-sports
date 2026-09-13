@@ -26,9 +26,9 @@ export const sportNames: Record<string, string> = {
   racing: "赛车",
 };
 export const sportColors: Record<string, string> = {
-  basketball: "#f4b979",
-  football: "#a3addf",
-  racing: "#f38d80",
+  basketball: "var(--color-sport-basketball)",
+  football: "var(--color-sport-football)",
+  racing: "var(--color-sport-racing)",
 };
 export function timeOf(event: SportEvent, timezone: string) {
   return event.starts_at
@@ -282,7 +282,7 @@ export default function CalendarView({
           allDay: e.time_precision !== "exact",
           backgroundColor: "transparent",
           borderColor: "transparent",
-          textColor: "#fff",
+          textColor: "var(--color-accent-ink)",
           extendedProps: { data: e },
         })),
     [shown],
