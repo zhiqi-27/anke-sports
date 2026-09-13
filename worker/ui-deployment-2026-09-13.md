@@ -23,3 +23,18 @@ Time: 2026-09-13 21:03–21:08 (Asia/Shanghai)
 ## Boundary
 
 This proves deployment to the existing public development Web surface, not formal v1 production release, signed-in account acceptance or external calendar refresh. No Git push was performed.
+
+## P2 visual-system deployment
+
+Time: 2026-09-13 21:27–21:30 (Asia/Shanghai)
+
+- P2 client commit: `5d26a0a` (`Apply P2 visual system`).
+- Cloudflare Worker version: `e2628970-f7a3-4661-a935-ad474b1750c7`.
+- Production-shaped build and Wrangler dry run passed; 76 assets were read.
+- Deployment uploaded 40 changed assets and reused 23.
+- `/calendar`, `/subscription`, `/creators` and `/settings` returned HTTP 200.
+- Public `/api/v1/status` returned HTTP 200 three consecutive times; anonymous `/api/v1/me/calendar` returned the expected HTTP 401.
+- Public bundles contained the new task headings, compact Apple/Google guide copy and external-Agent connection copy.
+- A real browser rendered the subscription page with two new guide rows, zero old guide cards and no horizontal overflow at 1440×900. The calendar rendered 19 visible September event elements without an application error at 1280×800.
+
+This deployment changed the Web client only. It did not mutate Azure/Firebase resources, use a signed-in account, confirm external calendar refresh or constitute formal v1 release. No Git push was performed.
