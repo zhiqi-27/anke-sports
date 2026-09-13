@@ -102,7 +102,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #73876a;
+  color: #9aaf92;
 }
 .calendar-search input {
   padding: 4px 0;
@@ -112,11 +112,11 @@
   width: 110px;
 }
 .calendar-search input::placeholder {
-  color: #73876a;
+  color: #9aaf92;
 }
 .match-count {
   font-size: 10px;
-  color: #6b8262;
+  color: #9aaf92;
   margin-left: 10px;
   white-space: nowrap;
 }
@@ -141,8 +141,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-  color: #78916c;
-  font-size: 9px;
+  color: #9aaf92;
+  font-size: 11px;
 }
 .calendar-footer > span {
   display: flex;
@@ -175,17 +175,23 @@
   border-left: 2px solid color-mix(in srgb, var(--sport-color) 68%, transparent);
   min-height: 32px;
   gap: 3px;
-  transition: background 0.15s;
+  transition: background var(--motion-fast) var(--ease-out);
 }
 .calendar-event:hover {
   background: color-mix(in srgb, var(--sport-color) 16%, #1b3022);
+}
+.calendar-engine.is-week .event-meta {
+  font-size: 14px;
+}
+.calendar-engine.is-week .event-name {
+  font-size: 13px;
 }
 .calendar-event.cancelled {
   opacity: 0.6;
   text-decoration: line-through;
 }
 .event-meta {
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.1;
   color: color-mix(in srgb, var(--sport-color) 83%, #c5d1b7);
   display: flex;
@@ -198,7 +204,7 @@
   font-weight: 650;
 }
 .event-meta span {
-  font-size: 8px;
+  font-size: 10px;
   opacity: 0.75;
 }
 .event-meta svg {
@@ -209,7 +215,7 @@
   align-items: center;
   gap: 6px;
   line-height: 1.2;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 550;
   white-space: nowrap;
   min-width: 0;
@@ -313,7 +319,7 @@
   background: #243c29;
 }
 .agenda-time {
-  font-size: 15px;
+  font-size: 24px;
   font-variant-numeric: tabular-nums;
   font-weight: 560;
   min-width: 48px;
@@ -372,7 +378,7 @@
   --fc-monarch-stronger: #ffffff18;
   --fc-monarch-strongest: #ffffff20;
   --fc-monarch-foreground: #c3d0b8;
-  --fc-monarch-faint-foreground: #647d5b;
+  --fc-monarch-faint-foreground: #91a782;
   --fc-monarch-muted-foreground: #829779;
   --fc-monarch-primary: #bedc99;
   --fc-monarch-primary-foreground: #1f3218;
@@ -542,13 +548,13 @@
   .calendar-event {
     flex-direction: row;
     align-items: center;
-    min-height: 22px;
-    height: 22px;
+    min-height: 28px;
+    height: 28px;
     padding: 3px 5px;
     gap: 6px;
   }
   .event-meta {
-    font-size: 9px;
+    font-size: 12px;
     flex-shrink: 0;
   }
   .event-meta > span,
@@ -556,7 +562,7 @@
     display: none;
   }
   .event-name {
-    font-size: 10px;
+    font-size: 12px;
     min-width: 0;
   }
   .event-name > svg {

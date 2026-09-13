@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowClockwise,
@@ -47,6 +47,7 @@ const defaults: Draft = {
   recap: true,
   enabled: true,
 };
+const REVIEW_PAGE_SIZE = 20;
 type Props = {
   user: CalendarUser | null;
   budget?: ServiceStatus["youtube_budget"];
@@ -149,6 +150,19 @@ export function CreatorManager({
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewError, setReviewError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [reviewSearch, setReviewSearch] = useState("");
+  const [reviewCreator, setReviewCreator] = useState("");
+  const [reviewSort, setReviewSort] = useState<"oldest" | "newest" | "event">(
+    "oldest",
+  );
+  const [groupReviews, setGroupReviews] = useState(true);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [selectedReviews, setSelectedReviews] = useState<Set<string>>(
+    new Set(),
+  );
+  const [reviewKinds, setReviewKinds] = useState<
+    Record<string, "preview" | "recap">
+  >({});
   useEffect(() => {
     if (!user) {
       setReviews([]);
@@ -160,7 +174,25 @@ export function CreatorManager({
       try {
         const data = await api<{ items: Review[] }>("/me/reviews");
         if (active) {
-          setReviews(data.items);
+          setReviews((current) => {
+            const signature = (items: Review[]) =>
+              items.map((item) => `${item.id}:${item.updated_at}`).join("|");
+            return signature(current) === signature(data.items)
+              ? current
+              : data.items;
+          });
+          setReviewKinds((current) => {
+            const next = { ...current };
+            let changed = false;
+            data.items.forEach((review) => {
+              if (!next[review.id]) {
+                next[review.id] =
+                  review.kind === "recap" ? "recap" : "preview";
+                changed = true;
+              }
+            });
+            return changed ? next : current;
+          });
           setReviewError("");
         }
       } catch (e) {
@@ -173,12 +205,99 @@ export function CreatorManager({
       }
     };
     void load();
-    const timer = setInterval(load, 10000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    const timer = setInterval(refreshWhenVisible, 30000);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
     return () => {
       active = false;
       clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, [user?.id, epoch]);
+  const creators = useMemo(
+    () => Array.from(new Set(reviews.map((review) => review.creator))).sort(),
+    [reviews],
+  );
+  const visibleReviews = useMemo(() => {
+    const query = reviewSearch.trim().toLocaleLowerCase("zh-CN");
+    return reviews
+      .filter(
+        (review) =>
+          (!reviewCreator || review.creator === reviewCreator) &&
+          (!query ||
+            `${review.title} ${review.creator} ${review.event_title}`
+              .toLocaleLowerCase("zh-CN")
+              .includes(query)),
+      )
+      .sort((a, b) => {
+        if (reviewSort === "event")
+          return (a.starts_at || "9999").localeCompare(b.starts_at || "9999");
+        const order = a.published_at.localeCompare(b.published_at);
+        return reviewSort === "newest" ? -order : order;
+      });
+  }, [reviews, reviewCreator, reviewSearch, reviewSort]);
+  const reviewPageCount = Math.max(
+    1,
+    Math.ceil(visibleReviews.length / REVIEW_PAGE_SIZE),
+  );
+  useEffect(() => {
+    setReviewPage((current) => Math.min(current, reviewPageCount));
+  }, [reviewPageCount]);
+  useEffect(() => setReviewPage(1), [reviewSearch, reviewCreator, reviewSort]);
+  useEffect(() => {
+    const ids = new Set(reviews.map((review) => review.id));
+    setSelectedReviews(
+      (current) => new Set([...current].filter((id) => ids.has(id))),
+    );
+  }, [reviews]);
+  const pagedReviews = visibleReviews.slice(
+    (reviewPage - 1) * REVIEW_PAGE_SIZE,
+    reviewPage * REVIEW_PAGE_SIZE,
+  );
+  const reviewGroups = useMemo(() => {
+    if (!groupReviews)
+      return [{ key: "all", label: "", items: pagedReviews }];
+    const grouped = new Map<string, Review[]>();
+    pagedReviews.forEach((review) => {
+      const key = `${review.event_id}:${review.event_title}`;
+      grouped.set(key, [...(grouped.get(key) || []), review]);
+    });
+    return [...grouped.entries()].map(([key, items]) => ({
+      key,
+      label: items[0].event_title,
+      items,
+    }));
+  }, [groupReviews, pagedReviews]);
+  const toggleReview = useCallback((id: string, selected: boolean) => {
+    setSelectedReviews((current) => {
+      const next = new Set(current);
+      if (selected) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+  const decideMany = (decision: "confirm" | "ignore") => {
+    const selected = reviews.filter((review) => selectedReviews.has(review.id));
+    return run(
+      () =>
+        Promise.all(
+          selected.map((review) =>
+            write(`/me/reviews/${review.id}`, "POST", {
+              decision,
+              kind: reviewKinds[review.id] || "preview",
+              expected_updated_at: review.updated_at,
+            }),
+          ),
+        ),
+      () => {
+        const ids = new Set(selected.map((review) => review.id));
+        setReviews((current) => current.filter((review) => !ids.has(review.id)));
+        setSelectedReviews(new Set());
+      },
+    );
+  };
   const saveEdit = () =>
     run(
       () =>
@@ -493,13 +612,112 @@ export function CreatorManager({
         ) : loading ? (
           <p>正在加载…</p>
         ) : reviews.length ? (
-          <div className="review-list">
-            {reviews.map((review) => (
+          <>
+            <div className="review-toolbar">
+              <label>
+                <span className="sr-only">搜索待确认视频</span>
+                <input
+                  type="search"
+                  placeholder="搜索视频、创作者或比赛"
+                  value={reviewSearch}
+                  onChange={(event) => setReviewSearch(event.target.value)}
+                />
+              </label>
+              <select
+                aria-label="筛选创作者"
+                value={reviewCreator}
+                onChange={(event) => setReviewCreator(event.target.value)}
+              >
+                <option value="">全部创作者</option>
+                {creators.map((creator) => (
+                  <option key={creator}>{creator}</option>
+                ))}
+              </select>
+              <select
+                aria-label="待确认排序"
+                value={reviewSort}
+                onChange={(event) =>
+                  setReviewSort(event.target.value as typeof reviewSort)
+                }
+              >
+                <option value="oldest">最早发布优先</option>
+                <option value="newest">最新发布优先</option>
+                <option value="event">比赛时间优先</option>
+              </select>
+              <label className="review-group-toggle">
+                <input
+                  type="checkbox"
+                  checked={groupReviews}
+                  onChange={(event) => setGroupReviews(event.target.checked)}
+                />
+                按比赛分组
+              </label>
+            </div>
+            <div className="review-batchbar">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={
+                    pagedReviews.length > 0 &&
+                    pagedReviews.every((review) =>
+                      selectedReviews.has(review.id),
+                    )
+                  }
+                  onChange={(event) =>
+                    setSelectedReviews((current) => {
+                      const next = new Set(current);
+                      pagedReviews.forEach((review) =>
+                        event.target.checked
+                          ? next.add(review.id)
+                          : next.delete(review.id),
+                      );
+                      return next;
+                    })
+                  }
+                />
+                选择本页
+              </label>
+              <span>{selectedReviews.size} 项已选</span>
+              <button
+                className="secondary-button"
+                disabled={!selectedReviews.size || busy}
+                onClick={() => void decideMany("ignore")}
+              >
+                批量不关联
+              </button>
+              <button
+                className="primary-button"
+                disabled={!selectedReviews.size || busy}
+                onClick={() => void decideMany("confirm")}
+              >
+                <Check size={15} />
+                批量确认关联
+              </button>
+            </div>
+            {reviewGroups.map((group) => (
+              <section className="review-group" key={group.key}>
+                {group.label && (
+                  <h3 className="review-group-title">
+                    {group.label}
+                    <small>{group.items.length} 项</small>
+                  </h3>
+                )}
+                <div className="review-list">
+            {group.items.map((review) => (
               <ReviewCard
                 key={review.id + review.updated_at}
                 review={review}
                 spoilerFree={user?.config.preferences.spoiler_free ?? true}
                 busy={busy}
+                selected={selectedReviews.has(review.id)}
+                onSelected={(selected) => toggleReview(review.id, selected)}
+                kind={reviewKinds[review.id] || "preview"}
+                onKind={(kind) =>
+                  setReviewKinds((current) => ({
+                    ...current,
+                    [review.id]: kind,
+                  }))
+                }
                 onDecide={(decision, kind) =>
                   run(
                     () =>
@@ -516,7 +734,34 @@ export function CreatorManager({
                 }
               />
             ))}
-          </div>
+                </div>
+              </section>
+            ))}
+            {!visibleReviews.length && (
+              <div className="review-empty">没有符合筛选条件的待确认视频。</div>
+            )}
+            {visibleReviews.length > REVIEW_PAGE_SIZE && (
+              <nav className="review-pagination" aria-label="待确认分页">
+                <button
+                  className="secondary-button"
+                  disabled={reviewPage === 1}
+                  onClick={() => setReviewPage((page) => page - 1)}
+                >
+                  上一页
+                </button>
+                <span>
+                  第 {reviewPage} / {reviewPageCount} 页 · 共 {visibleReviews.length} 项
+                </span>
+                <button
+                  className="secondary-button"
+                  disabled={reviewPage === reviewPageCount}
+                  onClick={() => setReviewPage((page) => page + 1)}
+                >
+                  下一页
+                </button>
+              </nav>
+            )}
+          </>
         ) : (
           <div className="review-empty">
             {user?.creators.length
@@ -539,19 +784,32 @@ function ReviewCard({
   review,
   spoilerFree,
   busy,
+  selected,
+  onSelected,
+  kind,
+  onKind,
   onDecide,
 }: {
   review: Review;
   spoilerFree: boolean;
   busy: boolean;
+  selected: boolean;
+  onSelected: (selected: boolean) => void;
+  kind: "preview" | "recap";
+  onKind: (kind: "preview" | "recap") => void;
   onDecide: (decision: "confirm" | "ignore", kind: "preview" | "recap") => void;
 }) {
-  const [kind, setKind] = useState<"preview" | "recap">(
-    review.kind === "recap" ? "recap" : "preview",
-  );
   return (
     <article className="review-card">
       <div className="review-source">
+        <label className="review-select">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={(event) => onSelected(event.target.checked)}
+          />
+          <span className="sr-only">选择 {review.title}</span>
+        </label>
         <YoutubeLogo size={16} />
         {review.creator}
         <span>视频候选</span>
@@ -593,7 +851,9 @@ function ReviewCard({
         <select
           aria-label={`关联类型 ${review.id}`}
           value={kind}
-          onChange={(e) => setKind(e.target.value as "preview" | "recap")}
+          onChange={(e) =>
+            onKind(e.target.value as "preview" | "recap")
+          }
         >
           <option value="preview">赛前前瞻</option>
           <option value="recap">赛后复盘</option>

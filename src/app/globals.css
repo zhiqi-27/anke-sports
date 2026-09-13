@@ -16,6 +16,13 @@
   --radius: 16px;
   --z-drawer: 20;
   --z-toast: 50;
+  --motion-press: 100ms;
+  --motion-fast: 140ms;
+  --motion-state: 160ms;
+  --motion-overlay-enter: 240ms;
+  --motion-overlay-exit: 200ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Microsoft YaHei", sans-serif;
@@ -46,6 +53,12 @@ textarea {
 }
 button {
   cursor: pointer;
+  transition:
+    transform var(--motion-press) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out),
+    opacity var(--motion-fast) var(--ease-out);
 }
 button,
 select {
@@ -58,7 +71,7 @@ button:disabled {
 button {
   border: 0;
 }
-button:active:not(:disabled) {
+button:active:not(:disabled):not(.agenda-game):not(.source-card) {
   transform: scale(0.98);
 }
 a {
@@ -118,6 +131,39 @@ h3 {
   font-size: 15px;
   font-weight: 600;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  transform: translateY(-160%);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+.boot-screen {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  color: var(--muted);
+}
 p {
   line-height: 1.75;
   color: var(--muted);
@@ -128,13 +174,12 @@ small {
 svg {
   flex-shrink: 0;
 }
-button,
 a {
   transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s,
-    opacity 0.15s;
+    background var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    opacity var(--motion-fast) var(--ease-out);
 }
 button {
   white-space: nowrap;
@@ -222,7 +267,11 @@ a svg {
   margin-bottom: 17px;
 }
 .sidebar-heading a {
-  padding: 3px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: #a2b498;
 }
 .sidebar-empty {
@@ -353,10 +402,11 @@ a svg {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.25;
   font-weight: 600;
   white-space: nowrap;
+  min-height: 44px;
 }
 .primary-button {
   background: var(--accent);
@@ -798,7 +848,7 @@ a svg {
   padding: 3px;
   display: flex;
   align-items: center;
-  transition: background 0.2s;
+  transition: background var(--motion-state) var(--ease-in-out);
 }
 .toggle span {
   width: 19px;
@@ -806,7 +856,7 @@ a svg {
   background: #cad4c1;
   border-radius: 50%;
   box-shadow: 0 1px 3px #0003;
-  transition: transform 0.2s;
+  transition: transform var(--motion-state) var(--ease-in-out);
 }
 .toggle.on {
   background: #a4c884;
@@ -906,8 +956,8 @@ a svg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   border-radius: 7px;
   background: transparent;
   color: #a0b39b;
@@ -934,7 +984,14 @@ a svg {
   font-size: 12px;
   max-width: 680px;
   line-height: 1.65;
-  animation: toast-in 0.2s ease-out;
+  animation: toast-in var(--motion-overlay-exit) var(--ease-out);
+  transition:
+    opacity var(--motion-overlay-exit) var(--ease-out),
+    translate var(--motion-overlay-exit) var(--ease-out);
+}
+.toast.is-closing {
+  opacity: 0;
+  translate: 0 5px;
 }
 dialog {
   color: var(--text);
@@ -943,10 +1000,23 @@ dialog {
   background: #182d22;
   scrollbar-width: thin;
   scrollbar-color: #45603f transparent;
+  opacity: 1;
+  transition:
+    opacity var(--motion-overlay-exit) var(--ease-out),
+    transform var(--motion-overlay-exit) var(--ease-out);
 }
 dialog::backdrop {
   background: #020e0966;
   backdrop-filter: blur(3px);
+  opacity: 1;
+  transition: opacity var(--motion-overlay-exit) var(--ease-out);
+}
+dialog.is-opening,
+dialog.is-closing {
+  opacity: 0;
+}
+dialog.is-closing::backdrop {
+  opacity: 0;
 }
 .modal {
   width: 460px;
@@ -954,6 +1024,11 @@ dialog::backdrop {
   padding: 0;
   max-height: 88dvh;
   max-width: calc(100vw - 40px);
+  transform: scale(1);
+}
+.modal.is-opening,
+.modal.is-closing {
+  transform: scale(0.98);
 }
 .modal .dialog-inside {
   padding: 35px;
@@ -1146,7 +1221,15 @@ dialog::backdrop {
   background: #12291f;
   border-color: #38513d;
   border-radius: 0;
-  animation: drawer-in 0.22s ease-out;
+  transform: translateX(0);
+  transition:
+    transform var(--motion-overlay-enter) var(--ease-out),
+    opacity var(--motion-overlay-exit) var(--ease-out);
+}
+.drawer-dialog.is-opening,
+.drawer-dialog.is-closing {
+  transform: translateX(24px);
+  opacity: 0.5;
 }
 .drawer-dialog::backdrop {
   background: #030d084d;
@@ -1218,7 +1301,7 @@ dialog::backdrop {
   margin-top: 25px;
 }
 .match-start strong {
-  font-size: 30px;
+  font-size: 40px;
   letter-spacing: -1px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
@@ -1409,7 +1492,7 @@ dialog::backdrop {
 }
 .drawer-source small {
   display: block;
-  color: #657f5d;
+  color: #91a78f;
   font-size: 9px;
   line-height: 1.8;
   margin-top: 5px;
@@ -1444,16 +1527,6 @@ dialog::backdrop {
   to {
     opacity: 1;
     translate: 0 0;
-  }
-}
-@keyframes drawer-in {
-  from {
-    translate: 24px 0;
-    opacity: 0.5;
-  }
-  to {
-    translate: 0 0;
-    opacity: 1;
   }
 }
 @media (min-width: 1700px) {
@@ -1586,12 +1659,24 @@ dialog::backdrop {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *:before,
-  *:after {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
+  :root {
+    --motion-press: 0ms;
+    --motion-fast: 0ms;
+    --motion-state: 0ms;
+    --motion-overlay-enter: 80ms;
+    --motion-overlay-exit: 80ms;
+  }
+  button:active:not(:disabled) {
+    transform: none;
+  }
+  .loader {
+    animation-duration: 1.8s;
+  }
+  .drawer-dialog.is-opening,
+  .drawer-dialog.is-closing,
+  .modal.is-opening,
+  .modal.is-closing {
+    transform: none;
   }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -1699,6 +1784,65 @@ dialog::backdrop {
   margin: 36px 0 22px;
   border-top: 1px solid var(--line);
   padding-top: 28px;
+}
+.review-toolbar,
+.review-batchbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.review-toolbar > label:first-child {
+  flex: 1 1 260px;
+}
+.review-toolbar input[type="search"] {
+  width: 100%;
+}
+.review-group-toggle,
+.review-batchbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+.review-batchbar {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #10251c;
+}
+.review-batchbar > span {
+  margin-right: auto;
+  color: var(--muted);
+}
+.review-group + .review-group {
+  margin-top: 24px;
+}
+.review-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.review-group-title small {
+  color: var(--muted);
+  font-weight: 400;
+}
+.review-select {
+  display: inline-flex;
+  min-width: 24px;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+}
+.review-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 22px;
+  color: var(--muted);
 }
 .review-empty {
   padding: 26px 0;

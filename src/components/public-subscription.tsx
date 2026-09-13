@@ -16,7 +16,7 @@ export function PublicSubscription({
   const [selected, setSelected] = useState("");
   const [feed, setFeed] = useState<PublicFeed | null>(null);
   const [error, setError] = useState("");
-  const [unavailable, setUnavailable] = useState(false);
+  const [available, setAvailable] = useState<boolean | null>(null);
   const [retry, setRetry] = useState(0);
   const sourceId = sources.some((s) => s.id === selected)
     ? selected
@@ -24,7 +24,6 @@ export function PublicSubscription({
   useEffect(() => {
     setFeed(null);
     setError("");
-    setUnavailable(false);
     if (!sourceId) return;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -37,13 +36,14 @@ export function PublicSubscription({
           },
         );
         if (controller.signal.aborted) return;
+        setAvailable(true);
         setFeed(next);
         if (next.status === "pending" || next.status === "updating")
           timer = setTimeout(load, 2000);
       } catch (e) {
         if (controller.signal.aborted) return;
         if (e instanceof ApiError && e.code === "DOCUMENT_FEATURE_UNAVAILABLE")
-          setUnavailable(true);
+          setAvailable(false);
         else setError(e instanceof Error ? e.message : "公共日历暂时无法读取");
       }
     };
@@ -68,7 +68,7 @@ export function PublicSubscription({
       setError("未能复制，请选中下方地址手动复制");
     }
   };
-  if (unavailable)
+  if (available === false)
     return (
       <section
         className="public-subscription"
@@ -81,6 +81,19 @@ export function PublicSubscription({
               当前环境可使用下方的个人日历。登录并保存关注后，即可获取个人订阅地址。
             </p>
           </div>
+        </div>
+      </section>
+    );
+  if (sourceId && available === null)
+    return (
+      <section className="public-subscription" aria-live="polite">
+        <div className="public-subscription-heading">
+          <div>
+            <span className="eyebrow">无需登录</span>
+            <h2>正在检查公共日历</h2>
+            <p>确认当前环境可用后，再显示可订阅的球队与赛事。</p>
+          </div>
+          <span className="loader" aria-hidden="true" />
         </div>
       </section>
     );

@@ -287,6 +287,25 @@ export default function CalendarView({
         })),
     [shown],
   );
+  const weekScrollTime = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      timeZone: timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    });
+    const firstMinute = shown.reduce<number | null>((earliest, event) => {
+      if (!event.starts_at) return earliest;
+      const parts = formatter.formatToParts(new Date(event.starts_at));
+      const minuteOfDay =
+        Number(parts.find((part) => part.type === "hour")?.value || 0) * 60 +
+        Number(parts.find((part) => part.type === "minute")?.value || 0);
+      return earliest === null ? minuteOfDay : Math.min(earliest, minuteOfDay);
+    }, null);
+    if (firstMinute === null) return "07:00:00";
+    const scrollMinutes = Math.max(0, firstMinute - 60);
+    return `${String(Math.floor(scrollMinutes / 60)).padStart(2, "0")}:${String(scrollMinutes % 60).padStart(2, "0")}:00`;
+  }, [shown, timezone]);
   const changeView = (value: string) => {
     setView(value);
     if (value !== "agenda") controller.changeView(value);
@@ -394,7 +413,7 @@ export default function CalendarView({
         </div>
       )}
       <div
-        className={`calendar-engine ${view === "agenda" ? "engine-hidden" : ""}`}
+        className={`calendar-engine ${view === "agenda" ? "engine-hidden" : ""} ${view === "timeGridWeek" ? "is-week" : ""}`}
         aria-busy={loading}
       >
         <FullCalendar
@@ -425,7 +444,8 @@ export default function CalendarView({
           showNonCurrentDates={true}
           slotMinTime="00:00:00"
           slotMaxTime="24:00:00"
-          scrollTime="07:00:00"
+          scrollTime={view === "timeGridWeek" ? weekScrollTime : "07:00:00"}
+          scrollTimeReset={true}
           nowIndicator={false}
           allDayText="时间待定"
           eventClick={(info) =>

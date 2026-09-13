@@ -95,18 +95,34 @@ function Modal({
   drawer = false,
   wide = false,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode | ((close: () => void) => React.ReactNode);
   onClose: () => void;
   title: string;
   drawer?: boolean;
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [phase, setPhase] = useState<"opening" | "open" | "closing">(
+    "opening",
+  );
+  const requestClose = useCallback(() => {
+    if (phase === "closing") return;
+    setPhase("closing");
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches
+      ? 80
+      : 200;
+    closeTimer.current = setTimeout(onClose, duration);
+  }, [onClose, phase]);
   useEffect(() => {
     const el = ref.current;
     const previous = document.activeElement as HTMLElement | null;
     el?.showModal();
+    const frame = requestAnimationFrame(() => setPhase("open"));
     return () => {
+      cancelAnimationFrame(frame);
+      if (closeTimer.current) clearTimeout(closeTimer.current);
       el?.close();
       previous?.focus();
     };
@@ -115,16 +131,18 @@ function Modal({
     <dialog
       ref={ref}
       aria-label={title}
-      className={drawer ? "drawer-dialog" : `modal${wide ? " modal-wide" : ""}`}
+      className={`${drawer ? "drawer-dialog" : `modal${wide ? " modal-wide" : ""}`} is-${phase}`}
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        requestClose();
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
-      <div className="dialog-inside">{children}</div>
+      <div className="dialog-inside">
+        {typeof children === "function" ? children(requestClose) : children}
+      </div>
     </dialog>
   );
 }
@@ -133,6 +151,7 @@ export function Dashboard({ page }: { page: string }) {
   const state = useAnke();
   const {
     user,
+    accountReady,
     sources,
     dataset,
     status,
@@ -146,8 +165,10 @@ export function Dashboard({ page }: { page: string }) {
   const [timezone, setTimezone] = useState("Asia/Shanghai");
   const [selected, setSelected] = useState<SportEvent | null>(null);
   const [login, setLogin] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState("");
+  const [toastClosing, setToastClosing] = useState(false);
   const [followDraft, setFollowDraft] = useState<Follow[]>([]);
   const [followReview, setFollowReview] = useState<{
     follows: Follow[];
@@ -215,11 +236,18 @@ export function Dashboard({ page }: { page: string }) {
     }
     previousAccount.current = user?.id ?? null;
   }, [user?.id]);
-  const flash = useCallback((text: string) => setToast(text), []);
+  const flash = useCallback((text: string) => {
+    setToastClosing(false);
+    setToast(text);
+  }, []);
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(""), 4200);
-    return () => clearTimeout(timer);
+    const exitTimer = setTimeout(() => setToastClosing(true), 4000);
+    const removeTimer = setTimeout(() => setToast(""), 4200);
+    return () => {
+      clearTimeout(exitTimer);
+      clearTimeout(removeTimer);
+    };
   }, [toast]);
   useEffect(() => {
     if (user) {
@@ -293,8 +321,22 @@ export function Dashboard({ page }: { page: string }) {
     refresh();
   };
   const savedMessage = () => flash("已保存，订阅源更新中");
+  if (!accountReady) {
+    return (
+      <div className="boot-screen" role="status" aria-live="polite">
+        <span className="brand-icon">
+          <Basketball weight="duotone" size={26} />
+        </span>
+        <span className="loader" />
+        <span>正在准备你的体育日历</span>
+      </div>
+    );
+  }
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        跳到主要内容
+      </a>
       <aside className="sidebar">
         <Link href="/calendar" className="brand" aria-label="Anke Sports 首页">
           <span className="brand-icon">
@@ -341,10 +383,10 @@ export function Dashboard({ page }: { page: string }) {
               )
               .slice(0, 7)
               .map((s) => (
-                <Link href="/following" key={s.id} className="mini-follow">
+                <div key={s.id} className="mini-follow">
                   <TeamMark short={s.short_name} color={s.color} small />
                   <span>{s.name}</span>
-                </Link>
+                </div>
               ))
           ) : (
             <div className="sidebar-empty">
@@ -365,7 +407,7 @@ export function Dashboard({ page }: { page: string }) {
           )}
           <Link className="sidebar-docs" href="/settings">
             <Code size={17} />
-            MCP 与扩展
+            MCP 与连接
             <CaretRight size={12} />
           </Link>
           <a
@@ -380,7 +422,9 @@ export function Dashboard({ page }: { page: string }) {
           </a>
           <button
             className="account-button"
-            onClick={() => (user ? run(logout) : setLogin(true))}
+            aria-haspopup={user ? "dialog" : undefined}
+            aria-expanded={user ? accountOpen : undefined}
+            onClick={() => (user ? setAccountOpen(true) : setLogin(true))}
           >
             <span className="avatar">{user ? "A" : <SignIn size={20} />}</span>
             <span>
@@ -397,7 +441,7 @@ export function Dashboard({ page }: { page: string }) {
           </button>
         </div>
       </aside>
-      <main className="main-content">
+      <main className="main-content" id="main-content" tabIndex={-1}>
         <header className="topbar">
           <div className="breadcrumb">
             <span>Anke Sports</span>
@@ -407,7 +451,8 @@ export function Dashboard({ page }: { page: string }) {
           <div className="topbar-actions">
             <GlobeHemisphereWest size={16} />
             <select
-              aria-label="显示时区"
+              aria-label="临时显示时区（不保存）"
+              title="仅改变当前页面显示；默认时区请在设置中保存"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
             >
@@ -509,6 +554,7 @@ export function Dashboard({ page }: { page: string }) {
               </button>
             </div>
             <label className="search-field">
+              <span className="sr-only">搜索球队或赛事</span>
               <SlidersHorizontal size={18} />
               <input
                 value={followSearch}
@@ -1019,7 +1065,10 @@ export function Dashboard({ page }: { page: string }) {
         )}
       </main>
       {toast && (
-        <div className="toast" role="status">
+        <div
+          className={`toast${toastClosing ? " is-closing" : ""}`}
+          role="status"
+        >
           <Check size={18} />
           {toast}
         </div>
@@ -1032,80 +1081,123 @@ export function Dashboard({ page }: { page: string }) {
             if (!followSaving) setFollowReview(null);
           }}
         >
-          <FollowPreview
-            {...followReview}
-            timezone={timezone}
-            onSaving={setFollowSaving}
-            onClose={() => {
-              if (!followSaving) setFollowReview(null);
-            }}
-            onSaved={() => {
-              setFollowReview(null);
-              refresh();
-              savedMessage();
-            }}
-          />
+          {(close) => (
+            <FollowPreview
+              {...followReview}
+              timezone={timezone}
+              onSaving={setFollowSaving}
+              onClose={() => {
+                if (!followSaving) close();
+              }}
+              onSaved={() => {
+                refresh();
+                savedMessage();
+                close();
+              }}
+            />
+          )}
         </Modal>
       )}
       {login && (
         <Modal title="登录 Anke Sports" onClose={() => setLogin(false)}>
-          <button
-            className="dialog-close"
-            aria-label="关闭登录"
-            onClick={() => setLogin(false)}
-          >
-            <X size={20} />
-          </button>
-          <div className="login-symbol">
-            <Basketball size={38} weight="duotone" />
-          </div>
-          <h2>你的热爱，值得一个位置。</h2>
-          <p>登录后保存关注，创建持续更新的个人体育日历。</p>
-          {status?.firebase_configured && (
-            <GoogleSignIn
-              disabled={busy}
-              onSignedIn={() => {
-                setError("");
-                refresh();
-                setLogin(false);
-              }}
-            />
-          )}
-          {status?.local_preview && (
+          {(close) => (
             <>
               <button
-                className="primary-button full-width"
-                disabled={busy}
-                onClick={() =>
-                  run(
-                    () => mutate("/auth/local", "POST"),
-                    () => {
-                      setLogin(false);
-                      flash("已进入本地体验，操作保存在本机");
-                    },
-                  )
-                }
+                className="dialog-close"
+                aria-label="关闭登录"
+                onClick={close}
               >
-                进入本地体验 <ArrowUpRight size={17} />
+                <X size={20} />
               </button>
-              <small className="modal-note">
-                本机独立体验账号。正式账号由 Firebase 提供。
-              </small>
+              <div className="login-symbol">
+                <Basketball size={38} weight="duotone" />
+              </div>
+              <h2>你的热爱，值得一个位置。</h2>
+              <p>登录后保存关注，创建持续更新的个人体育日历。</p>
+              {status?.firebase_configured && (
+                <GoogleSignIn
+                  disabled={busy}
+                  onSignedIn={() => {
+                    setError("");
+                    refresh();
+                    close();
+                  }}
+                />
+              )}
+              {status?.local_preview && (
+                <>
+                  <button
+                    className="primary-button full-width"
+                    disabled={busy}
+                    onClick={() =>
+                      run(
+                        () => mutate("/auth/local", "POST"),
+                        () => {
+                          close();
+                          flash("已进入本地体验，操作保存在本机");
+                        },
+                      )
+                    }
+                  >
+                    进入本地体验 <ArrowUpRight size={17} />
+                  </button>
+                  <small className="modal-note">
+                    本机独立体验账号。正式账号由 Firebase 提供。
+                  </small>
+                </>
+              )}
+              {!status?.local_preview && !status?.firebase_configured && (
+                <p>登录服务尚未配置。你仍可以浏览公开赛程。</p>
+              )}
             </>
           )}
-          {!status?.local_preview && !status?.firebase_configured && (
-            <p>登录服务尚未配置。你仍可以浏览公开赛程。</p>
+        </Modal>
+      )}
+      {accountOpen && user && (
+        <Modal title="账号" onClose={() => setAccountOpen(false)}>
+          {(close) => (
+            <>
+              <button
+                className="dialog-close"
+                aria-label="关闭账号面板"
+                onClick={close}
+              >
+                <X size={20} />
+              </button>
+              <span className="eyebrow">当前账号</span>
+              <h2>{user.display_name || "Anke Sports 用户"}</h2>
+              <p>退出前会先保留你的关注、订阅地址与个人设置。</p>
+              <div className="modal-actions">
+                <button className="secondary-button" onClick={close}>
+                  继续使用
+                </button>
+                <button
+                  className="danger-button"
+                  disabled={busy}
+                  onClick={() =>
+                    run(logout, () => {
+                      close();
+                      flash("已退出登录");
+                    })
+                  }
+                >
+                  <SignOut size={16} />
+                  退出登录
+                </button>
+              </div>
+            </>
           )}
         </Modal>
       )}
       {selected && (
         <Modal title={selected.title} onClose={closeEvent} drawer>
+          {(close) => (
           <EventDrawer
             event={selected}
             sources={sources}
             timezone={timezone}
             spoilerFree={preferences.spoiler_free}
-            onClose={closeEvent}
+            onClose={close}
             onAdd={() => requireUser(() => setAdding(true))}
             onToggle={() =>
               requireUser(() =>
@@ -1142,15 +1234,17 @@ export function Dashboard({ page }: { page: string }) {
             }
             busy={busy}
           />
+          )}
         </Modal>
       )}
       {adding && selected && (
         <Modal title="附加原始链接" onClose={() => setAdding(false)}>
+          {(close) => (
           <AddLinkForm
             event={selected}
             error={error}
             busy={busy}
-            close={() => setAdding(false)}
+            close={close}
             submit={(values) =>
               run(
                 async () => {
@@ -1158,12 +1252,13 @@ export function Dashboard({ page }: { page: string }) {
                   await reloadEvent();
                 },
                 () => {
-                  setAdding(false);
+                  close();
                   savedMessage();
                 },
               )
             }
           />
+          )}
         </Modal>
       )}
       {confirm && (
@@ -1171,6 +1266,8 @@ export function Dashboard({ page }: { page: string }) {
           title={confirm === "rotate" ? "重新生成订阅地址" : "删除账号"}
           onClose={() => setConfirm(null)}
         >
+          {(close) => (
+          <>
           <h2>
             {confirm === "rotate"
               ? "替换现有订阅地址？"
@@ -1184,7 +1281,7 @@ export function Dashboard({ page }: { page: string }) {
           <div className="modal-actions">
             <button
               className="secondary-button"
-              onClick={() => setConfirm(null)}
+              onClick={close}
             >
               取消
             </button>
@@ -1212,7 +1309,7 @@ export function Dashboard({ page }: { page: string }) {
                     }
                   },
                   () => {
-                    setConfirm(null);
+                    close();
                     flash("操作已完成");
                   },
                 )
@@ -1221,6 +1318,8 @@ export function Dashboard({ page }: { page: string }) {
               确认{confirm === "rotate" ? "重新生成" : "删除"}
             </button>
           </div>
+          </>
+          )}
         </Modal>
       )}
     </div>

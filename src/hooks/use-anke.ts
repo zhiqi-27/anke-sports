@@ -11,9 +11,9 @@ export function useAnke() {
   const [error, setError] = useState("");
   const [epoch, setEpoch] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [accountReady, setAccountReady] = useState(false);
   const userRequest = useRef(0);
   const statusReady = status !== null;
-  const userReady = user !== null;
   const personalPending = Boolean(
     user &&
     (user.feed.status === "updating" ||
@@ -33,6 +33,8 @@ export function useAnke() {
       )
         setUser(null);
       else setError(e instanceof Error ? e.message : "连接失败");
+    } finally {
+      if (request === userRequest.current) setAccountReady(true);
     }
   }, []);
   useEffect(() => {
@@ -86,7 +88,7 @@ export function useAnke() {
     );
     const waitingYouTube = status?.youtube_budget?.state === "waiting";
     if (
-      !userReady ||
+      !accountReady ||
       (!personalPending &&
         !activeProvider &&
         !waitingProvider &&
@@ -126,7 +128,7 @@ export function useAnke() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [userReady, personalPending, status, refreshUser, refresh]);
+  }, [accountReady, personalPending, status, refreshUser, refresh]);
   const run = useCallback(
     async (action: () => Promise<unknown>, success?: () => void) => {
       setBusy(true);
@@ -155,6 +157,7 @@ export function useAnke() {
   };
   return {
     user,
+    accountReady,
     status,
     dataset,
     sources,
