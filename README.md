@@ -2,7 +2,7 @@
 
 选择球队、赛事和YouTube创作者，通过持续更新的日历交付赛程与原始观看链接。原名SportsCal。桌面Web采用Apple Sports视觉语言；不开发原生手机App或播放器。
 
-当前为**公网核心日历链路可用，持续更新待验收**。已连通 Google 登录、F1/NBA/英超目录、F1+马刺+利物浦关注和 Mac Apple 日历订阅；视频与手机验收边界见 STATE，尚未完成公测签收。最新进度见[STATE](STATE.md)，总体顺序见[实施计划](<../anke-sports 文档/Anke_Sports_实施计划.md>)。本仓拥有Web、Chrome扩展和生成的客户端契约；权威业务在独立仓`anke-sports-cloud`。
+当前为**公网核心日历链路可用，持续更新待验收**。已连通 Google 登录、F1/NBA/英超目录、F1+马刺+利物浦关注和 Mac Apple 日历订阅；视频与手机验收边界见 STATE，尚未完成公测签收。最新进度见[STATE](STATE.md)，总体顺序见[实施计划](<../anke-sports 文档/Anke_Sports_实施计划.md>)。本仓拥有桌面Web和生成的客户端契约；权威业务与公网MCP在独立仓`anke-sports-cloud`。
 
 ## 本地启动
 
@@ -35,17 +35,11 @@ npm run contracts
 
 最后一条在相邻服务仓更新`contracts/openapi.json`后运行；不要在没有契约变化时重复生成。依赖解析锁定于`package-lock.json`。CI只检查不部署，当前远端运行结果未在本次刷新中查询。
 
-## Chrome与MCP
-
-```sh
-npm run extension:build
-npm run extension:test
-npm run extension:preview
-```
-
-Chrome有本地包与380×560合成弹窗，实际安装/身份/当前页面权限/休眠仍待验收，详见[扩展说明](extension/README.md)和[证据](extension/evidence.md)。合成预览不具备实际Chrome权限。
+## MCP
 
 MCP在服务端实现，已有本地Codex实际调用证据；[连接说明](../anke-sports-cloud/docs/mcp-and-connections.md)。文档模式OAuth/MCP与Firebase/HTTPS组合尚未闭环。
+
+Chrome扩展已于2026-09-13退出产品与发布范围。`extension/`及`CHROMEWEBSTORE.md`保留既有本地实现和证据，默认检查、发布和支持均不包含它们；只有用户明确要求删除时才清理这些历史文件。
 
 ## 当前范围
 
