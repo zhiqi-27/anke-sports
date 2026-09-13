@@ -478,6 +478,7 @@ export function Dashboard({ page }: { page: string }) {
             sources={sources}
             epoch={epoch}
             signedIn={!!user}
+            accountId={user?.id ?? null}
             onEvent={openEvent}
             onFollowing={() => {
               window.location.href = "/following";
@@ -1042,10 +1043,6 @@ export function Dashboard({ page }: { page: string }) {
               setFollowReview(null);
               refresh();
               savedMessage();
-            }}
-            onReload={() => {
-              setFollowReview(null);
-              refresh();
             }}
           />
         </Modal>

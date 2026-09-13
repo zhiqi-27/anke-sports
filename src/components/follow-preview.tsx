@@ -11,7 +11,6 @@ export function FollowPreview({
   timezone,
   onClose,
   onSaved,
-  onReload,
   onSaving,
 }: {
   follows: Follow[];
@@ -19,12 +18,13 @@ export function FollowPreview({
   timezone: string;
   onClose: () => void;
   onSaved: () => void;
-  onReload: () => void;
   onSaving: (value: boolean) => void;
 }) {
   const [preview, setPreview] = useState<FollowPreviewView | null>(null);
   const [error, setError] = useState("");
   const [conflict, setConflict] = useState("");
+  const [notice, setNotice] = useState("");
+  const [effectiveRevision, setEffectiveRevision] = useState(revision);
   const [retry, setRetry] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -32,6 +32,27 @@ export function FollowPreview({
   const submitting = useRef(false);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const automaticRebases = useRef(0);
+
+  const rebase = async (automatic = false) => {
+    if (automatic && automaticRebases.current >= 2) return false;
+    if (automatic) automaticRebases.current += 1;
+    try {
+      const latest = await api<CalendarUser>("/me/calendar");
+      setPreview(null);
+      setConflict("");
+      setError("");
+      setNotice("关注已在其他页面更新。你的选择已保留，并按最新版本重新计算。");
+      if (latest.revision === effectiveRevision) setRetry((value) => value + 1);
+      else setEffectiveRevision(latest.revision);
+      return true;
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "无法读取最新关注，请重试",
+      );
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (error) errorRef.current?.focus();
@@ -46,7 +67,7 @@ export function FollowPreview({
     setConflict("");
     api<FollowPreviewView>("/me/follows/preview", {
       method: "POST",
-      body: JSON.stringify({ expected_revision: revision, follows }),
+      body: JSON.stringify({ expected_revision: effectiveRevision, follows }),
       signal: controller.signal,
     })
       .then((value) => {
@@ -54,8 +75,15 @@ export function FollowPreview({
         commandKey.current = crypto.randomUUID();
         setPreview(value);
       })
-      .catch((e) => {
+      .catch(async (e) => {
         if (controller.signal.aborted) return;
+        if (
+          e instanceof ApiError &&
+          e.status === 409 &&
+          e.code === "REVISION_CONFLICT" &&
+          (await rebase(true))
+        )
+          return;
         setError(e instanceof Error ? e.message : "暂时无法预览，请重试");
         if (e instanceof ApiError) setConflict(e.code);
       })
@@ -63,7 +91,7 @@ export function FollowPreview({
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [follows, revision, retry]);
+  }, [effectiveRevision, follows, retry]);
 
   const save = async () => {
     if (!preview || submitting.current || conflict) return;
@@ -83,6 +111,13 @@ export function FollowPreview({
       });
       onSaved();
     } catch (e) {
+      if (
+        e instanceof ApiError &&
+        e.status === 409 &&
+        e.code === "REVISION_CONFLICT" &&
+        (await rebase(true))
+      )
+        return;
       setError(e instanceof Error ? e.message : "保存结果尚未确认，请重试");
       if (e instanceof ApiError && e.status === 409) setConflict(e.code);
       // Keep the same command key after an uncertain network result.
@@ -108,6 +143,11 @@ export function FollowPreview({
         这次关注会改变什么
       </h2>
       {loading && <p role="status">正在计算日历变化…</p>}
+      {notice && (
+        <p className="follow-preview-notice" role="status">
+          {notice}
+        </p>
+      )}
       {error && (
         <p
           ref={errorRef}
@@ -233,8 +273,8 @@ export function FollowPreview({
         </button>
         {!loading &&
           (conflict === "REVISION_CONFLICT" ? (
-            <button className="primary-button" onClick={onReload}>
-              重新读取关注
+            <button className="primary-button" onClick={() => void rebase()}>
+              保留选择并重新计算
             </button>
           ) : conflict || !preview ? (
             <button

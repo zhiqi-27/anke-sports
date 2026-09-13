@@ -75,6 +75,7 @@ interface Props {
   sources: Source[];
   epoch: number;
   signedIn: boolean;
+  accountId: string | null;
   onEvent: (e: SportEvent) => void;
   onFollowing: () => void;
 }
@@ -85,6 +86,7 @@ export default function CalendarView({
   sources,
   epoch,
   signedIn,
+  accountId,
   onEvent,
   onFollowing,
 }: Props) {
@@ -102,11 +104,32 @@ export default function CalendarView({
   const [range, setRange] = useState({ from: "", to: "" });
   const [items, setItems] = useState<SportEvent[]>([]);
   const [loadedDataset, setLoadedDataset] = useState("");
-  const [followed, setFollowed] = useState(false);
+  const [followed, setFollowed] = useState(signedIn);
   const [sport, setSport] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [nextEvent, setNextEvent] = useState<SportEvent | null>(null);
+  const [nextState, setNextState] = useState<
+    "idle" | "loading" | "complete" | "error"
+  >("idle");
+  useEffect(() => {
+    if (!signedIn || !accountId) {
+      setFollowed(false);
+      return;
+    }
+    setFollowed(
+      localStorage.getItem(`anke-calendar-scope:${accountId}`) !== "all",
+    );
+  }, [accountId, signedIn]);
+  const selectScope = (nextFollowed: boolean) => {
+    setFollowed(nextFollowed);
+    if (signedIn && accountId)
+      localStorage.setItem(
+        `anke-calendar-scope:${accountId}`,
+        nextFollowed ? "followed" : "all",
+      );
+  };
   const dates = useCallback(
     (info: DatesSetInfo) => {
       const formatter = new Intl.DateTimeFormat("zh-CN", {
@@ -177,6 +200,72 @@ export default function CalendarView({
       ),
     [items, loadedDataset, dataset, sport, search],
   );
+  useEffect(() => {
+    if (
+      loading ||
+      error ||
+      shown.length ||
+      search ||
+      !range.to ||
+      (followed && !signedIn)
+    ) {
+      setNextEvent(null);
+      setNextState("idle");
+      return;
+    }
+    const abort = new AbortController();
+    const from = new Date(range.to);
+    const to = new Date(from);
+    to.setUTCDate(to.getUTCDate() + 180);
+    const query = new URLSearchParams({
+      from: from.toISOString(),
+      to: to.toISOString(),
+      dataset,
+      followed: String(followed && signedIn),
+      limit: "500",
+    });
+    setNextEvent(null);
+    setNextState("loading");
+    async function findNext() {
+      for (let page = 0; page < 20; page++) {
+        const data = await api<{
+          items: SportEvent[];
+          next_cursor: string | null;
+        }>(`/events?${query}`, { signal: abort.signal });
+        const match = data.items.find(
+          (event) => !sport || event.sport === sport,
+        );
+        if (match) return match;
+        if (!data.next_cursor) return null;
+        query.set("cursor", data.next_cursor);
+      }
+      return null;
+    }
+    findNext()
+      .then((event) => {
+        if (!abort.signal.aborted) {
+          setNextEvent(event);
+          setNextState("complete");
+        }
+      })
+      .catch(() => {
+        if (!abort.signal.aborted) {
+          setNextEvent(null);
+          setNextState("error");
+        }
+      });
+    return () => abort.abort();
+  }, [
+    dataset,
+    error,
+    followed,
+    loading,
+    range.to,
+    search,
+    shown.length,
+    signedIn,
+    sport,
+  ]);
   const fcEvents = useMemo(
     () =>
       shown
@@ -260,13 +349,15 @@ export default function CalendarView({
         <div className="scope-switch">
           <button
             className={!followed ? "active" : ""}
-            onClick={() => setFollowed(false)}
+            aria-pressed={!followed}
+            onClick={() => selectScope(false)}
           >
             全部赛事
           </button>
           <button
             className={followed ? "active" : ""}
-            onClick={() => (signedIn ? setFollowed(true) : onFollowing())}
+            aria-pressed={followed}
+            onClick={() => (signedIn ? selectScope(true) : onFollowing())}
           >
             我的关注
           </button>
@@ -460,9 +551,29 @@ export default function CalendarView({
                 : "这个时间段暂无赛程"}
           </strong>
           <span>
-            {dataset === "real"
-              ? "已接入的数据源会持续补充赛程。"
-              : "切换日期，或选择其他赛事筛选。"}
+            {search
+              ? "换一个关键词，或清除运动筛选后再试。"
+              : nextState === "loading"
+                ? "正在查找下一场比赛…"
+                : nextEvent
+                  ? `下一场：${nextEvent.title} · ${new Intl.DateTimeFormat(
+                      "zh-CN",
+                      {
+                        timeZone: timezone,
+                        month: "long",
+                        day: "numeric",
+                        hour: nextEvent.starts_at ? "2-digit" : undefined,
+                        minute: nextEvent.starts_at ? "2-digit" : undefined,
+                      },
+                    ).format(
+                      new Date(
+                        nextEvent.starts_at ||
+                          `${nextEvent.local_date}T12:00:00`,
+                      ),
+                    )}`
+                  : nextState === "error"
+                    ? "暂时无法查询下一场比赛，可切换日期后再试。"
+                    : "已检查随后 180 天的已接入赛程，暂时没有匹配比赛。"}
           </span>
           {followed && (
             <button className="text-button" onClick={onFollowing}>
