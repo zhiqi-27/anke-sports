@@ -20,7 +20,7 @@ npm run dev
 ## 现有检查入口
 
 - [3000主日历](http://127.0.0.1:3000/calendar)：SQL本地基线。
-- [3008创作者](http://localhost:3008/creators)与[个人订阅](http://localhost:3008/subscription)：文档模式合成预览，不是全功能云端版。公共订阅尚未开放时明确引导个人订阅。
+- [3008创作者](http://localhost:3008/creators)与[个人订阅](http://localhost:3008/subscription)：文档模式合成预览，不是全功能云端版。订阅页只提供登录后的个人日历。
 - [3007 F1样本](http://localhost:3007/calendar)：独立Provider批次后端；进入本地体验并选择真实赛程。
 
 3000已于2026-09-13重新启动并完成P0本地验收，验收后停止；3007/3008仍是历史入口，当前存活状态须重新检查。最新[P0日历证据](output/playwright/p0-calendar-experience-2026-09-13.md)覆盖默认筛选、空状态、冲突重算与三种桌面尺寸；既有[UI/ICS证据](output/playwright/lean-check-2026-09-10.md)包含12条唯一事件下载。

@@ -46,7 +46,6 @@ import type {
   SportEvent,
 } from "@/lib/types";
 import { BroadcastManager } from "./broadcast-manager";
-import { PublicSubscription } from "./public-subscription";
 import { FollowPreview } from "./follow-preview";
 import { CreatorManager } from "./creator-manager";
 import { ConnectionManager } from "./connections";
@@ -813,7 +812,6 @@ export function Dashboard({ page }: { page: string }) {
         )}
         {page === "subscription" && (
           <div className="management-page subscription-page">
-            <PublicSubscription sources={sources} flash={flash} />
             <div className="feed-card">
               <div className="feed-art">
                 <CalendarBlank size={40} weight="duotone" />
