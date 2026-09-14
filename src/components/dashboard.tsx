@@ -81,7 +81,7 @@ const pageInfo: Record<string, [string, string]> = {
 
 function canFollowDirectly(source: Source) {
   return (
-    source.kind === "team" ||
+    (source.kind === "team" && source.sport !== "racing") ||
     (source.kind === "competition" && source.sport === "racing")
   );
 }
@@ -229,6 +229,30 @@ export function Dashboard({ page }: { page: string }) {
       ),
     [sources],
   );
+  const selectedLeague = leagueDirectories.find(
+    (league) => league.id === selectedLeagueId,
+  );
+  const selectedLeagueTeams = useMemo(() => {
+    if (!selectedLeague) return [];
+    const query = followSearch.trim().toLowerCase();
+    return followableSources.filter(
+      (source) =>
+        source.kind === "team" &&
+        source.sport === selectedLeague.sport &&
+        (source.name + source.short_name).toLowerCase().includes(query),
+    );
+  }, [followSearch, followableSources, selectedLeague]);
+  const blockedFollowCount = useMemo(() => {
+    if (!user) return 0;
+    const blocked = new Set(
+      sources
+        .filter((source) => !canFollowDirectly(source))
+        .map((source) => source.id),
+    );
+    return user.config.follows.filter((follow) =>
+      blocked.has(follow.source_key),
+    ).length;
+  }, [sources, user]);
   const [preferences, setPreferences] = useState<Preferences>({
     timezone: "Asia/Shanghai",
     locale: "zh-CN",
@@ -306,17 +330,21 @@ export function Dashboard({ page }: { page: string }) {
     if (user) {
       setTimezone(user.config.preferences.timezone);
       setPreferences(user.config.preferences);
-      setFollowDraft(
-        pendingGuestFollows.current
-          ? Array.from(
-              new Map(
-                [...user.config.follows, ...pendingGuestFollows.current].map(
-                  (f) => [f.source_key, f],
-                ),
-              ).values(),
-            )
-          : user.config.follows,
-      );
+      const pendingFollows = pendingGuestFollows.current;
+      const nextFollows = pendingFollows
+        ? Array.from(
+            new Map(
+              [...user.config.follows, ...pendingFollows].map((follow) => [
+                follow.source_key,
+                follow,
+              ]),
+            ).values(),
+          )
+        : user.config.follows;
+      setFollowDraft(nextFollows);
+      if (pendingFollows) {
+        setFollowReview({ follows: nextFollows, revision: user.revision });
+      }
       pendingGuestFollows.current = null;
     }
   }, [user?.revision, user?.id]); // Preferences refresh only after authoritative configuration changes.
@@ -614,7 +642,11 @@ export function Dashboard({ page }: { page: string }) {
               </div>
               <button
                 className="primary-button"
-                disabled={busy || (!!user && !followChanged)}
+                disabled={
+                  busy ||
+                  (!user && !followDraft.length) ||
+                  (!!user && !followChanged)
+                }
                 onClick={() =>
                   requireUser(() =>
                     setFollowReview({
@@ -625,18 +657,9 @@ export function Dashboard({ page }: { page: string }) {
                 }
               >
                 <Check size={16} />
-                {!user ? "保存我的关注" : followChanged ? "预览变更" : "已保存"}
+                {!user ? "登录并保存" : followChanged ? "预览变更" : "已保存"}
               </button>
             </div>
-            <label className="search-field">
-              <span className="sr-only">搜索球队或赛事</span>
-              <SlidersHorizontal size={18} />
-              <input
-                value={followSearch}
-                onChange={(e) => setFollowSearch(e.target.value)}
-                placeholder="搜索球队或赛事"
-              />
-            </label>
             <section className="source-section">
               <h3>
                 关注赛事
@@ -650,13 +673,7 @@ export function Dashboard({ page }: { page: string }) {
               </h3>
               <div className="source-grid">
                 {followableSources
-                  .filter(
-                    (source) =>
-                      source.kind === "competition" &&
-                      (source.name + source.short_name)
-                        .toLowerCase()
-                        .includes(followSearch.toLowerCase()),
-                  )
+                  .filter((source) => source.kind === "competition")
                   .map((source) => (
                     <FollowSourceCard
                       key={source.id}
@@ -672,12 +689,7 @@ export function Dashboard({ page }: { page: string }) {
             <section className="source-section">
               <h3>
                 按联赛选择球队
-                <small>
-                  {
-                    followableSources.filter((source) => source.kind === "team")
-                      .length
-                  }
-                </small>
+                <small>{leagueDirectories.length}</small>
               </h3>
               <div className="league-picker">
                 {leagueDirectories.map((league) => {
@@ -686,14 +698,24 @@ export function Dashboard({ page }: { page: string }) {
                     (source) =>
                       source.kind === "team" && source.sport === league.sport,
                   ).length;
+                  const selectedCount = followDraft.filter((follow) =>
+                    followableSources.some(
+                      (source) =>
+                        source.id === follow.source_key &&
+                        source.kind === "team" &&
+                        source.sport === league.sport,
+                    ),
+                  ).length;
                   return (
                     <button
                       className={`league-card ${expanded ? "expanded" : ""}`}
                       key={league.id}
                       aria-expanded={expanded}
-                      onClick={() =>
-                        setSelectedLeagueId(expanded ? "" : league.id)
-                      }
+                      aria-controls={`league-teams-${league.id}`}
+                      onClick={() => {
+                        setFollowSearch("");
+                        setSelectedLeagueId(expanded ? "" : league.id);
+                      }}
                     >
                       <TeamMark
                         short={league.short_name}
@@ -701,29 +723,40 @@ export function Dashboard({ page }: { page: string }) {
                       />
                       <span>
                         <b>{league.name}</b>
-                        <small>{teamCount} 支球队</small>
+                        <small>
+                          {teamCount} 支球队
+                          {selectedCount ? ` · 已选 ${selectedCount}` : ""}
+                        </small>
                       </span>
                       <CaretRight size={17} />
                     </button>
                   );
                 })}
               </div>
-              {selectedLeagueId ? (
-                <div className="source-grid league-team-grid">
-                  {followableSources
-                    .filter((source) => {
-                      const league = leagueDirectories.find(
-                        (candidate) => candidate.id === selectedLeagueId,
-                      );
-                      return (
-                        source.kind === "team" &&
-                        source.sport === league?.sport &&
-                        (source.name + source.short_name)
-                          .toLowerCase()
-                          .includes(followSearch.toLowerCase())
-                      );
-                    })
-                    .map((source) => (
+              {selectedLeague ? (
+                <div
+                  className="league-team-panel"
+                  id={`league-teams-${selectedLeague.id}`}
+                  aria-live="polite"
+                >
+                  <div className="league-team-toolbar">
+                    <strong>{selectedLeague.short_name} 球队</strong>
+                    <label className="search-field">
+                      <span className="sr-only">
+                        搜索{selectedLeague.short_name}球队
+                      </span>
+                      <SlidersHorizontal size={18} />
+                      <input
+                        value={followSearch}
+                        onChange={(event) =>
+                          setFollowSearch(event.target.value)
+                        }
+                        placeholder={`搜索${selectedLeague.short_name}球队`}
+                      />
+                    </label>
+                  </div>
+                  <div className="source-grid">
+                    {selectedLeagueTeams.map((source) => (
                       <FollowSourceCard
                         key={source.id}
                         source={source}
@@ -733,11 +766,24 @@ export function Dashboard({ page }: { page: string }) {
                         onToggle={() => toggleFollow(source)}
                       />
                     ))}
+                  </div>
+                  {!selectedLeagueTeams.length && (
+                    <p className="league-picker-empty">没有找到对应球队。</p>
+                  )}
                 </div>
               ) : (
                 <p className="league-picker-empty">选择一个联赛后查看球队。</p>
               )}
             </section>
+            {blockedFollowCount > 0 && (
+              <div className="info-note follow-migration-note" role="status">
+                <WarningCircle size={18} />
+                <span>
+                  检测到 {blockedFollowCount}{" "}
+                  个旧的整联赛关注；预览并保存后会按新规则移除。
+                </span>
+              </div>
+            )}
             {!followableSources.length && (
               <Empty
                 icon={<Star size={34} />}
