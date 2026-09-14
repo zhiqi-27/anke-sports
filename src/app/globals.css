@@ -518,6 +518,58 @@ a svg {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
 }
+.league-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.league-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  text-align: left;
+  background: var(--color-surface);
+  border: var(--rule-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  min-height: 72px;
+}
+.league-card:hover,
+.league-card.expanded {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
+}
+.league-card > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.league-card b,
+.league-card small {
+  display: block;
+}
+.league-card b {
+  font-size: 13px;
+  font-weight: 550;
+}
+.league-card small {
+  margin-top: var(--space-1);
+  color: var(--color-text-disabled);
+  font-size: 10px;
+}
+.league-card > svg {
+  transition: transform var(--dur-state) var(--ease-out);
+}
+.league-card.expanded > svg {
+  transform: rotate(90deg);
+}
+.league-team-grid {
+  margin-top: var(--space-4);
+}
+.league-picker-empty {
+  margin-top: var(--space-4);
+  color: var(--color-text-disabled);
+  font-size: 12px;
+}
 .source-card {
   display: flex;
   align-items: center;

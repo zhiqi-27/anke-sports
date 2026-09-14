@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Basketball,
   CalendarBlank,
@@ -78,6 +78,51 @@ const pageInfo: Record<string, [string, string]> = {
   settings: ["设置", ""],
   maintenance: ["直播入口维护", "核对来源、场次与兼容性证据。"],
 };
+
+function canFollowDirectly(source: Source) {
+  return (
+    source.kind === "team" ||
+    (source.kind === "competition" && source.sport === "racing")
+  );
+}
+
+function FollowSourceCard({
+  source,
+  checked,
+  onToggle,
+}: {
+  source: Source;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      className={`source-card ${checked ? "chosen" : ""}`}
+      onClick={onToggle}
+      aria-pressed={checked}
+    >
+      <TeamMark
+        short={source.short_name}
+        color={source.color}
+        logoUrl={source.logo_url}
+      />
+      <span>
+        <b>{source.name}</b>
+        <small>
+          {source.sport === "basketball"
+            ? "篮球"
+            : source.sport === "football"
+              ? "足球"
+              : "赛车"}
+          {source.demo ? " · 演示" : ""}
+        </small>
+      </span>
+      <span className="check-circle">
+        {checked ? <Check size={14} /> : <Plus size={14} />}
+      </span>
+    </button>
+  );
+}
 
 function Modal({
   children,
@@ -166,6 +211,24 @@ export function Dashboard({ page }: { page: string }) {
   const [followSaving, setFollowSaving] = useState(false);
   const pendingGuestFollows = useRef<Follow[] | null>(null);
   const [followSearch, setFollowSearch] = useState("");
+  const [selectedLeagueId, setSelectedLeagueId] = useState("");
+  const followableSources = useMemo(
+    () => sources.filter(canFollowDirectly),
+    [sources],
+  );
+  const leagueDirectories = useMemo(
+    () =>
+      sources.filter(
+        (source) =>
+          source.kind === "competition" &&
+          source.sport !== "racing" &&
+          sources.some(
+            (candidate) =>
+              candidate.kind === "team" && candidate.sport === source.sport,
+          ),
+      ),
+    [sources],
+  );
   const [preferences, setPreferences] = useState<Preferences>({
     timezone: "Asia/Shanghai",
     locale: "zh-CN",
@@ -210,6 +273,7 @@ export function Dashboard({ page }: { page: string }) {
       setImportPreview(null);
       setImportMode("merge");
       setFollowSearch("");
+      setSelectedLeagueId("");
       setFollowSaving(false);
       setAdding(false);
       setConfirm(null);
@@ -256,6 +320,24 @@ export function Dashboard({ page }: { page: string }) {
       pendingGuestFollows.current = null;
     }
   }, [user?.revision, user?.id]); // Preferences refresh only after authoritative configuration changes.
+  useEffect(() => {
+    if (!sources.length) return;
+    const blocked = new Set(
+      sources
+        .filter((source) => !canFollowDirectly(source))
+        .map((source) => source.id),
+    );
+    setFollowDraft((current) =>
+      current.filter((follow) => !blocked.has(follow.source_key)),
+    );
+  }, [sources]);
+  useEffect(() => {
+    if (
+      selectedLeagueId &&
+      !leagueDirectories.some((league) => league.id === selectedLeagueId)
+    )
+      setSelectedLeagueId("");
+  }, [leagueDirectories, selectedLeagueId]);
   const openEvent = useCallback((event: SportEvent) => {
     setSelected(event);
     const url = new URL(window.location.href);
@@ -528,7 +610,7 @@ export function Dashboard({ page }: { page: string }) {
             <div className="section-toolbar">
               <div>
                 <h2>球队与赛事</h2>
-                <p>关注球队，也可以一次订阅整个联赛。</p>
+                <p>F1 可整体关注；英超、NBA 请选择球队。</p>
               </div>
               <button
                 className="primary-button"
@@ -555,58 +637,108 @@ export function Dashboard({ page }: { page: string }) {
                 placeholder="搜索球队或赛事"
               />
             </label>
-            {["competition", "team"].map((kind) => (
-              <section className="source-section" key={kind}>
-                <h3>
-                  {kind === "competition" ? "关注赛事" : "关注球队"}
-                  <small>{sources.filter((s) => s.kind === kind).length}</small>
-                </h3>
-                <div className="source-grid">
-                  {sources
-                    .filter(
-                      (s) =>
-                        s.kind === kind &&
-                        (s.name + s.short_name)
-                          .toLowerCase()
-                          .includes(followSearch.toLowerCase()),
-                    )
-                    .map((source) => {
-                      const checked = followDraft.some(
-                        (f) => f.source_key === source.id,
+            <section className="source-section">
+              <h3>
+                关注赛事
+                <small>
+                  {
+                    followableSources.filter(
+                      (source) => source.kind === "competition",
+                    ).length
+                  }
+                </small>
+              </h3>
+              <div className="source-grid">
+                {followableSources
+                  .filter(
+                    (source) =>
+                      source.kind === "competition" &&
+                      (source.name + source.short_name)
+                        .toLowerCase()
+                        .includes(followSearch.toLowerCase()),
+                  )
+                  .map((source) => (
+                    <FollowSourceCard
+                      key={source.id}
+                      source={source}
+                      checked={followDraft.some(
+                        (follow) => follow.source_key === source.id,
+                      )}
+                      onToggle={() => toggleFollow(source)}
+                    />
+                  ))}
+              </div>
+            </section>
+            <section className="source-section">
+              <h3>
+                按联赛选择球队
+                <small>
+                  {
+                    followableSources.filter((source) => source.kind === "team")
+                      .length
+                  }
+                </small>
+              </h3>
+              <div className="league-picker">
+                {leagueDirectories.map((league) => {
+                  const expanded = league.id === selectedLeagueId;
+                  const teamCount = followableSources.filter(
+                    (source) =>
+                      source.kind === "team" && source.sport === league.sport,
+                  ).length;
+                  return (
+                    <button
+                      className={`league-card ${expanded ? "expanded" : ""}`}
+                      key={league.id}
+                      aria-expanded={expanded}
+                      onClick={() =>
+                        setSelectedLeagueId(expanded ? "" : league.id)
+                      }
+                    >
+                      <TeamMark
+                        short={league.short_name}
+                        color={league.color}
+                      />
+                      <span>
+                        <b>{league.name}</b>
+                        <small>{teamCount} 支球队</small>
+                      </span>
+                      <CaretRight size={17} />
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedLeagueId ? (
+                <div className="source-grid league-team-grid">
+                  {followableSources
+                    .filter((source) => {
+                      const league = leagueDirectories.find(
+                        (candidate) => candidate.id === selectedLeagueId,
                       );
                       return (
-                        <button
-                          className={`source-card ${checked ? "chosen" : ""}`}
-                          key={source.id}
-                          onClick={() => toggleFollow(source)}
-                          aria-pressed={checked}
-                        >
-                          <TeamMark
-                            short={source.short_name}
-                            color={source.color}
-                            logoUrl={source.logo_url}
-                          />
-                          <span>
-                            <b>{source.name}</b>
-                            <small>
-                              {source.sport === "basketball"
-                                ? "篮球"
-                                : source.sport === "football"
-                                  ? "足球"
-                                  : "赛车"}
-                              {source.demo ? " · 演示" : ""}
-                            </small>
-                          </span>
-                          <span className="check-circle">
-                            {checked ? <Check size={14} /> : <Plus size={14} />}
-                          </span>
-                        </button>
+                        source.kind === "team" &&
+                        source.sport === league?.sport &&
+                        (source.name + source.short_name)
+                          .toLowerCase()
+                          .includes(followSearch.toLowerCase())
                       );
-                    })}
+                    })
+                    .map((source) => (
+                      <FollowSourceCard
+                        key={source.id}
+                        source={source}
+                        checked={followDraft.some(
+                          (follow) => follow.source_key === source.id,
+                        )}
+                        onToggle={() => toggleFollow(source)}
+                      />
+                    ))}
                 </div>
-              </section>
-            ))}
-            {!sources.length && (
+              ) : (
+                <p className="league-picker-empty">选择一个联赛后查看球队。</p>
+              )}
+            </section>
+            {!followableSources.length && (
               <Empty
                 icon={<Star size={34} />}
                 title="还没有可关注的赛事"
