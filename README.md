@@ -2,7 +2,7 @@
 
 选择球队、赛事和YouTube创作者，通过持续更新的日历交付赛程与原始观看链接。原名SportsCal。桌面Web采用Apple Sports视觉语言；不开发原生手机App或播放器。
 
-当前为**公网核心日历链路可用，持续更新待验收**。已连通 Google 登录、F1/NBA/英超目录、F1+马刺+利物浦关注和 Mac Apple 日历订阅；视频与手机验收边界见 STATE，尚未完成公测签收。最新进度见[STATE](STATE.md)，总体顺序见[实施计划](<../anke-sports 文档/Anke_Sports_实施计划.md>)。本仓拥有桌面Web和生成的客户端契约；权威业务与公网MCP在独立仓`anke-sports-cloud`。
+当前为**公网核心日历链路可用，持续更新待验收**。已连通 Google 登录、F1/NBA/英超目录、个人关注和 Mac Apple 日历订阅；最近公网只读证据为马刺、利物浦，无F1；视频与手机验收边界见 STATE，尚未完成公测签收。最新进度见[STATE](STATE.md)，总体顺序见[实施计划](<../anke-sports 文档/Anke_Sports_实施计划.md>)。本仓拥有桌面Web和生成的客户端契约；权威业务与公网MCP在独立仓`anke-sports-cloud`。
 
 ## 本地启动
 
