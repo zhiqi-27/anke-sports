@@ -54,6 +54,8 @@
   --color-text-muted: oklch(74% 0.015 140);
   --color-text-subtle: oklch(66% 0.018 140);
   --color-text-disabled: oklch(54% 0.015 140);
+  --color-shell-divider: oklch(25% 0.01 145);
+  --color-content-divider: oklch(28% 0.01 145);
   --color-border: oklch(38% 0.012 145);
   --color-border-strong: oklch(58% 0.015 145);
 

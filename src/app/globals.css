@@ -180,7 +180,7 @@ a svg {
 .sidebar {
   padding: var(--space-8) var(--space-4) 0;
   background: var(--color-sidebar);
-  border-right: var(--rule-thin) solid var(--color-border);
+  border-right: var(--rule-thin) solid var(--color-shell-divider);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -565,7 +565,7 @@ a svg {
 .league-team-panel {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
-  border-top: var(--rule-thin) solid var(--color-border);
+  border-top: var(--rule-thin) solid var(--color-content-divider);
 }
 .league-team-toolbar {
   display: flex;
@@ -766,7 +766,7 @@ a svg {
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-6) 0;
-  border-bottom: var(--rule-thin) solid var(--color-border);
+  border-bottom: var(--rule-thin) solid var(--color-content-divider);
 }
 .creator-avatar {
   width: 46px;
@@ -847,7 +847,7 @@ a svg {
 }
 .subscription-guide-list {
   margin-bottom: var(--space-7);
-  border-block: var(--rule-thin) solid var(--color-border);
+  border-block: var(--rule-thin) solid var(--color-content-divider);
 }
 .subscription-guide-row {
   min-height: 76px;
@@ -858,7 +858,7 @@ a svg {
   padding: var(--space-4) var(--space-1);
 }
 .subscription-guide-row + .subscription-guide-row {
-  border-top: var(--rule-thin) solid var(--color-border);
+  border-top: var(--rule-thin) solid var(--color-content-divider);
 }
 .subscription-guide-row > svg {
   color: var(--color-accent);
@@ -881,7 +881,7 @@ a svg {
 }
 .settings-list {
   margin: var(--space-3) 0 var(--space-6);
-  border-top: var(--rule-thin) solid var(--color-border);
+  border-top: var(--rule-thin) solid var(--color-content-divider);
 }
 .setting-row {
   display: flex;
@@ -889,7 +889,7 @@ a svg {
   justify-content: space-between;
   gap: var(--space-6);
   padding: var(--space-6) 0;
-  border-bottom: var(--rule-thin) solid var(--color-border);
+  border-bottom: var(--rule-thin) solid var(--color-content-divider);
 }
 .setting-row h3 {
   font-size: 13px;
@@ -1403,7 +1403,7 @@ dialog.is-closing::backdrop {
   margin-top: var(--space-4);
 }
 .match-facts {
-  border-top: var(--rule-thin) solid var(--color-border);
+  border-top: var(--rule-thin) solid var(--color-content-divider);
   margin-top: var(--space-2);
   padding-top: var(--space-5);
   display: flex;
@@ -1558,7 +1558,7 @@ dialog.is-closing::backdrop {
   gap: var(--space-2);
   font-size: 10px;
   color: var(--color-text-disabled);
-  border-top: var(--rule-thin) solid var(--color-border);
+  border-top: var(--rule-thin) solid var(--color-content-divider);
   padding-top: var(--space-5);
   margin-top: var(--space-4);
 }
@@ -1844,8 +1844,6 @@ dialog.is-closing::backdrop {
 }
 .review-section {
   margin: var(--space-8) 0 var(--space-6);
-  border-top: var(--rule-thin) solid var(--color-border);
-  padding-top: var(--space-7);
 }
 .review-toolbar,
 .review-batchbar {

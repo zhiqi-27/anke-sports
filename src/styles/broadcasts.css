@@ -169,7 +169,7 @@
 .broadcast-maintain,
 .broadcast-device,
 .broadcast-audit {
-  border-top: var(--rule-thin) solid var(--color-border);
+  border-top: var(--rule-thin) solid var(--color-content-divider);
   padding-top: var(--space-5);
   margin-top: var(--space-6);
 }
@@ -223,7 +223,7 @@
 .broadcast-evidence {
   margin: var(--space-2) 0 0;
   padding: var(--space-2) 0;
-  border-top: var(--rule-thin) solid var(--color-border);
+  border-top: var(--rule-thin) solid var(--color-content-divider);
   font-size: 11px;
   line-height: 1.7;
   color: var(--color-text-muted);
