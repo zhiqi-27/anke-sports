@@ -16,7 +16,8 @@
 
 ## 开发环境回读
 
-- Cloudflare Worker `bb25fee6-1592-4095-82b6-90203f505269` 已发布，上一版本 `a87681cd-476e-41b3-9e08-c287e8d25bc4` 可用于回滚。
+- Cloudflare Worker `5c7c9bc3-6585-4601-9b88-703e806ca926` 已从干净提交 `ff37f9d` 构建并发布，上一已知干净版本 `a87681cd-476e-41b3-9e08-c287e8d25bc4` 可用于回滚。
 - 公网 `/subscription` HTTP 200；匿名浏览器只显示个人日历登录/创建状态、个人订阅管理及 Apple/Google 日历说明。
 - 网络请求中没有 `/api/v1/public-feed`；匿名 `/api/v1/me/calendar` 返回预期的 401。
 - 公网以 `jolpica:f1` 查询保留的公共 Feed 路由，HTTP 200 且业务状态为 `unavailable`，与空白名单一致。
+- 公网 CSS 与干净构建产物的 SHA-256 均为 `456f2083a0a4ee5671dbc892c2294ca391de078d6ee2562bc3923c602f02a1fa`；并行工作区中的未提交视觉 Token 修改没有进入最终版本。
