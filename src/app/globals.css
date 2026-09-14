@@ -2011,15 +2011,22 @@ dialog.is-closing::backdrop {
 .public-subscription p {
   font-size: 12px;
 }
-.public-subscription label {
+.public-subscription label,
+.public-source-picker {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   font-size: 11px;
 }
+.public-source-picker > span {
+  color: var(--color-text-subtle);
+}
 .public-subscription select {
   width: 240px;
   max-width: 100%;
+}
+.public-source-picker .schedule-source-picker {
+  align-items: stretch;
 }
 .public-feed-state {
   margin: var(--space-5) 0 var(--space-4);
@@ -2050,8 +2057,12 @@ dialog.is-closing::backdrop {
     flex-direction: column;
     gap: var(--space-4);
   }
-  .public-subscription select {
+  .public-subscription select,
+  .public-source-picker .schedule-source-picker {
     width: 100%;
+  }
+  .public-source-picker .schedule-source-picker {
+    flex-direction: column;
   }
 }
 

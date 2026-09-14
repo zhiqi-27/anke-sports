@@ -69,7 +69,8 @@
   min-height: 47px;
   color: var(--color-text-subtle);
 }
-.calendar-filters > select {
+.calendar-filters > select,
+.calendar-source-picker select {
   padding: var(--space-1) 0;
   font-size: 11px;
   border: 0;
@@ -77,8 +78,14 @@
   max-width: 110px;
   color: var(--color-text-subtle);
 }
-.calendar-filters > select.guest-schedule-select {
-  max-width: 220px;
+.schedule-source-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.calendar-source-picker select {
+  max-width: 140px;
 }
 .calendar-search {
   margin-left: auto;

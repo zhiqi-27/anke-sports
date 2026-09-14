@@ -19,6 +19,10 @@ import {
 } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import type { Source, SportEvent } from "@/lib/types";
+import {
+  defaultScheduleSourceId,
+  ScheduleSourcePicker,
+} from "./schedule-source-picker";
 
 export const sportNames: Record<string, string> = {
   basketball: "篮球",
@@ -137,14 +141,7 @@ export default function CalendarView({
     if (signedIn || !guestSources.length) return;
     setGuestSourceId((current) => {
       if (guestSources.some((source) => source.id === current)) return current;
-      return (
-        guestSources.find(
-          (source) =>
-            source.kind === "competition" &&
-            (source.id === "jolpica:f1" ||
-              source.short_name.toUpperCase() === "F1"),
-        ) || guestSources[0]
-      ).id;
+      return defaultScheduleSourceId(guestSources) || guestSources[0].id;
     });
   }, [dataset, guestSources, signedIn]);
   const guestSource = guestSources.find(
@@ -176,7 +173,14 @@ export default function CalendarView({
     [timezone],
   );
   useEffect(() => {
-    if (!range.from || (!signedIn && !guestSourceId)) return;
+    if (!range.from) return;
+    if (!signedIn && !guestSourceId) {
+      setItems([]);
+      setLoadedDataset(dataset);
+      setLoading(false);
+      setError("");
+      return;
+    }
     const abort = new AbortController();
     setLoading(true);
     setError("");
@@ -222,7 +226,14 @@ export default function CalendarView({
     [items, loadedDataset, dataset, signedIn, sport, search],
   );
   useEffect(() => {
-    if (loading || error || shown.length || search || !range.to) {
+    if (
+      loading ||
+      error ||
+      shown.length ||
+      search ||
+      !range.to ||
+      (!signedIn && !guestSourceId)
+    ) {
       setNextEvent(null);
       setNextState("idle");
       return;
@@ -394,56 +405,12 @@ export default function CalendarView({
             ))}
           </select>
         ) : (
-          <select
-            className="guest-schedule-select"
-            aria-label="选择赛程"
-            value={guestSourceId}
-            onChange={(event) => setGuestSourceId(event.target.value)}
-            disabled={!guestSources.length}
-          >
-            {!guestSources.length && <option value="">正在读取赛程</option>}
-            {guestSources.some((source) => source.kind === "competition") && (
-              <optgroup label="赛事">
-                {guestSources
-                  .filter((source) => source.kind === "competition")
-                  .map((source) => (
-                    <option key={source.id} value={source.id}>
-                      {source.name}
-                    </option>
-                  ))}
-              </optgroup>
-            )}
-            {Object.entries(sportNames)
-              .filter(([sportKey]) =>
-                guestSources.some(
-                  (source) =>
-                    source.kind === "team" && source.sport === sportKey,
-                ),
-              )
-              .map(([sportKey, sportName]) => {
-                const competition = sources.find(
-                  (source) =>
-                    source.kind === "competition" && source.sport === sportKey,
-                );
-                return (
-                  <optgroup
-                    key={sportKey}
-                    label={`${competition?.short_name || sportName}球队`}
-                  >
-                    {guestSources
-                      .filter(
-                        (source) =>
-                          source.kind === "team" && source.sport === sportKey,
-                      )
-                      .map((source) => (
-                        <option key={source.id} value={source.id}>
-                          {source.name}
-                        </option>
-                      ))}
-                  </optgroup>
-                );
-              })}
-          </select>
+          <ScheduleSourcePicker
+            sources={sources}
+            selectedSourceId={guestSourceId}
+            onSelect={setGuestSourceId}
+            className="calendar-source-picker"
+          />
         )}
         <label className="calendar-search">
           <MagnifyingGlass size={16} />
@@ -615,36 +582,40 @@ export default function CalendarView({
         <div className="calendar-empty">
           <CalendarBlank size={30} />
           <strong>
-            {search
-              ? "没有找到对应比赛"
-              : signedIn
-                ? "这个时间段还没有关注的比赛"
-                : `${guestSource?.name || "所选对象"}在这个时间段暂无赛程`}
+            {!signedIn && !guestSourceId
+              ? "请选择一支球队"
+              : search
+                ? "没有找到对应比赛"
+                : signedIn
+                  ? "这个时间段还没有关注的比赛"
+                  : `${guestSource?.name || "所选对象"}在这个时间段暂无赛程`}
           </strong>
           <span>
-            {search
-              ? "换一个关键词，或清除运动筛选后再试。"
-              : nextState === "loading"
-                ? "正在查找下一场比赛…"
-                : nextEvent
-                  ? `下一场：${nextEvent.title} · ${new Intl.DateTimeFormat(
-                      "zh-CN",
-                      {
-                        timeZone: timezone,
-                        month: "long",
-                        day: "numeric",
-                        hour: nextEvent.starts_at ? "2-digit" : undefined,
-                        minute: nextEvent.starts_at ? "2-digit" : undefined,
-                      },
-                    ).format(
-                      new Date(
-                        nextEvent.starts_at ||
-                          `${nextEvent.local_date}T12:00:00`,
-                      ),
-                    )}`
-                  : nextState === "error"
-                    ? "暂时无法查询下一场比赛，可切换日期后再试。"
-                    : "已检查随后 180 天的已接入赛程，暂时没有匹配比赛。"}
+            {!signedIn && !guestSourceId
+              ? "选择 NBA 或英超球队后，这里会显示对应赛程。"
+              : search
+                ? "换一个关键词，或清除运动筛选后再试。"
+                : nextState === "loading"
+                  ? "正在查找下一场比赛…"
+                  : nextEvent
+                    ? `下一场：${nextEvent.title} · ${new Intl.DateTimeFormat(
+                        "zh-CN",
+                        {
+                          timeZone: timezone,
+                          month: "long",
+                          day: "numeric",
+                          hour: nextEvent.starts_at ? "2-digit" : undefined,
+                          minute: nextEvent.starts_at ? "2-digit" : undefined,
+                        },
+                      ).format(
+                        new Date(
+                          nextEvent.starts_at ||
+                            `${nextEvent.local_date}T12:00:00`,
+                        ),
+                      )}`
+                    : nextState === "error"
+                      ? "暂时无法查询下一场比赛，可切换日期后再试。"
+                      : "已检查随后 180 天的已接入赛程，暂时没有匹配比赛。"}
           </span>
           {signedIn && (
             <button className="text-button" onClick={onFollowing}>

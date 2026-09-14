@@ -5,6 +5,10 @@ import Link from "next/link";
 import { Copy, DownloadSimple, ArrowClockwise } from "@phosphor-icons/react";
 import { api, ApiError } from "@/lib/api";
 import type { PublicFeed, Source } from "@/lib/types";
+import {
+  defaultScheduleSourceId,
+  ScheduleSourcePicker,
+} from "./schedule-source-picker";
 
 export function PublicSubscription({
   sources,
@@ -13,14 +17,18 @@ export function PublicSubscription({
   sources: Source[];
   flash: (message: string) => void;
 }) {
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
   const [feed, setFeed] = useState<PublicFeed | null>(null);
   const [error, setError] = useState("");
   const [available, setAvailable] = useState<boolean | null>(null);
   const [retry, setRetry] = useState(0);
-  const sourceId = sources.some((s) => s.id === selected)
-    ? selected
-    : sources[0]?.id || "";
+  const defaultSourceId = defaultScheduleSourceId(sources);
+  const sourceId =
+    selected === null
+      ? defaultSourceId
+      : !selected || sources.some((source) => source.id === selected)
+        ? selected
+        : defaultSourceId;
   useEffect(() => {
     setFeed(null);
     setError("");
@@ -110,29 +118,20 @@ export function PublicSubscription({
             公共日历包含赛程与已审核的直播入口。关注创作者或组合多个球队，请使用个人日历。
           </p>
         </div>
-        <label>
-          公共日历
-          <select
-            aria-label="选择公共球队或赛事"
-            value={sourceId}
-            onChange={(e) => setSelected(e.target.value)}
-            disabled={!sources.length}
-          >
-            {!sources.length && <option value="">暂无可选赛程</option>}
-            {sources.map((s) => (
-              <option value={s.id} key={s.id}>
-                {s.demo ? "演示 · " : ""}
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="public-source-picker">
+          <span>公共日历</span>
+          <ScheduleSourcePicker
+            sources={sources}
+            selectedSourceId={sourceId}
+            onSelect={setSelected}
+          />
+        </div>
       </div>
       <div aria-live="polite" className="public-feed-state">
         {error ? (
           <p role="alert">{error}</p>
         ) : !sourceId ? (
-          <p>此数据集尚无球队或赛事，请选择其他赛程数据。</p>
+          <p>请选择一支球队，再查看对应的公共日历。</p>
         ) : !current ? (
           <p>正在读取公共日历…</p>
         ) : (
