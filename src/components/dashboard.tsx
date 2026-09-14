@@ -517,7 +517,6 @@ export function Dashboard({ page }: { page: string }) {
             sources={sources}
             epoch={epoch}
             signedIn={!!user}
-            accountId={user?.id ?? null}
             onEvent={openEvent}
             onFollowing={() => {
               window.location.href = "/following";

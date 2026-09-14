@@ -69,26 +69,6 @@
   min-height: 47px;
   color: var(--color-text-subtle);
 }
-.scope-switch {
-  display: flex;
-  gap: var(--space-5);
-}
-.scope-switch button {
-  font-size: 11px;
-  background: none;
-  padding: var(--space-1) 0;
-  color: var(--color-text-disabled);
-}
-.scope-switch button.active {
-  color: var(--color-text-muted);
-  font-weight: 600;
-}
-.filter-divider {
-  width: 1px;
-  height: 14px;
-  background: var(--color-surface-raised);
-  margin: 0 var(--space-1);
-}
 .calendar-filters > select {
   padding: var(--space-1) 0;
   font-size: 11px;
@@ -96,6 +76,9 @@
   background: transparent;
   max-width: 110px;
   color: var(--color-text-subtle);
+}
+.calendar-filters > select.guest-schedule-select {
+  max-width: 220px;
 }
 .calendar-search {
   margin-left: auto;
@@ -515,9 +498,6 @@
   }
   .date-controls h2 {
     font-size: 17px;
-  }
-  .scope-switch {
-    gap: var(--space-3);
   }
   .calendar-search {
     display: none;

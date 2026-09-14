@@ -88,7 +88,6 @@ interface Props {
   sources: Source[];
   epoch: number;
   signedIn: boolean;
-  accountId: string | null;
   onEvent: (e: SportEvent) => void;
   onFollowing: () => void;
 }
@@ -99,7 +98,6 @@ export default function CalendarView({
   sources,
   epoch,
   signedIn,
-  accountId,
   onEvent,
   onFollowing,
 }: Props) {
@@ -117,7 +115,7 @@ export default function CalendarView({
   const [range, setRange] = useState({ from: "", to: "" });
   const [items, setItems] = useState<SportEvent[]>([]);
   const [loadedDataset, setLoadedDataset] = useState("");
-  const [followed, setFollowed] = useState(signedIn);
+  const [guestSourceId, setGuestSourceId] = useState("");
   const [sport, setSport] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -126,23 +124,32 @@ export default function CalendarView({
   const [nextState, setNextState] = useState<
     "idle" | "loading" | "complete" | "error"
   >("idle");
+  const guestSources = useMemo(
+    () =>
+      sources.filter(
+        (source) =>
+          (source.kind === "competition" && source.sport === "racing") ||
+          (source.kind === "team" && source.sport !== "racing"),
+      ),
+    [sources],
+  );
   useEffect(() => {
-    if (!signedIn || !accountId) {
-      setFollowed(false);
-      return;
-    }
-    setFollowed(
-      localStorage.getItem(`anke-calendar-scope:${accountId}`) !== "all",
-    );
-  }, [accountId, signedIn]);
-  const selectScope = (nextFollowed: boolean) => {
-    setFollowed(nextFollowed);
-    if (signedIn && accountId)
-      localStorage.setItem(
-        `anke-calendar-scope:${accountId}`,
-        nextFollowed ? "followed" : "all",
-      );
-  };
+    if (signedIn || !guestSources.length) return;
+    setGuestSourceId((current) => {
+      if (guestSources.some((source) => source.id === current)) return current;
+      return (
+        guestSources.find(
+          (source) =>
+            source.kind === "competition" &&
+            (source.id === "jolpica:f1" ||
+              source.short_name.toUpperCase() === "F1"),
+        ) || guestSources[0]
+      ).id;
+    });
+  }, [dataset, guestSources, signedIn]);
+  const guestSource = guestSources.find(
+    (source) => source.id === guestSourceId,
+  );
   const dates = useCallback(
     (info: DatesSetInfo) => {
       const formatter = new Intl.DateTimeFormat("zh-CN", {
@@ -169,14 +176,15 @@ export default function CalendarView({
     [timezone],
   );
   useEffect(() => {
-    if (!range.from) return;
+    if (!range.from || (!signedIn && !guestSourceId)) return;
     const abort = new AbortController();
     setLoading(true);
     setError("");
     const query = new URLSearchParams({
       ...range,
       dataset,
-      followed: String(followed && signedIn),
+      followed: String(signedIn),
+      source_id: signedIn ? "" : guestSourceId,
     });
     async function loadPages() {
       const items: SportEvent[] = [];
@@ -189,7 +197,7 @@ export default function CalendarView({
         if (!data.next_cursor) return items;
         query.set("cursor", data.next_cursor);
       }
-      throw new Error("这个范围的比赛过多，请切换到周视图或我的关注");
+      throw new Error("这个范围的比赛过多，请切换到周视图");
     }
     loadPages()
       .then((items) => {
@@ -203,25 +211,18 @@ export default function CalendarView({
         if (!abort.signal.aborted) setLoading(false);
       });
     return () => abort.abort();
-  }, [range, dataset, followed, signedIn, epoch]);
+  }, [range, dataset, guestSourceId, signedIn, epoch]);
   const shown = useMemo(
     () =>
       (loadedDataset === dataset ? items : []).filter(
         (e) =>
-          (!sport || sport === e.sport) &&
+          (!signedIn || !sport || sport === e.sport) &&
           e.title.toLowerCase().includes(search.toLowerCase()),
       ),
-    [items, loadedDataset, dataset, sport, search],
+    [items, loadedDataset, dataset, signedIn, sport, search],
   );
   useEffect(() => {
-    if (
-      loading ||
-      error ||
-      shown.length ||
-      search ||
-      !range.to ||
-      (followed && !signedIn)
-    ) {
+    if (loading || error || shown.length || search || !range.to) {
       setNextEvent(null);
       setNextState("idle");
       return;
@@ -234,7 +235,8 @@ export default function CalendarView({
       from: from.toISOString(),
       to: to.toISOString(),
       dataset,
-      followed: String(followed && signedIn),
+      followed: String(signedIn),
+      source_id: signedIn ? "" : guestSourceId,
       limit: "500",
     });
     setNextEvent(null);
@@ -271,7 +273,7 @@ export default function CalendarView({
   }, [
     dataset,
     error,
-    followed,
+    guestSourceId,
     loading,
     range.to,
     search,
@@ -378,35 +380,71 @@ export default function CalendarView({
         </div>
       </div>
       <div className="calendar-filters">
-        <div className="scope-switch">
-          <button
-            className={!followed ? "active" : ""}
-            aria-pressed={!followed}
-            onClick={() => selectScope(false)}
+        {signedIn ? (
+          <select
+            aria-label="筛选运动"
+            value={sport}
+            onChange={(e) => setSport(e.target.value)}
           >
-            全部赛事
-          </button>
-          <button
-            className={followed ? "active" : ""}
-            aria-pressed={followed}
-            onClick={() => (signedIn ? selectScope(true) : onFollowing())}
+            <option value="">所有运动</option>
+            {Object.entries(sportNames).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <select
+            className="guest-schedule-select"
+            aria-label="选择赛程"
+            value={guestSourceId}
+            onChange={(event) => setGuestSourceId(event.target.value)}
+            disabled={!guestSources.length}
           >
-            我的关注
-          </button>
-        </div>
-        <div className="filter-divider" />
-        <select
-          aria-label="筛选运动"
-          value={sport}
-          onChange={(e) => setSport(e.target.value)}
-        >
-          <option value="">所有运动</option>
-          {Object.entries(sportNames).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </select>
+            {!guestSources.length && <option value="">正在读取赛程</option>}
+            {guestSources.some((source) => source.kind === "competition") && (
+              <optgroup label="赛事">
+                {guestSources
+                  .filter((source) => source.kind === "competition")
+                  .map((source) => (
+                    <option key={source.id} value={source.id}>
+                      {source.name}
+                    </option>
+                  ))}
+              </optgroup>
+            )}
+            {Object.entries(sportNames)
+              .filter(([sportKey]) =>
+                guestSources.some(
+                  (source) =>
+                    source.kind === "team" && source.sport === sportKey,
+                ),
+              )
+              .map(([sportKey, sportName]) => {
+                const competition = sources.find(
+                  (source) =>
+                    source.kind === "competition" && source.sport === sportKey,
+                );
+                return (
+                  <optgroup
+                    key={sportKey}
+                    label={`${competition?.short_name || sportName}球队`}
+                  >
+                    {guestSources
+                      .filter(
+                        (source) =>
+                          source.kind === "team" && source.sport === sportKey,
+                      )
+                      .map((source) => (
+                        <option key={source.id} value={source.id}>
+                          {source.name}
+                        </option>
+                      ))}
+                  </optgroup>
+                );
+              })}
+          </select>
+        )}
         <label className="calendar-search">
           <MagnifyingGlass size={16} />
           <input
@@ -579,9 +617,9 @@ export default function CalendarView({
           <strong>
             {search
               ? "没有找到对应比赛"
-              : followed
+              : signedIn
                 ? "这个时间段还没有关注的比赛"
-                : "这个时间段暂无赛程"}
+                : `${guestSource?.name || "所选对象"}在这个时间段暂无赛程`}
           </strong>
           <span>
             {search
@@ -608,7 +646,7 @@ export default function CalendarView({
                     ? "暂时无法查询下一场比赛，可切换日期后再试。"
                     : "已检查随后 180 天的已接入赛程，暂时没有匹配比赛。"}
           </span>
-          {followed && (
+          {signedIn && (
             <button className="text-button" onClick={onFollowing}>
               管理我的关注
             </button>
