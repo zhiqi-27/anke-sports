@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
+    "build:deploy": "node scripts/clean-deployment-build.mjs && ANKE_SPORTS_STATIC_EXPORT=true next build && node scripts/verify-deployment-build.mjs",
+    "deploy:web": "npm run build:deploy && wrangler deploy --dry-run && wrangler deploy",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "next typegen && tsc --noEmit",
     "contracts": "openapi-typescript ../anke-sports-cloud/contracts/openapi.json -o src/lib/generated.ts",

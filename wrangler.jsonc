@@ -5,6 +5,9 @@
   "workers_dev": false,
   "account_id": "6be1e7b072eb22de20bb3c58fbf56585",
   "routes": [{ "pattern": "sports.anke-ai.com", "custom_domain": true }],
+  "build": {
+    "command": "node scripts/verify-deployment-build.mjs",
+  },
   "vars": {
     "AZURE_API_ORIGIN": "https://anke-sports-dev-mtcflttk.azurewebsites.net",
   },

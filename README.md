@@ -51,4 +51,4 @@ Chrome扩展已于2026-09-13退出产品与发布范围。`extension/`及`CHROME
 
 `wrangler.jsonc` 使用静态资源绑定和 `/api/*` Worker 转发。部署时须配置 `AZURE_API_ORIGIN` 为已验证的 Azure HTTPS origin；未配置返回 503。Worker 保留身份、请求体和 Origin，禁用 API 缓存及自动跟随重定向。`node --test worker/index.test.mjs` 验证转发契约；公网登录、关注和订阅路径已有联调证据，完整转发边界仍按对应测试与验收记录判断。配置参考：https://developers.cloudflare.com/workers/static-assets/binding/
 
-桌面域名：`https://sports.anke-ai.com`。`ANKE_SPORTS_STATIC_EXPORT=true npm run build` 可生成 `.next-cloudflare/` 静态产物；默认仍支持本地 Next 服务。静态模式不执行 Next rewrites，部署端必须将 `/api/*` 转发至已验证的 Azure 后端，并禁止缓存认证响应。Cloudflare、域名和公网登录已完成；当前验收记录见 STATE。Firebase Web 配置须在正式构建时注入，不能用缺失配置的本地构建冒充生产包。
+桌面域名：`https://sports.anke-ai.com`。注入三项 `NEXT_PUBLIC_FIREBASE_*` 配置后使用 `npm run build:deploy` 生成 `.next-cloudflare/` 静态产物；该命令会清除旧 Next 构建缓存，并在完成后确认 Firebase Web 配置已写入浏览器脚本。默认的 `npm run build` 仍支持本地 Next 服务。静态模式不执行 Next rewrites，部署端必须将 `/api/*` 转发至已验证的 Azure 后端，并禁止缓存认证响应。Cloudflare、域名和公网登录已完成；当前验收记录见 STATE。缺失 Firebase 配置的产物不得发布。
