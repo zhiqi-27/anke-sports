@@ -46,6 +46,7 @@ import type {
   SportEvent,
 } from "@/lib/types";
 import { BroadcastManager } from "./broadcast-manager";
+import { BroadcastPreferences } from "./broadcast-preferences";
 import { FollowPreview } from "./follow-preview";
 import { CreatorManager } from "./creator-manager";
 import { ConnectionManager } from "./connections";
@@ -65,14 +66,14 @@ const CalendarView = dynamic(() => import("./calendar-view"), {
 const navigation = [
   { id: "calendar", label: "日历", icon: CalendarBlank },
   { id: "following", label: "我的关注", icon: Star },
-  { id: "creators", label: "直播和创作者内容", icon: Play },
+  { id: "creators", label: "创作者内容", icon: Play },
   { id: "subscription", label: "日历订阅", icon: Broadcast },
   { id: "settings", label: "设置", icon: GearSix },
 ];
 const pageInfo: Record<string, [string, string]> = {
   calendar: ["比赛日历", ""],
   following: ["我的关注", "选择球队或赛事。"],
-  creators: ["直播和创作者内容", "选择直播方，并把创作者内容附到对应比赛。"],
+  creators: ["创作者内容", "把创作者内容附到对应比赛。"],
   subscription: ["日历订阅", "复制地址，在 Apple 或 Google 日历中添加。"],
   settings: ["设置", ""],
   maintenance: ["直播入口维护", "核对来源、场次与兼容性证据。"],
@@ -1001,45 +1002,6 @@ export function Dashboard({ page }: { page: string }) {
                 </select>
               </Setting>
               <Setting
-                title="观看地区"
-                text="用于筛选已标明地区限制的观看入口。"
-              >
-                <select
-                  aria-label="观看地区"
-                  value={preferences.watch_region || ""}
-                  onChange={(e) =>
-                    setPreferences({
-                      ...preferences,
-                      watch_region: e.target.value || null,
-                    })
-                  }
-                >
-                  <option value="">暂不设置</option>
-                  <option value="CN">中国大陆</option>
-                  <option value="US">美国</option>
-                  <option value="GB">英国</option>
-                  <option value="JP">日本</option>
-                  <option value="HK">中国香港</option>
-                  <optgroup label="欧洲">
-                    <option value="IE">爱尔兰</option>
-                    <option value="FR">法国</option>
-                    <option value="DE">德国</option>
-                    <option value="AT">奥地利</option>
-                    <option value="CH">瑞士</option>
-                    <option value="IT">意大利</option>
-                    <option value="ES">西班牙</option>
-                    <option value="PT">葡萄牙</option>
-                    <option value="NL">荷兰</option>
-                    <option value="BE">比利时</option>
-                    <option value="DK">丹麦</option>
-                    <option value="FI">芬兰</option>
-                    <option value="NO">挪威</option>
-                    <option value="SE">瑞典</option>
-                    <option value="PL">波兰</option>
-                  </optgroup>
-                </select>
-              </Setting>
-              <Setting
                 title="防剧透"
                 text="用通用标签替代日历描述里的复盘标题。"
               >
@@ -1064,6 +1026,10 @@ export function Dashboard({ page }: { page: string }) {
                 />
               </Setting>
             </div>
+            <BroadcastPreferences
+              preferences={preferences}
+              onChange={setPreferences}
+            />
             <button
               className="primary-button"
               disabled={busy}
@@ -1080,7 +1046,7 @@ export function Dashboard({ page }: { page: string }) {
                 )
               }
             >
-              保存偏好
+              保存设置
             </button>
             <h2 className="section-gap">个人配置</h2>
             <div className="settings-list">

@@ -12,7 +12,6 @@ import {
   YoutubeLogo,
 } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
-import { BroadcastPreferences } from "./broadcast-preferences";
 import type {
   CalendarUser,
   CreatorIdentity,
@@ -299,12 +298,6 @@ export function CreatorManager({
     );
   return (
     <div className="management-page creators-page">
-      <BroadcastPreferences
-        user={user}
-        busy={busy}
-        requireUser={requireUser}
-        run={run}
-      />
       <div className="section-toolbar">
         <div>
           <h2>创作者内容</h2>

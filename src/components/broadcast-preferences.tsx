@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Broadcast, Check, GlobeHemisphereWest } from "@phosphor-icons/react";
+import { Broadcast, GlobeHemisphereWest } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
-import type { CalendarUser } from "@/lib/types";
+import type { Preferences } from "@/lib/types";
 
 type BroadcastPlatform = {
   id: string;
@@ -45,34 +45,20 @@ const regions = [
 ] as const;
 
 type Props = {
-  user: CalendarUser | null;
-  busy: boolean;
-  requireUser: (action: () => void) => void;
-  run: (
-    action: () => Promise<unknown>,
-    success?: () => void,
-  ) => Promise<boolean>;
+  preferences: Preferences;
+  onChange: (preferences: Preferences) => void;
 };
 
-export function BroadcastPreferences({ user, busy, requireUser, run }: Props) {
+export function BroadcastPreferences({ preferences, onChange }: Props) {
   const [platforms, setPlatforms] = useState<BroadcastPlatform[]>([]);
-  const [region, setRegion] = useState(
-    user?.config.preferences.watch_region || "",
-  );
-  const [draft, setDraft] = useState<Record<string, string>>(
-    user?.config.preferences.broadcast_platforms || {},
-  );
+  const region = preferences.watch_region || "";
+  const draft = preferences.broadcast_platforms || {};
 
   useEffect(() => {
     api<{ items: BroadcastPlatform[] }>("/platforms")
       .then((data) => setPlatforms(data.items))
       .catch(() => setPlatforms([]));
   }, []);
-  useEffect(() => {
-    setRegion(user?.config.preferences.watch_region || "");
-    setDraft(user?.config.preferences.broadcast_platforms || {});
-  }, [user?.id, user?.revision]);
-
   const regionalRights = useMemo(
     () =>
       Object.keys(competitions).map((competitionId) => ({
@@ -108,7 +94,12 @@ export function BroadcastPreferences({ user, busy, requireUser, run }: Props) {
         <select
           aria-label="直播观看地区"
           value={region}
-          onChange={(event) => setRegion(event.target.value)}
+          onChange={(event) =>
+            onChange({
+              ...preferences,
+              watch_region: event.target.value || null,
+            })
+          }
         >
           <option value="">选择地区</option>
           {regions.map(([code, name]) => (
@@ -137,10 +128,13 @@ export function BroadcastPreferences({ user, busy, requireUser, run }: Props) {
                   disabled={!choices.length}
                   value={draft[preferenceKey] || ""}
                   onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      [preferenceKey]: event.target.value,
-                    }))
+                    onChange({
+                      ...preferences,
+                      broadcast_platforms: {
+                        ...draft,
+                        [preferenceKey]: event.target.value,
+                      },
+                    })
                   }
                 >
                   <option value="">自动选择</option>
@@ -162,32 +156,6 @@ export function BroadcastPreferences({ user, busy, requireUser, run }: Props) {
           先选择观看地区，再按联赛设置直播方。
         </p>
       )}
-      <div className="creator-actions">
-        <button
-          className="primary-button"
-          disabled={!user || !region || busy}
-          onClick={() =>
-            requireUser(() =>
-              run(() =>
-                api("/me/preferences", {
-                  method: "PATCH",
-                  body: JSON.stringify({
-                    preferences: {
-                      ...user!.config.preferences,
-                      watch_region: region,
-                      broadcast_platforms: draft,
-                    },
-                    expected_revision: user!.revision,
-                  }),
-                }),
-              ),
-            )
-          }
-        >
-          <Check size={16} />
-          保存直播偏好
-        </button>
-      </div>
     </section>
   );
 }
