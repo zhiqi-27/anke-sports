@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { components } from "@/lib/generated";
 import type { CalendarUser, SportEvent } from "@/lib/types";
 import { api } from "@/lib/api";
+import { SelectMenu } from "./select-menu";
 
 type RecordView = components["schemas"]["BroadcastView"];
 type Draft = components["schemas"]["BroadcastDraft"];
@@ -244,6 +245,10 @@ export function BroadcastManager({
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              if (!current && !fields.event_id) {
+                setError("请先选择具体比赛。");
+                return;
+              }
               void run(async () => {
                 const result = await api<RecordView>(
                   `/maintenance/broadcasts${current ? `/${current.id}` : ""}`,
@@ -318,25 +323,40 @@ export function BroadcastManager({
                       查找比赛
                     </button>
                   </div>
-                  <label>
-                    选择比赛
-                    <select
-                      required
+                  <div className="broadcast-select-field">
+                    <span>选择比赛</span>
+                    <SelectMenu
+                      ariaLabel="选择比赛"
                       value={fields.event_id}
-                      onChange={(e) => update("event_id", e.target.value)}
-                    >
-                      <option value="">请选择具体比赛</option>
-                      {events.map((event) => (
-                        <option key={event.id} value={event.id}>
-                          {event.demo ? "演示 · " : ""}
-                          {event.title} ·{" "}
-                          {event.starts_at
-                            ? when(event.starts_at)
-                            : event.local_date || "时间待定"}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                      placeholder={
+                        events.length ? "请选择具体比赛" : "请先查找比赛"
+                      }
+                      searchable
+                      searchPlaceholder="搜索候选比赛"
+                      emptyText="没有匹配的候选比赛"
+                      invalid={
+                        !fields.event_id && error === "请先选择具体比赛。"
+                      }
+                      groups={[
+                        {
+                          label: events.length
+                            ? `${events.length} 场候选比赛`
+                            : undefined,
+                          options: events.map((event) => ({
+                            value: event.id,
+                            label: `${event.demo ? "演示 · " : ""}${event.title}`,
+                            description: event.starts_at
+                              ? when(event.starts_at)
+                              : event.local_date || "时间待定",
+                          })),
+                        },
+                      ]}
+                      onChange={(value) => {
+                        update("event_id", value);
+                        if (error === "请先选择具体比赛。") setError("");
+                      }}
+                    />
+                  </div>
                 </div>
               )}
               <div className="broadcast-event">

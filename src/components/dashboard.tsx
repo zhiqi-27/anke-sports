@@ -53,6 +53,7 @@ import { ConnectionManager } from "./connections";
 import { GoogleSignIn } from "./google-sign-in";
 import { useAnke } from "@/hooks/use-anke";
 import { TeamMark, leagueOf, timeOf } from "./calendar-view";
+import { SelectMenu } from "./select-menu";
 
 const CalendarView = dynamic(() => import("./calendar-view"), {
   ssr: false,
@@ -70,6 +71,15 @@ const navigation = [
   { id: "subscription", label: "日历订阅", icon: Broadcast },
   { id: "settings", label: "设置", icon: GearSix },
 ];
+const timezoneOptions = [
+  "Asia/Shanghai",
+  "America/New_York",
+  "America/Los_Angeles",
+  "Europe/London",
+  "Europe/Paris",
+  "Asia/Tokyo",
+  "UTC",
+].map((value) => ({ value, label: value }));
 const pageInfo: Record<string, [string, string]> = {
   calendar: ["比赛日历", ""],
   following: ["我的关注", "选择球队或赛事。"],
@@ -556,24 +566,15 @@ export function Dashboard({ page }: { page: string }) {
           </div>
           <div className="topbar-actions">
             <GlobeHemisphereWest size={16} />
-            <select
-              aria-label="临时显示时区（不保存）"
+            <SelectMenu
+              ariaLabel="临时显示时区（不保存）"
               title="仅改变当前页面显示；默认时区请在设置中保存"
               value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-            >
-              {[
-                "Asia/Shanghai",
-                "America/New_York",
-                "America/Los_Angeles",
-                "Europe/London",
-                "Europe/Paris",
-                "Asia/Tokyo",
-                "UTC",
-              ].map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
+              placeholder="选择时区"
+              className="select-menu--quiet topbar-timezone-menu"
+              groups={[{ options: timezoneOptions }]}
+              onChange={setTimezone}
+            />
             <Link className="primary-button" href="/subscription">
               <CalendarCheck size={17} />
               订阅日历
@@ -1080,17 +1081,27 @@ export function Dashboard({ page }: { page: string }) {
                 }}
               />
               <div className="import-actions">
-                <select
-                  aria-label="导入方式"
-                  value={importMode}
-                  onChange={(e) => {
-                    setImportMode(e.target.value);
-                    setImportPreview(null);
-                  }}
-                >
-                  <option value="merge">合并现有配置</option>
-                  <option value="replace">替换现有配置</option>
-                </select>
+                <fieldset className="choice-group">
+                  <legend className="sr-only">导入方式</legend>
+                  {[
+                    ["merge", "合并现有配置"],
+                    ["replace", "替换现有配置"],
+                  ].map(([value, label]) => (
+                    <label className="choice-option" key={value}>
+                      <input
+                        type="radio"
+                        name="import-mode"
+                        value={value}
+                        checked={importMode === value}
+                        onChange={() => {
+                          setImportMode(value);
+                          setImportPreview(null);
+                        }}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </fieldset>
                 <button
                   className="secondary-button"
                   disabled={!user || !importText || busy}
@@ -1920,14 +1931,25 @@ function AddLinkForm({
           autoFocus
         />
       </label>
-      <label className="form-label">
-        类型
-        <select value={kind} onChange={(e) => setKind(e.target.value)}>
-          <option value="video">相关视频</option>
-          <option value="live">直播入口</option>
-          <option value="watch_along">同步解说，无比赛画面</option>
-        </select>
-      </label>
+      <fieldset className="choice-group form-choice-field">
+        <legend>类型</legend>
+        {[
+          ["video", "相关视频"],
+          ["live", "直播入口"],
+          ["watch_along", "同步解说，无比赛画面"],
+        ].map(([value, label]) => (
+          <label className="choice-option" key={value}>
+            <input
+              type="radio"
+              name="link-kind"
+              value={value}
+              checked={kind === value}
+              onChange={() => setKind(value)}
+            />
+            {label}
+          </label>
+        ))}
+      </fieldset>
       <label className="form-label">
         标题（可选）
         <input

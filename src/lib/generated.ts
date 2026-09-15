@@ -726,7 +726,7 @@ export interface components {
             /** Url */
             url: string;
             /** Scope Keys */
-            scope_keys?: string[];
+            scope_keys: string[];
             /**
              * Preview
              * @default true
@@ -1254,6 +1254,13 @@ export interface components {
             /** Source Key */
             source_key: string;
         };
+        /** FollowChangeCreator */
+        FollowChangeCreator: {
+            /** Channel Id */
+            channel_id: string;
+            /** Name */
+            name: string;
+        };
         /** FollowChangeSource */
         FollowChangeSource: {
             /**
@@ -1306,6 +1313,8 @@ export interface components {
             added_sources: components["schemas"]["FollowChangeSource"][];
             /** Removed Sources */
             removed_sources: components["schemas"]["FollowChangeSource"][];
+            /** Removed Creators */
+            removed_creators: components["schemas"]["FollowChangeCreator"][];
             added: components["schemas"]["FollowImpactGroup"];
             removed: components["schemas"]["FollowImpactGroup"];
             retained: components["schemas"]["FollowImpactGroup"];

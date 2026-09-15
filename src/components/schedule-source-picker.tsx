@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Source } from "@/lib/types";
+import { SelectMenu, type SelectMenuGroup } from "./select-menu";
 
 function isDirectSchedule(source: Source) {
   return source.kind === "competition" && source.sport === "racing";
@@ -92,60 +93,70 @@ export function ScheduleSourcePicker({
         : [],
     [selectedLeague, sources],
   );
+  const directoryGroups = useMemo<SelectMenuGroup[]>(() => {
+    const groups: SelectMenuGroup[] = [];
+    if (directSources.length) {
+      groups.push({
+        label: "赛事",
+        options: directSources.map((source) => ({
+          value: source.id,
+          label: source.short_name || source.name,
+        })),
+      });
+    }
+    if (leagues.length) {
+      groups.push({
+        label: "联赛",
+        options: leagues.map((league) => ({
+          value: league.id,
+          label: league.short_name || league.name,
+        })),
+      });
+    }
+    return groups;
+  }, [directSources, leagues]);
+  const teamGroups = useMemo<SelectMenuGroup[]>(
+    () => [
+      {
+        label: selectedLeague?.short_name || selectedLeague?.name || "球队",
+        options: [
+          { value: "", label: "选择球队" },
+          ...teams.map((team) => ({ value: team.id, label: team.name })),
+        ],
+      },
+    ],
+    [selectedLeague, teams],
+  );
 
   return (
     <div className={`schedule-source-picker ${className}`.trim()}>
-      <select
-        aria-label="选择赛事或联赛"
+      <SelectMenu
+        ariaLabel="选择赛事或联赛"
+        groups={directoryGroups}
         value={directoryId}
-        onChange={(event) => {
-          const nextId = event.target.value;
+        placeholder="选择赛事或联赛"
+        loading={!directSources.length && !leagues.length}
+        className="select-menu--quiet"
+        onChange={(nextId) => {
           setDirectoryId(nextId);
           onSelect(
             directSources.some((source) => source.id === nextId) ? nextId : "",
           );
         }}
-        disabled={!directSources.length && !leagues.length}
-      >
-        {!directSources.length && !leagues.length && (
-          <option value="">正在读取赛程</option>
-        )}
-        {!!directSources.length && (
-          <optgroup label="赛事">
-            {directSources.map((source) => (
-              <option key={source.id} value={source.id}>
-                {source.short_name || source.name}
-              </option>
-            ))}
-          </optgroup>
-        )}
-        {!!leagues.length && (
-          <optgroup label="联赛">
-            {leagues.map((league) => (
-              <option key={league.id} value={league.id}>
-                {league.short_name || league.name}
-              </option>
-            ))}
-          </optgroup>
-        )}
-      </select>
+      />
       {selectedLeague && (
-        <select
-          aria-label={`选择${selectedLeague.short_name || selectedLeague.name}球队`}
+        <SelectMenu
+          ariaLabel={`选择${selectedLeague.short_name || selectedLeague.name}球队`}
+          groups={teamGroups}
           value={
             teams.some((team) => team.id === selectedSourceId)
               ? selectedSourceId
               : ""
           }
-          onChange={(event) => onSelect(event.target.value)}
-        >
-          <option value="">选择球队</option>
-          {teams.map((team) => (
-            <option key={team.id} value={team.id}>
-              {team.name}
-            </option>
-          ))}
-        </select>
+          placeholder="选择球队"
+          className="select-menu--quiet"
+          onChange={onSelect}
+        />
       )}
     </div>
   );

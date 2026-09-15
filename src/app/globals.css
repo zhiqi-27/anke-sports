@@ -1,5 +1,6 @@
 /* Hallmark · macrostructure: Workbench · theme: graphite-acid-lime · tone: modern-minimal · enrichment: none · pre-emit critique: P5 H5 E4 S5 R5 V4 · contrast: pass (40–41) · nav: product sidebar · footer: none · tokens: pass (48) · responsive: pass at supported desktop widths; brand exceptions: system UI font and 760px minimum */
 @import url("../../tokens.css");
+@import url("../styles/select-menu.css");
 @import url("../styles/calendar.css");
 @import url("../styles/connections.css");
 @import url("../styles/broadcasts.css");
@@ -86,6 +87,21 @@ textarea::placeholder {
 select {
   cursor: pointer;
   color-scheme: dark;
+}
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  background: var(--color-surface-raised);
+  color: var(--color-text-disabled);
+}
+select[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+@media (hover: hover) {
+  select:hover:not(:disabled) {
+    border-color: var(--color-content-divider);
+    background-color: var(--color-surface-hover);
+  }
 }
 /* Native popup menus need their own foreground/background pair. */
 select option,
@@ -377,12 +393,14 @@ a svg {
   gap: var(--space-2);
   color: var(--color-text-subtle);
 }
-.topbar-actions > select {
+.topbar-timezone-menu {
+  max-width: 190px;
+}
+.topbar-timezone-menu .select-menu-trigger {
   border: 0;
   background: transparent;
   font-size: 11px;
-  padding: var(--space-1) var(--space-4) var(--space-1) var(--space-hairline);
-  max-width: 170px;
+  padding: var(--space-1) var(--space-2);
 }
 .topbar-actions .primary-button {
   margin-left: var(--space-4);
@@ -973,10 +991,59 @@ a svg {
   display: flex;
   gap: var(--space-3);
   justify-content: space-between;
+  align-items: center;
   margin-top: var(--space-3);
 }
-.import-actions select {
-  font-size: 11px;
+.choice-group {
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.choice-group legend {
+  margin-bottom: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.choice-option {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--rule-thin) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.choice-option:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-surface-selected);
+  color: var(--color-accent);
+}
+.choice-option input {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  accent-color: var(--color-accent);
+}
+.form-choice-field {
+  margin: var(--space-5) 0;
+}
+.form-choice-field.choice-group {
+  flex-wrap: wrap;
+}
+.form-choice-field .choice-option {
+  flex: 1 1 120px;
 }
 .import-result {
   background: var(--color-surface);
@@ -1666,7 +1733,7 @@ dialog.is-closing::backdrop {
     width: 65px;
     height: 65px;
   }
-  .topbar-actions > select {
+  .topbar-timezone-menu {
     max-width: 140px;
   }
   .brand {
@@ -1923,6 +1990,9 @@ dialog.is-closing::backdrop {
 }
 .review-toolbar input[type="search"] {
   width: 100%;
+}
+.review-toolbar .select-menu {
+  flex: 0 1 180px;
 }
 .review-group-toggle,
 .review-batchbar label {

@@ -12,6 +12,7 @@ import {
   YoutubeLogo,
 } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
+import { SelectMenu } from "./select-menu";
 import type {
   CalendarUser,
   CreatorIdentity,
@@ -98,17 +99,7 @@ function ScopeFields({
   return (
     <div className="creator-options">
       <fieldset>
-        <legend>对应哪些关注</legend>
-        <label>
-          <input
-            type="checkbox"
-            checked={!value.scope_keys.length}
-            onChange={(e) => {
-              if (e.target.checked) onChange({ ...value, scope_keys: [] });
-            }}
-          />
-          我的所有关注
-        </label>
+        <legend>选择至少一个关注对象</legend>
         <div className="scope-options">
           {sources.map((source) => (
             <label key={source.id}>
@@ -128,7 +119,8 @@ function ScopeFields({
             </label>
           ))}
         </div>
-        <p>选择范围后，只匹配其中已加入个人日历的比赛。</p>
+        {!sources.length && <p>请先在“我的关注”中添加球队或赛事。</p>}
+        <p>创作者视频只会匹配所选关注对象的比赛。</p>
       </fieldset>
     </div>
   );
@@ -164,6 +156,18 @@ export function CreatorManager({
   const [selectedReviews, setSelectedReviews] = useState<Set<string>>(
     new Set(),
   );
+  const followedSources = useMemo(() => {
+    const followed = new Set(
+      user?.config.follows.map((follow) => follow.source_key) || [],
+    );
+    return sources.filter((source) => followed.has(source.id));
+  }, [sources, user?.config.follows]);
+  const effectiveScopeKeys = (creator: CreatorFollow) =>
+    creator.scope_keys.length
+      ? creator.scope_keys.filter((key) =>
+          followedSources.some((source) => source.id === key),
+        )
+      : followedSources.map((source) => source.id);
   useEffect(() => {
     if (!user) {
       setReviews([]);
@@ -317,6 +321,14 @@ export function CreatorManager({
           </span>
         </div>
       )}
+      {user && !followedSources.length && (
+        <div className="info-note" role="status">
+          <span>
+            关注创作者前，请先在 <Link href="/following">我的关注</Link>
+            中选择球队或赛事。
+          </span>
+        </div>
+      )}
       <form
         className="creator-form"
         onSubmit={(e) => {
@@ -344,7 +356,10 @@ export function CreatorManager({
             setIdentity(null);
           }}
         />
-        <button className="primary-button" disabled={busy}>
+        <button
+          className="primary-button"
+          disabled={busy || (Boolean(user) && !followedSources.length)}
+        >
           <Plus size={16} />
           查找创作者
         </button>
@@ -360,7 +375,11 @@ export function CreatorManager({
               </a>
             </div>
           </div>
-          <ScopeFields sources={sources} value={draft} onChange={setDraft} />
+          <ScopeFields
+            sources={followedSources}
+            value={draft}
+            onChange={setDraft}
+          />
           <div className="creator-actions">
             <button
               className="secondary-button"
@@ -370,7 +389,7 @@ export function CreatorManager({
             </button>
             <button
               className="primary-button"
-              disabled={busy}
+              disabled={busy || !draft.scope_keys.length}
               onClick={() =>
                 run(
                   () =>
@@ -405,11 +424,11 @@ export function CreatorManager({
                 <div className="creator-summary">
                   <b>{creator.name}</b>
                   <p>
-                    {creator.scope_keys
+                    {effectiveScopeKeys(creator)
                       .map(
                         (key) => sources.find((s) => s.id === key)?.name || key,
                       )
-                      .join("、") || "我的所有关注"}{" "}
+                      .join("、") || "未绑定关注对象"}{" "}
                     · AI 自动判断视频内容
                   </p>
                   <p className={creator.last_error ? "creator-sync-error" : ""}>
@@ -437,7 +456,7 @@ export function CreatorManager({
                     onClick={() =>
                       run(() =>
                         write(`/me/creators/${creator.channel_id}`, "PATCH", {
-                          scope_keys: creator.scope_keys,
+                          scope_keys: effectiveScopeKeys(creator),
                           preview: creator.preview,
                           recap: creator.recap,
                           enabled: !creator.enabled,
@@ -478,7 +497,7 @@ export function CreatorManager({
                           : creator.channel_id,
                       );
                       setEditDraft({
-                        scope_keys: creator.scope_keys,
+                        scope_keys: effectiveScopeKeys(creator),
                         preview: creator.preview,
                         recap: creator.recap,
                         enabled: creator.enabled,
@@ -513,7 +532,7 @@ export function CreatorManager({
                   <ScopeFields
                     value={editDraft}
                     onChange={setEditDraft}
-                    sources={sources}
+                    sources={followedSources}
                   />
                   <div className="creator-actions">
                     <button
@@ -524,7 +543,7 @@ export function CreatorManager({
                     </button>
                     <button
                       className="primary-button"
-                      disabled={busy}
+                      disabled={busy || !editDraft.scope_keys.length}
                       onClick={saveEdit}
                     >
                       保存偏好
@@ -606,27 +625,38 @@ export function CreatorManager({
                   onChange={(event) => setReviewSearch(event.target.value)}
                 />
               </label>
-              <select
-                aria-label="筛选创作者"
+              <SelectMenu
+                ariaLabel="筛选创作者"
                 value={reviewCreator}
-                onChange={(event) => setReviewCreator(event.target.value)}
-              >
-                <option value="">全部创作者</option>
-                {creators.map((creator) => (
-                  <option key={creator}>{creator}</option>
-                ))}
-              </select>
-              <select
-                aria-label="待确认排序"
+                placeholder="全部创作者"
+                groups={[
+                  {
+                    options: [
+                      { value: "", label: "全部创作者" },
+                      ...creators.map((creator) => ({
+                        value: creator,
+                        label: creator,
+                      })),
+                    ],
+                  },
+                ]}
+                onChange={setReviewCreator}
+              />
+              <SelectMenu
+                ariaLabel="待确认排序"
                 value={reviewSort}
-                onChange={(event) =>
-                  setReviewSort(event.target.value as typeof reviewSort)
-                }
-              >
-                <option value="oldest">最早发布优先</option>
-                <option value="newest">最新发布优先</option>
-                <option value="event">比赛时间优先</option>
-              </select>
+                placeholder="选择排序"
+                groups={[
+                  {
+                    options: [
+                      { value: "oldest", label: "最早发布优先" },
+                      { value: "newest", label: "最新发布优先" },
+                      { value: "event", label: "比赛时间优先" },
+                    ],
+                  },
+                ]}
+                onChange={(value) => setReviewSort(value as typeof reviewSort)}
+              />
               <label className="review-group-toggle">
                 <input
                   type="checkbox"

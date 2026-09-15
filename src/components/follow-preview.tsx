@@ -177,6 +177,14 @@ export function FollowPreview({
                   </p>
                 ),
             )}
+            {preview.removed_creators.length > 0 && (
+              <p>
+                <strong>同步取消创作者</strong>
+                {preview.removed_creators
+                  .map((creator) => creator.name)
+                  .join("、")}
+              </p>
+            )}
           </div>
           <div className="follow-impact-counts">
             <div>

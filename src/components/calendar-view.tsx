@@ -23,6 +23,7 @@ import {
   defaultScheduleSourceId,
   ScheduleSourcePicker,
 } from "./schedule-source-picker";
+import { SelectMenu } from "./select-menu";
 
 export const sportNames: Record<string, string> = {
   basketball: "篮球",
@@ -392,18 +393,24 @@ export default function CalendarView({
       </div>
       <div className="calendar-filters">
         {signedIn ? (
-          <select
-            aria-label="筛选运动"
+          <SelectMenu
+            ariaLabel="筛选运动"
             value={sport}
-            onChange={(e) => setSport(e.target.value)}
-          >
-            <option value="">所有运动</option>
-            {Object.entries(sportNames).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
+            placeholder="所有运动"
+            className="select-menu--quiet calendar-sport-menu"
+            groups={[
+              {
+                options: [
+                  { value: "", label: "所有运动" },
+                  ...Object.entries(sportNames).map(([value, label]) => ({
+                    value,
+                    label,
+                  })),
+                ],
+              },
+            ]}
+            onChange={setSport}
+          />
         ) : (
           <ScheduleSourcePicker
             sources={sources}

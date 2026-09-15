@@ -1,3 +1,7 @@
+/* Hallmark · component: calendar workbench · genre: modern-minimal · theme: graphite-acid-lime
+ * states: default · hover · focus · active · disabled · loading · success · error
+ * pre-emit critique: P5 H5 E5 S5 R5 V4 · contrast: pass (40–41)
+ */
 .calendar-area {
   position: relative;
   display: flex;
@@ -70,7 +74,7 @@
   color: var(--color-text-subtle);
 }
 .calendar-filters > select,
-.calendar-source-picker select {
+.calendar-filters > .select-menu .select-menu-trigger {
   padding: var(--space-1) 0;
   font-size: 11px;
   border: 0;
@@ -84,7 +88,7 @@
   gap: var(--space-3);
   min-width: 0;
 }
-.calendar-source-picker select {
+.calendar-source-picker .select-menu-trigger {
   max-width: 140px;
 }
 .calendar-search {
