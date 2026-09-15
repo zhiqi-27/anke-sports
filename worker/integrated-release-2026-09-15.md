@@ -8,4 +8,6 @@ Cloudflare Worker version `5db1f3c0-9142-4377-86b1-a4fbd80001ab` is active on `s
 
 Corrective release `39500a75-662f-4405-b31e-60d1198e3b65` restores the existing Firebase Web App's public build configuration, which was omitted from the integrated static build. The backend `/api/v1/status` reports `firebase_configured: true`; the rebuilt Web passed production build, TypeScript and Wrangler dry-run, and the deployed UI started the Google authentication flow without a console error. No login was completed during verification.
 
+Follow-up release `51c0058f-f24a-4b60-9863-ab2259e7799d` moves region-plus-competition broadcast preferences into Settings and restores the Creators navigation and page to creator-only content. Broadcast, timezone and calendar choices now share one controlled preference draft and one “保存设置” action. TypeScript, production build, Worker proxy tests `3/3` and Wrangler dry-run passed. Authenticated production readback confirmed that Creators contains no broadcast settings and Settings contains the broadcast region selector. No preference was changed during verification.
+
 No user preference, calendar, external account or broadcast publication was changed during release verification.
