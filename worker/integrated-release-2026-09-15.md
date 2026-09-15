@@ -6,4 +6,6 @@ Validation passed: OpenAPI client generation, Next route type generation, TypeSc
 
 Cloudflare Worker version `5db1f3c0-9142-4377-86b1-a4fbd80001ab` is active on `sports.anke-ai.com`; 55 changed assets were uploaded and 29 reused. Public asset readback contains the new page title, region-plus-competition selector, single-calendar-link copy and AI content copy. Rendered browser readback visibly confirmed the page, all supported region options and the disabled save state for an anonymous user.
 
+Corrective release `39500a75-662f-4405-b31e-60d1198e3b65` restores the existing Firebase Web App's public build configuration, which was omitted from the integrated static build. The backend `/api/v1/status` reports `firebase_configured: true`; the rebuilt Web passed production build, TypeScript and Wrangler dry-run, and the deployed UI started the Google authentication flow without a console error. No login was completed during verification.
+
 No user preference, calendar, external account or broadcast publication was changed during release verification.
