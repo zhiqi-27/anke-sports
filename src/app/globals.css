@@ -1841,6 +1841,18 @@ dialog.is-closing::backdrop {
   color: var(--color-text-muted);
   font-size: 12px;
 }
+
+.content-search-options {
+  display: grid;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.content-search-options label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
 .broadcast-region-field,
 .broadcast-league-row {
   display: flex;

@@ -67,7 +67,7 @@ const CalendarView = dynamic(() => import("./calendar-view"), {
 const navigation = [
   { id: "calendar", label: "日历", icon: CalendarBlank },
   { id: "following", label: "我的关注", icon: Star },
-  { id: "creators", label: "创作者内容", icon: Play },
+  { id: "creators", label: "视频内容", icon: Play },
   { id: "subscription", label: "日历订阅", icon: Broadcast },
   { id: "settings", label: "设置", icon: GearSix },
 ];
@@ -83,7 +83,7 @@ const timezoneOptions = [
 const pageInfo: Record<string, [string, string]> = {
   calendar: ["比赛日历", ""],
   following: ["我的关注", "选择球队或赛事。"],
-  creators: ["创作者内容", "把创作者内容附到对应比赛。"],
+  creators: ["视频内容", ""],
   subscription: ["日历订阅", "复制地址，在 Apple 或 Google 日历中添加。"],
   settings: ["设置", ""],
   maintenance: ["直播入口维护", "核对来源、场次与兼容性证据。"],
@@ -270,6 +270,7 @@ export function Dashboard({ page }: { page: string }) {
     spoiler_free: true,
     transparent: true,
     broadcast_platforms: {},
+    content_search_windows: ["before_24h", "after_3h"],
   });
   const [importText, setImportText] = useState("");
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(
@@ -320,6 +321,7 @@ export function Dashboard({ page }: { page: string }) {
         spoiler_free: true,
         transparent: true,
         broadcast_platforms: {},
+        content_search_windows: ["before_24h", "after_3h"],
       });
       pendingGuestFollows.current = null;
     }
@@ -1026,6 +1028,47 @@ export function Dashboard({ page }: { page: string }) {
                   }
                 />
               </Setting>
+              <Setting title="视频搜索时间" text="最多选择两个时间。">
+                <div className="content-search-options">
+                  {[
+                    ["before_24h", "赛前 24 小时"],
+                    ["before_3h", "赛前 3 小时"],
+                    ["after_3h", "预计结束后 3 小时"],
+                    ["after_18h", "预计结束后 18 小时"],
+                  ].map(([value, label]) => {
+                    const selected =
+                      preferences.content_search_windows.includes(
+                        value as (typeof preferences.content_search_windows)[number],
+                      );
+                    return (
+                      <label key={value}>
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          disabled={
+                            !selected &&
+                            preferences.content_search_windows.length >= 2
+                          }
+                          onChange={(event) =>
+                            setPreferences({
+                              ...preferences,
+                              content_search_windows: event.target.checked
+                                ? [
+                                    ...preferences.content_search_windows,
+                                    value as (typeof preferences.content_search_windows)[number],
+                                  ]
+                                : preferences.content_search_windows.filter(
+                                    (item) => item !== value,
+                                  ),
+                            })
+                          }
+                        />
+                        {label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </Setting>
             </div>
             <BroadcastPreferences
               preferences={preferences}
@@ -1053,7 +1096,7 @@ export function Dashboard({ page }: { page: string }) {
             <div className="settings-list">
               <Setting
                 title="导出配置"
-                text="包含关注、创作者和个人规则，不包含账号凭据或私人订阅地址。"
+                text="包含关注、视频搜索时间和个人规则，不包含账号凭据或私人订阅地址。"
               >
                 <button
                   className="secondary-button"
@@ -1380,7 +1423,7 @@ export function Dashboard({ page }: { page: string }) {
                       await mutate(`/me/links/${id}/pin`, "POST");
                       await reloadEvent();
                     },
-                    () => flash("链接已固定，停止关注创作者后仍会保留"),
+                    () => flash("链接已固定，后续自动搜索不会覆盖"),
                   ),
                 )
               }
@@ -1843,7 +1886,7 @@ function EventDrawer({
                   </span>
                   {kind === "video" && (
                     <Link href="/creators" onClick={onClose}>
-                      管理创作者 <ArrowUpRight size={12} />
+                      查看视频内容 <ArrowUpRight size={12} />
                     </Link>
                   )}
                 </div>

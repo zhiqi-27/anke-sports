@@ -1468,6 +1468,8 @@ export interface components {
             broadcast_platforms?: {
                 [key: string]: string;
             };
+            /** Content Search Windows */
+            content_search_windows?: ("before_24h" | "before_3h" | "after_3h" | "after_18h")[];
         };
         /** Preferences */
         "Preferences-Output": {
@@ -1498,6 +1500,8 @@ export interface components {
             broadcast_platforms: {
                 [key: string]: string;
             };
+            /** Content Search Windows */
+            content_search_windows: ("before_24h" | "before_3h" | "after_3h" | "after_18h")[];
         };
         /** ProviderView */
         ProviderView: {
@@ -1698,6 +1702,14 @@ export interface components {
             reset_at: string | null;
             /** Resume At */
             resume_at: string | null;
+            /** Search Daily Limit */
+            search_daily_limit: number;
+            /** Search Reserved Calls */
+            search_reserved_calls: number;
+            /** Search Available Calls */
+            search_available_calls: number | null;
+            /** Search Resume At */
+            search_resume_at: string | null;
         };
     };
     responses: never;

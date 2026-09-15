@@ -24,42 +24,36 @@ import type {
 } from "@/lib/types";
 
 const labels: Record<string, string> = {
-  BOTH_TEAMS_FOUND: "找到比赛双方",
-  ONE_TEAM_ONLY: "只找到一方球队",
-  RACE_FOUND: "找到大奖赛名称",
-  SESSION_FOUND: "找到具体分场次",
-  SESSION_AMBIGUOUS: "具体分场次不明确",
-  EXPLICIT_DATE: "找到比赛日期",
+  BOTH_TEAMS_FOUND: "包含双方球队",
+  ONE_TEAM_ONLY: "只明确提到一方球队",
+  RACE_FOUND: "包含大奖赛名称",
+  SESSION_FOUND: "包含具体场次",
+  SESSION_AMBIGUOUS: "具体场次不明确",
+  EXPLICIT_DATE: "包含比赛日期",
   NO_EXPLICIT_DATE: "缺少明确日期",
   DATE_AMBIGUOUS: "日期有多种解释，需要确认",
   TITLE_SUBJECT_UNCLEAR: "标题未明确比赛对象",
-  TITLE_PHASE_UNCLEAR: "标题未明确内容阶段",
-  PHASE_UNKNOWN: "内容阶段待确认",
   MULTIPLE_CANDIDATES: "可能对应多场比赛",
   MATCH_NOT_FINISHED: "视频发布时比赛可能尚未结束",
-  AI_SELECTED: "AI认为最可能对应这场比赛",
-  AI_ASSESSED: "AI已独立评估与这场比赛的相关性",
-  AI_REVIEW_RANGE: "AI置信度尚未达到自动添加标准",
-  AI_DECISION_CANDIDATE: "AI判定为备选",
-  BOTH_PARTICIPANTS: "AI识别到双方参与者",
-  OPPONENT_PAIR: "AI识别到对阵双方",
-  EXACT_DATE: "AI识别到明确日期",
-  RELATIVE_DATE: "AI识别到相对比赛时间",
-  COMPETITION: "AI识别到对应赛事",
-  SESSION: "AI识别到对应分场次",
-  SCORE_RESULT: "AI识别到赛果语义",
+  BOTH_PARTICIPANTS: "包含双方参与者",
+  OPPONENT_PAIR: "包含对阵双方",
+  EXACT_DATE: "日期与比赛一致",
+  RELATIVE_DATE: "时间与比赛接近",
+  COMPETITION: "赛事一致",
+  SESSION: "具体场次一致",
+  SCORE_RESULT: "包含比赛结果",
   CHANNEL_CONTEXT: "频道内容与比赛相关",
-  TITLE_SEMANTICS: "标题语义与比赛吻合",
-  DESCRIPTION_SEMANTICS: "简介语义与比赛吻合",
+  TITLE_SEMANTICS: "标题与比赛相关",
+  DESCRIPTION_SEMANTICS: "简介与比赛相关",
   GENERIC_TEAM_CONTENT: "可能只是球队泛内容",
-  CONFLICTING_SIGNALS: "AI发现相互冲突的信息",
+  CONFLICTING_SIGNALS: "信息存在冲突",
 };
 
 const reasonLabel = (reason: string) => {
   if (reason.startsWith("AI_CONFIDENCE_")) {
-    return `AI 置信度 ${Number(reason.slice(-3))}%`;
+    return `相关度 ${Number(reason.slice(-3))}%`;
   }
-  return labels[reason] || "信息仍需确认";
+  return labels[reason] || null;
 };
 type Draft = Pick<
   CreatorFollow,
@@ -135,6 +129,7 @@ export function CreatorManager({
   requireUser,
   run,
 }: Props) {
+  let legacyCreatorManagement = false;
   const [url, setUrl] = useState("");
   const [identity, setIdentity] = useState<CreatorIdentity | null>(null);
   const [draft, setDraft] = useState<Draft>(defaults);
@@ -302,14 +297,6 @@ export function CreatorManager({
     );
   return (
     <div className="management-page creators-page">
-      <div className="section-toolbar">
-        <div>
-          <h2>创作者内容</h2>
-        </div>
-        <span className="count-label">
-          {user?.creators.length || 0} 位创作者
-        </span>
-      </div>
       {budget?.state === "waiting" && (
         <div className="info-note creator-wait" role="status">
           <Pause size={18} />
@@ -321,289 +308,309 @@ export function CreatorManager({
           </span>
         </div>
       )}
-      {user && !followedSources.length && (
-        <div className="info-note" role="status">
-          <span>
-            关注创作者前，请先在 <Link href="/following">我的关注</Link>
-            中选择球队或赛事。
-          </span>
-        </div>
-      )}
-      <form
-        className="creator-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          requireUser(() =>
-            run(async () => {
-              const resolved = await api<CreatorIdentity>(
-                "/me/creators/resolve",
-                { method: "POST", body: JSON.stringify({ url }) },
-              );
-              setIdentity(resolved);
-              setDraft(defaults);
-            }),
-          );
-        }}
-      >
-        <YoutubeLogo size={26} />
-        <input
-          required
-          aria-label="创作者链接"
-          placeholder="YouTube 频道链接、@handle 或视频链接"
-          value={url}
-          onChange={(e) => {
-            setUrl(e.target.value);
-            setIdentity(null);
-          }}
-        />
-        <button
-          className="primary-button"
-          disabled={busy || (Boolean(user) && !followedSources.length)}
-        >
-          <Plus size={16} />
-          查找创作者
-        </button>
-      </form>
-      {identity && (
-        <section className="creator-editor" aria-label="确认创作者">
-          <div className="section-toolbar">
-            <div>
-              <span className="eyebrow">确认频道</span>
-              <h3>{identity.name}</h3>
-              <a href={identity.url} target="_blank" rel="noopener noreferrer">
-                在 YouTube 查看频道 <ArrowUpRight size={13} />
-              </a>
+      {legacyCreatorManagement && identity && user && (
+        <>
+          {user && !followedSources.length && (
+            <div className="info-note" role="status">
+              <span>
+                关注创作者前，请先在 <Link href="/following">我的关注</Link>
+                中选择球队或赛事。
+              </span>
             </div>
-          </div>
-          <ScopeFields
-            sources={followedSources}
-            value={draft}
-            onChange={setDraft}
-          />
-          <div className="creator-actions">
-            <button
-              className="secondary-button"
-              onClick={() => setIdentity(null)}
-            >
-              取消
-            </button>
+          )}
+          <form
+            className="creator-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              requireUser(() =>
+                run(async () => {
+                  const resolved = await api<CreatorIdentity>(
+                    "/me/creators/resolve",
+                    { method: "POST", body: JSON.stringify({ url }) },
+                  );
+                  setIdentity(resolved);
+                  setDraft(defaults);
+                }),
+              );
+            }}
+          >
+            <YoutubeLogo size={26} />
+            <input
+              required
+              aria-label="创作者链接"
+              placeholder="YouTube 频道链接、@handle 或视频链接"
+              value={url}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                setIdentity(null);
+              }}
+            />
             <button
               className="primary-button"
-              disabled={busy || !draft.scope_keys.length}
-              onClick={() =>
-                run(
-                  () =>
-                    write("/me/creators", "POST", {
-                      url: identity.url,
-                      scope_keys: draft.scope_keys,
-                      preview: draft.preview,
-                      recap: draft.recap,
-                      expected_revision: user!.revision,
-                    }),
-                  () => {
-                    setIdentity(null);
-                    setUrl("");
-                  },
-                )
-              }
+              disabled={busy || (Boolean(user) && !followedSources.length)}
             >
-              <Check size={16} />
-              确认关注
+              <Plus size={16} />
+              查找创作者
             </button>
-          </div>
-        </section>
-      )}
-      {user?.creators.length ? (
-        <div className="creator-list">
-          {user.creators.map((creator) => (
-            <section className="managed-creator" key={creator.channel_id}>
-              <div className="creator-row">
-                <span className="creator-avatar">
-                  <YoutubeLogo size={24} />
-                </span>
-                <div className="creator-summary">
-                  <b>{creator.name}</b>
-                  <p>
-                    {effectiveScopeKeys(creator)
-                      .map(
-                        (key) => sources.find((s) => s.id === key)?.name || key,
-                      )
-                      .join("、") || "未绑定关注对象"}{" "}
-                    · AI 自动判断视频内容
-                  </p>
-                  <p className={creator.last_error ? "creator-sync-error" : ""}>
-                    {!creator.enabled
-                      ? "已暂停新视频关联，保留已有链接"
-                      : creator.sync_status === "syncing"
-                        ? budget?.state === "waiting"
-                          ? "等待 YouTube 恢复更新"
-                          : "正在检查频道更新…"
-                        : creator.last_error
-                          ? creator.last_error === "YOUTUBE_KEY_REQUIRED"
-                            ? "尚未配置 YouTube 服务，暂时无法更新"
-                            : "上次更新未完成，可稍后重试"
-                          : creator.last_synced_at
-                            ? `上次检查 ${new Date(creator.last_synced_at).toLocaleString("zh-CN")}`
-                            : "等待首次检查"}
-                  </p>
-                </div>
-                <div className="creator-row-actions">
-                  <button
-                    className="icon-button"
-                    title={creator.enabled ? "暂停更新" : "恢复更新"}
-                    aria-label={`${creator.enabled ? "暂停" : "恢复"} ${creator.name}`}
-                    disabled={busy}
-                    onClick={() =>
-                      run(() =>
-                        write(`/me/creators/${creator.channel_id}`, "PATCH", {
-                          scope_keys: effectiveScopeKeys(creator),
-                          preview: creator.preview,
-                          recap: creator.recap,
-                          enabled: !creator.enabled,
-                          expected_revision: user.revision,
-                        }),
-                      )
-                    }
+          </form>
+          {identity && (
+            <section className="creator-editor" aria-label="确认创作者">
+              <div className="section-toolbar">
+                <div>
+                  <span className="eyebrow">确认频道</span>
+                  <h3>{identity.name}</h3>
+                  <a
+                    href={identity.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    {creator.enabled ? <Pause size={17} /> : <Play size={17} />}
-                  </button>
-                  <button
-                    className="icon-button"
-                    title="检查更新"
-                    aria-label={`检查 ${creator.name} 更新`}
-                    disabled={
-                      busy ||
-                      !creator.enabled ||
-                      creator.sync_status === "syncing"
-                    }
-                    onClick={() =>
-                      run(() =>
-                        write(
-                          `/me/creators/${creator.channel_id}/refresh`,
-                          "POST",
-                        ),
-                      )
-                    }
-                  >
-                    <ArrowClockwise size={17} />
-                  </button>
-                  <button
-                    className="secondary-button"
-                    disabled={busy}
-                    onClick={() => {
-                      setEditing(
-                        editing === creator.channel_id
-                          ? null
-                          : creator.channel_id,
-                      );
-                      setEditDraft({
-                        scope_keys: effectiveScopeKeys(creator),
-                        preview: creator.preview,
-                        recap: creator.recap,
-                        enabled: creator.enabled,
-                      });
-                    }}
-                  >
-                    偏好
-                  </button>
-                  <button
-                    className="icon-button"
-                    aria-label={`删除 ${creator.name}`}
-                    disabled={busy}
-                    onClick={() =>
-                      run(async () => {
-                        const impact = await api<CreatorRemovalImpact>(
-                          `/me/creators/${creator.channel_id}/impact`,
-                        );
-                        setDeletion({
-                          ...impact,
-                          id: creator.channel_id,
-                          name: creator.name,
-                        });
-                      })
-                    }
-                  >
-                    <Trash size={17} />
-                  </button>
+                    在 YouTube 查看频道 <ArrowUpRight size={13} />
+                  </a>
                 </div>
               </div>
-              {editing === creator.channel_id && (
-                <div className="creator-editor">
-                  <ScopeFields
-                    value={editDraft}
-                    onChange={setEditDraft}
-                    sources={followedSources}
-                  />
-                  <div className="creator-actions">
-                    <button
-                      className="secondary-button"
-                      onClick={() => setEditing(null)}
-                    >
-                      取消
-                    </button>
-                    <button
-                      className="primary-button"
-                      disabled={busy || !editDraft.scope_keys.length}
-                      onClick={saveEdit}
-                    >
-                      保存偏好
-                    </button>
-                  </div>
-                </div>
-              )}
-              {deletion?.id === creator.channel_id && (
-                <div
-                  className="creator-delete"
-                  role="region"
-                  aria-label="确认删除创作者"
+              <ScopeFields
+                sources={followedSources}
+                value={draft}
+                onChange={setDraft}
+              />
+              <div className="creator-actions">
+                <button
+                  className="secondary-button"
+                  onClick={() => setIdentity(null)}
                 >
-                  <h3>停止关注 {deletion.name}？</h3>
-                  <p>
-                    将移除 {deletion.automatic_removed} 条自动关联，保留{" "}
-                    {deletion.manual_retained}{" "}
-                    条手动添加或固定链接。比赛和球队关注会继续保留。
-                  </p>
-                  <div className="creator-actions">
-                    <button
-                      className="secondary-button"
-                      onClick={() => setDeletion(null)}
-                    >
-                      取消
-                    </button>
-                    <button
-                      className="danger-button"
-                      disabled={busy}
-                      onClick={() =>
-                        run(
-                          () =>
-                            write(
-                              `/me/creators/${deletion.id}?expected_revision=${deletion.revision}&confirmed=true`,
-                              "DELETE",
-                            ),
-                          () => setDeletion(null),
-                        )
-                      }
-                    >
-                      确认删除创作者
-                    </button>
-                  </div>
-                </div>
-              )}
+                  取消
+                </button>
+                <button
+                  className="primary-button"
+                  disabled={busy || !draft.scope_keys.length}
+                  onClick={() =>
+                    run(
+                      () =>
+                        write("/me/creators", "POST", {
+                          url: identity.url,
+                          scope_keys: draft.scope_keys,
+                          preview: draft.preview,
+                          recap: draft.recap,
+                          expected_revision: user!.revision,
+                        }),
+                      () => {
+                        setIdentity(null);
+                        setUrl("");
+                      },
+                    )
+                  }
+                >
+                  <Check size={16} />
+                  确认关注
+                </button>
+              </div>
             </section>
-          ))}
-        </div>
-      ) : (
-        <div className="empty-state">
-          <YoutubeLogo size={40} />
-          <h3>还没有创作者</h3>
-          <p>添加后，AI 会判断视频对应的比赛、处理方式与内容标签。</p>
-        </div>
+          )}
+          {user?.creators.length ? (
+            <div className="creator-list">
+              {user.creators.map((creator) => (
+                <section className="managed-creator" key={creator.channel_id}>
+                  <div className="creator-row">
+                    <span className="creator-avatar">
+                      <YoutubeLogo size={24} />
+                    </span>
+                    <div className="creator-summary">
+                      <b>{creator.name}</b>
+                      <p>
+                        {effectiveScopeKeys(creator)
+                          .map(
+                            (key) =>
+                              sources.find((s) => s.id === key)?.name || key,
+                          )
+                          .join("、") || "未绑定关注对象"}{" "}
+                        · AI 自动判断视频内容
+                      </p>
+                      <p
+                        className={
+                          creator.last_error ? "creator-sync-error" : ""
+                        }
+                      >
+                        {!creator.enabled
+                          ? "已暂停新视频关联，保留已有链接"
+                          : creator.sync_status === "syncing"
+                            ? budget?.state === "waiting"
+                              ? "等待 YouTube 恢复更新"
+                              : "正在检查频道更新…"
+                            : creator.last_error
+                              ? creator.last_error === "YOUTUBE_KEY_REQUIRED"
+                                ? "尚未配置 YouTube 服务，暂时无法更新"
+                                : "上次更新未完成，可稍后重试"
+                              : creator.last_synced_at
+                                ? `上次检查 ${new Date(creator.last_synced_at).toLocaleString("zh-CN")}`
+                                : "等待首次检查"}
+                      </p>
+                    </div>
+                    <div className="creator-row-actions">
+                      <button
+                        className="icon-button"
+                        title={creator.enabled ? "暂停更新" : "恢复更新"}
+                        aria-label={`${creator.enabled ? "暂停" : "恢复"} ${creator.name}`}
+                        disabled={busy}
+                        onClick={() =>
+                          run(() =>
+                            write(
+                              `/me/creators/${creator.channel_id}`,
+                              "PATCH",
+                              {
+                                scope_keys: effectiveScopeKeys(creator),
+                                preview: creator.preview,
+                                recap: creator.recap,
+                                enabled: !creator.enabled,
+                                expected_revision: user.revision,
+                              },
+                            ),
+                          )
+                        }
+                      >
+                        {creator.enabled ? (
+                          <Pause size={17} />
+                        ) : (
+                          <Play size={17} />
+                        )}
+                      </button>
+                      <button
+                        className="icon-button"
+                        title="检查更新"
+                        aria-label={`检查 ${creator.name} 更新`}
+                        disabled={
+                          busy ||
+                          !creator.enabled ||
+                          creator.sync_status === "syncing"
+                        }
+                        onClick={() =>
+                          run(() =>
+                            write(
+                              `/me/creators/${creator.channel_id}/refresh`,
+                              "POST",
+                            ),
+                          )
+                        }
+                      >
+                        <ArrowClockwise size={17} />
+                      </button>
+                      <button
+                        className="secondary-button"
+                        disabled={busy}
+                        onClick={() => {
+                          setEditing(
+                            editing === creator.channel_id
+                              ? null
+                              : creator.channel_id,
+                          );
+                          setEditDraft({
+                            scope_keys: effectiveScopeKeys(creator),
+                            preview: creator.preview,
+                            recap: creator.recap,
+                            enabled: creator.enabled,
+                          });
+                        }}
+                      >
+                        偏好
+                      </button>
+                      <button
+                        className="icon-button"
+                        aria-label={`删除 ${creator.name}`}
+                        disabled={busy}
+                        onClick={() =>
+                          run(async () => {
+                            const impact = await api<CreatorRemovalImpact>(
+                              `/me/creators/${creator.channel_id}/impact`,
+                            );
+                            setDeletion({
+                              ...impact,
+                              id: creator.channel_id,
+                              name: creator.name,
+                            });
+                          })
+                        }
+                      >
+                        <Trash size={17} />
+                      </button>
+                    </div>
+                  </div>
+                  {editing === creator.channel_id && (
+                    <div className="creator-editor">
+                      <ScopeFields
+                        value={editDraft}
+                        onChange={setEditDraft}
+                        sources={followedSources}
+                      />
+                      <div className="creator-actions">
+                        <button
+                          className="secondary-button"
+                          onClick={() => setEditing(null)}
+                        >
+                          取消
+                        </button>
+                        <button
+                          className="primary-button"
+                          disabled={busy || !editDraft.scope_keys.length}
+                          onClick={saveEdit}
+                        >
+                          保存偏好
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {deletion?.id === creator.channel_id && (
+                    <div
+                      className="creator-delete"
+                      role="region"
+                      aria-label="确认删除创作者"
+                    >
+                      <h3>停止关注 {deletion.name}？</h3>
+                      <p>
+                        将移除 {deletion.automatic_removed} 条自动关联，保留{" "}
+                        {deletion.manual_retained}{" "}
+                        条手动添加或固定链接。比赛和球队关注会继续保留。
+                      </p>
+                      <div className="creator-actions">
+                        <button
+                          className="secondary-button"
+                          onClick={() => setDeletion(null)}
+                        >
+                          取消
+                        </button>
+                        <button
+                          className="danger-button"
+                          disabled={busy}
+                          onClick={() =>
+                            run(
+                              () =>
+                                write(
+                                  `/me/creators/${deletion.id}?expected_revision=${deletion.revision}&confirmed=true`,
+                                  "DELETE",
+                                ),
+                              () => setDeletion(null),
+                            )
+                          }
+                        >
+                          确认删除创作者
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <YoutubeLogo size={40} />
+              <h3>还没有创作者</h3>
+              <p>添加后，AI 会判断视频对应的比赛、处理方式与内容标签。</p>
+            </div>
+          )}
+        </>
       )}
       <section className="review-section" aria-label="待确认视频">
         <div className="section-toolbar">
           <div>
             <h2>待确认</h2>
-            <p>对应关系不够明确时，由你决定是否附到这场比赛。</p>
           </div>
           <span className="count-label">{reviews.length} 项</span>
         </div>
@@ -620,19 +627,19 @@ export function CreatorManager({
                 <span className="sr-only">搜索待确认视频</span>
                 <input
                   type="search"
-                  placeholder="搜索视频、创作者或比赛"
+                  placeholder="搜索视频或比赛"
                   value={reviewSearch}
                   onChange={(event) => setReviewSearch(event.target.value)}
                 />
               </label>
               <SelectMenu
-                ariaLabel="筛选创作者"
+                ariaLabel="筛选频道"
                 value={reviewCreator}
-                placeholder="全部创作者"
+                placeholder="全部频道"
                 groups={[
                   {
                     options: [
-                      { value: "", label: "全部创作者" },
+                      { value: "", label: "全部频道" },
                       ...creators.map((creator) => ({
                         value: creator,
                         label: creator,
@@ -773,18 +780,12 @@ export function CreatorManager({
             )}
           </>
         ) : (
-          <div className="review-empty">
-            {user?.creators.length
-              ? "当前没有待确认的视频。频道更新后，新候选会出现在这里。"
-              : "关注创作者并收到视频后，需你确认的关联会出现在这里。"}
-          </div>
+          <div className="review-empty">暂无待确认视频。</div>
         )}
       </section>
       <div className="info-note">
         <YoutubeLogo size={18} />
-        <span>
-          仅附加原视频链接。移除的视频不会被自动加回；固定的链接会随比赛保留。
-        </span>
+        <span>移除后不会自动加回；固定后不会被后台更新。</span>
       </div>
     </div>
   );
@@ -805,6 +806,9 @@ function ReviewCard({
   onSelected: (selected: boolean) => void;
   onDecide: (decision: "confirm" | "ignore") => void;
 }) {
+  const reasons = review.reason_codes
+    .map(reasonLabel)
+    .filter((reason): reason is string => Boolean(reason));
   return (
     <article className="review-card">
       <div className="review-source">
@@ -818,7 +822,7 @@ function ReviewCard({
         </label>
         <YoutubeLogo size={16} />
         {review.creator}
-        <span>视频候选</span>
+        <span>待确认</span>
       </div>
       {spoilerFree ? (
         <details>
@@ -840,7 +844,7 @@ function ReviewCard({
         className="review-event"
         href={`/calendar?event=${review.event_id}`}
       >
-        <span>拟关联比赛</span>
+        <span>比赛</span>
         <b>{review.event_title}</b>
         <small>
           {review.starts_at
@@ -848,12 +852,9 @@ function ReviewCard({
             : "时间待定"}
         </small>
       </Link>
-      <p className="review-reasons">
-        {review.reason_codes
-          .filter((reason) => !reason.startsWith("AI_MARGIN_"))
-          .map(reasonLabel)
-          .join(" · ")}
-      </p>
+      {!!reasons.length && (
+        <p className="review-reasons">{reasons.join(" · ")}</p>
+      )}
       {!!review.content_labels?.length && (
         <p className="review-reasons">{review.content_labels.join(" · ")}</p>
       )}
@@ -863,7 +864,7 @@ function ReviewCard({
           disabled={busy}
           onClick={() => onDecide("ignore")}
         >
-          不关联此场
+          不添加
         </button>
         <button
           className="primary-button"
@@ -871,7 +872,7 @@ function ReviewCard({
           onClick={() => onDecide("confirm")}
         >
           <Check size={15} />
-          确认关联
+          添加到比赛
         </button>
       </div>
     </article>
