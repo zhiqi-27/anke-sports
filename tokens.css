@@ -50,10 +50,10 @@
   --color-surface-danger: oklch(24% 0.045 28);
 
   /* Ink and rules */
-  --color-text: oklch(95% 0.008 120);
-  --color-text-muted: oklch(74% 0.015 140);
-  --color-text-subtle: oklch(66% 0.018 140);
-  --color-text-disabled: oklch(54% 0.015 140);
+  --color-text: oklch(97% 0.004 120);
+  --color-text-muted: oklch(84% 0.006 140);
+  --color-text-subtle: oklch(77% 0.006 140);
+  --color-text-disabled: oklch(68% 0.006 140);
   --color-shell-divider: oklch(25% 0.01 145);
   --color-content-divider: oklch(28% 0.01 145);
   --color-border: oklch(38% 0.012 145);

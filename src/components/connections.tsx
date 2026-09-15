@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { BrandMark } from "./brand-mark";
 import { useEffect, useState } from "react";
-import { Basketball, PlugsConnected, ShieldCheck } from "@phosphor-icons/react";
+import { PlugsConnected, ShieldCheck } from "@phosphor-icons/react";
 import { api, ApiError } from "@/lib/api";
 import { GoogleSignIn } from "./google-sign-in";
 import type { components } from "@/lib/generated";
@@ -113,7 +114,7 @@ export function ConnectionConsent() {
   return (
     <main className="connect-page">
       <Link href="/calendar" className="connect-brand">
-        <Basketball size={26} /> Anke Sports
+        <BrandMark size={32} /> Anke Sports
       </Link>
       <section className="consent-card" aria-labelledby="consent-heading">
         <ShieldCheck size={36} weight="duotone" />

@@ -7,6 +7,18 @@ import { api } from "@/lib/api";
 type RecordView = components["schemas"]["BroadcastView"];
 type Draft = components["schemas"]["BroadcastDraft"];
 type Observation = components["schemas"]["DeviceEvidence"];
+type Platform = {
+  id: string;
+  name: string;
+  evidence: string;
+  mobile_opening: "verified_https_app_link" | "web_handoff";
+  rights: Array<{
+    competition_id: string;
+    regions: string[];
+    valid_through: string | null;
+    evidence: string;
+  }>;
+};
 const contentLabels = {
   official_match: "比赛直播",
   reservation: "直播预约",
@@ -75,6 +87,7 @@ export function BroadcastManager({
     [reason, setReason] = useState("");
   const [filterEvent, setFilterEvent] = useState("");
   const [regionsText, setRegionsText] = useState("");
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
   const choose = useCallback((record: RecordView | null) => {
     setCurrent(record);
     setFields(record?.draft || emptyDraft());
@@ -90,7 +103,12 @@ export function BroadcastManager({
     setHasMore(result.has_more);
   }, [filterEvent]);
   useEffect(() => {
-    if (user?.is_maintainer) void reload().catch((e) => setError(e.message));
+    if (user?.is_maintainer) {
+      void reload().catch((e) => setError(e.message));
+      void api<{ items: Platform[] }>("/platforms")
+        .then((result) => setPlatforms(result.items))
+        .catch((e) => setError(e.message));
+    }
   }, [user?.is_maintainer, reload]);
   async function run(action: () => Promise<void>) {
     if (busy) return;
@@ -128,6 +146,20 @@ export function BroadcastManager({
     );
   const dirty = JSON.stringify(fields) !== JSON.stringify(current?.draft);
   const selectedEvent = events.find((e) => e.id === fields.event_id);
+  const selectedRegions = fields.regions || [];
+  const recommendedPlatforms = platforms.filter((platform) => {
+    const covered = new Set(
+      platform.rights
+        .filter(
+          (right) => right.competition_id === selectedEvent?.competition_id,
+        )
+        .flatMap((right) => right.regions),
+    );
+    return (
+      selectedRegions.length > 0 &&
+      selectedRegions.every((region) => covered.has(region))
+    );
+  });
   return (
     <div className="management-page broadcast-manager">
       <p className="broadcast-intro">
@@ -338,6 +370,46 @@ export function BroadcastManager({
                   maxLength={2000}
                 />
               </label>
+              {!!selectedEvent && (
+                <details>
+                  <summary>查看该赛事与地区的已核验版权方</summary>
+                  {!selectedRegions.length ? (
+                    <p>请先在下方选择“仅限指定地区”并填写国家代码。</p>
+                  ) : recommendedPlatforms.length ? (
+                    recommendedPlatforms.map((platform) => {
+                      const right = platform.rights.find(
+                        (item) =>
+                          item.competition_id ===
+                            selectedEvent.competition_id &&
+                          selectedRegions.some((region) =>
+                            item.regions.includes(region),
+                          ),
+                      );
+                      return (
+                        <p key={platform.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              update("evidence_url", right!.evidence);
+                            }}
+                          >
+                            {platform.name}
+                          </button>{" "}
+                          · {selectedRegions.join(", ")} ·{" "}
+                          {platform.mobile_opening === "verified_https_app_link"
+                            ? "支持官方 HTTPS App Link"
+                            : "网页交接，App 直达未验证"}
+                          {right!.valid_through
+                            ? ` · 权利期至 ${right!.valid_through}`
+                            : " · 发布前复核当前权利"}
+                        </p>
+                      );
+                    })
+                  ) : (
+                    <p>该地区尚无已核验版权方，请不要发布为比赛直播。</p>
+                  )}
+                </details>
+              )}
               <div className="broadcast-field-grid">
                 <label>
                   内容类型

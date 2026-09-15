@@ -753,7 +753,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "live" | "preview" | "recap" | "watch_along";
+            kind: "live" | "video" | "preview" | "recap" | "watch_along";
         };
         /** BroadcastAction */
         BroadcastAction: {
@@ -849,6 +849,15 @@ export interface components {
         };
         /** BroadcastPublicView */
         BroadcastPublicView: {
+            /** Platform Id */
+            platform_id: string;
+            /** Platform Name */
+            platform_name: string;
+            /**
+             * Mobile Opening
+             * @enum {string}
+             */
+            mobile_opening: "verified_https_app_link" | "web_handoff";
             /**
              * Content Type
              * @enum {string}
@@ -1383,6 +1392,8 @@ export interface components {
             title: string;
             /** Kind */
             kind: string;
+            /** Content Labels */
+            content_labels?: string[];
             /** Platform */
             platform: string;
             /** Creator */
@@ -1444,6 +1455,10 @@ export interface components {
              * @default true
              */
             transparent: boolean;
+            /** Broadcast Platforms */
+            broadcast_platforms?: {
+                [key: string]: string;
+            };
         };
         /** Preferences */
         "Preferences-Output": {
@@ -1470,6 +1485,10 @@ export interface components {
              * @default true
              */
             transparent: boolean;
+            /** Broadcast Platforms */
+            broadcast_platforms: {
+                [key: string]: string;
+            };
         };
         /** ProviderView */
         ProviderView: {
@@ -1531,11 +1550,8 @@ export interface components {
              * @enum {string}
              */
             decision: "confirm" | "ignore";
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "preview" | "recap";
+            /** Kind */
+            kind?: ("preview" | "recap") | null;
             /** Expected Updated At */
             expected_updated_at: string;
         };
@@ -1566,6 +1582,8 @@ export interface components {
             starts_at: string | null;
             /** Kind */
             kind: string;
+            /** Content Labels */
+            content_labels?: string[];
             /** Reason Codes */
             reason_codes: string[];
             /** Rule Version */

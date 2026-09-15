@@ -12,6 +12,7 @@ import {
   YoutubeLogo,
 } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
+import { BroadcastPreferences } from "./broadcast-preferences";
 import type {
   CalendarUser,
   CreatorIdentity,
@@ -32,10 +33,33 @@ const labels: Record<string, string> = {
   NO_EXPLICIT_DATE: "缺少明确日期",
   DATE_AMBIGUOUS: "日期有多种解释，需要确认",
   TITLE_SUBJECT_UNCLEAR: "标题未明确比赛对象",
-  TITLE_PHASE_UNCLEAR: "标题未明确前瞻或复盘",
-  PHASE_UNKNOWN: "前瞻或复盘类型待确认",
+  TITLE_PHASE_UNCLEAR: "标题未明确内容阶段",
+  PHASE_UNKNOWN: "内容阶段待确认",
   MULTIPLE_CANDIDATES: "可能对应多场比赛",
   MATCH_NOT_FINISHED: "视频发布时比赛可能尚未结束",
+  AI_SELECTED: "AI认为最可能对应这场比赛",
+  AI_ASSESSED: "AI已独立评估与这场比赛的相关性",
+  AI_REVIEW_RANGE: "AI置信度尚未达到自动添加标准",
+  AI_DECISION_CANDIDATE: "AI判定为备选",
+  BOTH_PARTICIPANTS: "AI识别到双方参与者",
+  OPPONENT_PAIR: "AI识别到对阵双方",
+  EXACT_DATE: "AI识别到明确日期",
+  RELATIVE_DATE: "AI识别到相对比赛时间",
+  COMPETITION: "AI识别到对应赛事",
+  SESSION: "AI识别到对应分场次",
+  SCORE_RESULT: "AI识别到赛果语义",
+  CHANNEL_CONTEXT: "频道内容与比赛相关",
+  TITLE_SEMANTICS: "标题语义与比赛吻合",
+  DESCRIPTION_SEMANTICS: "简介语义与比赛吻合",
+  GENERIC_TEAM_CONTENT: "可能只是球队泛内容",
+  CONFLICTING_SIGNALS: "AI发现相互冲突的信息",
+};
+
+const reasonLabel = (reason: string) => {
+  if (reason.startsWith("AI_CONFIDENCE_")) {
+    return `AI 置信度 ${Number(reason.slice(-3))}%`;
+  }
+  return labels[reason] || "信息仍需确认";
 };
 type Draft = Pick<
   CreatorFollow,
@@ -74,25 +98,6 @@ function ScopeFields({
 }) {
   return (
     <div className="creator-options">
-      <fieldset>
-        <legend>附加内容</legend>
-        <label>
-          <input
-            type="checkbox"
-            checked={value.preview}
-            onChange={(e) => onChange({ ...value, preview: e.target.checked })}
-          />
-          赛前前瞻
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={value.recap}
-            onChange={(e) => onChange({ ...value, recap: e.target.checked })}
-          />
-          赛后复盘
-        </label>
-      </fieldset>
       <fieldset>
         <legend>对应哪些关注</legend>
         <label>
@@ -160,9 +165,6 @@ export function CreatorManager({
   const [selectedReviews, setSelectedReviews] = useState<Set<string>>(
     new Set(),
   );
-  const [reviewKinds, setReviewKinds] = useState<
-    Record<string, "preview" | "recap">
-  >({});
   useEffect(() => {
     if (!user) {
       setReviews([]);
@@ -180,17 +182,6 @@ export function CreatorManager({
             return signature(current) === signature(data.items)
               ? current
               : data.items;
-          });
-          setReviewKinds((current) => {
-            const next = { ...current };
-            let changed = false;
-            data.items.forEach((review) => {
-              if (!next[review.id]) {
-                next[review.id] = review.kind === "recap" ? "recap" : "preview";
-                changed = true;
-              }
-            });
-            return changed ? next : current;
           });
           setReviewError("");
         }
@@ -284,7 +275,6 @@ export function CreatorManager({
           selected.map((review) =>
             write(`/me/reviews/${review.id}`, "POST", {
               decision,
-              kind: reviewKinds[review.id] || "preview",
               expected_updated_at: review.updated_at,
             }),
           ),
@@ -309,9 +299,15 @@ export function CreatorManager({
     );
   return (
     <div className="management-page creators-page">
+      <BroadcastPreferences
+        user={user}
+        busy={busy}
+        requireUser={requireUser}
+        run={run}
+      />
       <div className="section-toolbar">
         <div>
-          <h2>我的创作者</h2>
+          <h2>创作者内容</h2>
         </div>
         <span className="count-label">
           {user?.creators.length || 0} 位创作者
@@ -421,10 +417,7 @@ export function CreatorManager({
                         (key) => sources.find((s) => s.id === key)?.name || key,
                       )
                       .join("、") || "我的所有关注"}{" "}
-                    ·{" "}
-                    {[creator.preview && "前瞻", creator.recap && "复盘"]
-                      .filter(Boolean)
-                      .join("、") || "未启用内容类型"}
+                    · AI 自动判断视频内容
                   </p>
                   <p className={creator.last_error ? "creator-sync-error" : ""}>
                     {!creator.enabled
@@ -591,7 +584,7 @@ export function CreatorManager({
         <div className="empty-state">
           <YoutubeLogo size={40} />
           <h3>还没有创作者</h3>
-          <p>添加后，明确对应比赛的前瞻与复盘会以原视频链接补充到日历中。</p>
+          <p>添加后，AI 会判断视频对应的比赛、处理方式与内容标签。</p>
         </div>
       )}
       <section className="review-section" aria-label="待确认视频">
@@ -712,19 +705,11 @@ export function CreatorManager({
                       onSelected={(selected) =>
                         toggleReview(review.id, selected)
                       }
-                      kind={reviewKinds[review.id] || "preview"}
-                      onKind={(kind) =>
-                        setReviewKinds((current) => ({
-                          ...current,
-                          [review.id]: kind,
-                        }))
-                      }
-                      onDecide={(decision, kind) =>
+                      onDecide={(decision) =>
                         run(
                           () =>
                             write(`/me/reviews/${review.id}`, "POST", {
                               decision,
-                              kind,
                               expected_updated_at: review.updated_at,
                             }),
                           () =>
@@ -788,8 +773,6 @@ function ReviewCard({
   busy,
   selected,
   onSelected,
-  kind,
-  onKind,
   onDecide,
 }: {
   review: Review;
@@ -797,9 +780,7 @@ function ReviewCard({
   busy: boolean;
   selected: boolean;
   onSelected: (selected: boolean) => void;
-  kind: "preview" | "recap";
-  onKind: (kind: "preview" | "recap") => void;
-  onDecide: (decision: "confirm" | "ignore", kind: "preview" | "recap") => void;
+  onDecide: (decision: "confirm" | "ignore") => void;
 }) {
   return (
     <article className="review-card">
@@ -816,7 +797,7 @@ function ReviewCard({
         {review.creator}
         <span>视频候选</span>
       </div>
-      {spoilerFree && review.kind !== "preview" ? (
+      {spoilerFree ? (
         <details>
           <summary>显示视频标题（可能含赛果）</summary>
           <h3>{review.title}</h3>
@@ -846,29 +827,25 @@ function ReviewCard({
       </Link>
       <p className="review-reasons">
         {review.reason_codes
-          .map((reason) => labels[reason] || "信息仍需确认")
+          .filter((reason) => !reason.startsWith("AI_MARGIN_"))
+          .map(reasonLabel)
           .join(" · ")}
       </p>
+      {!!review.content_labels?.length && (
+        <p className="review-reasons">{review.content_labels.join(" · ")}</p>
+      )}
       <div className="creator-actions">
-        <select
-          aria-label={`关联类型 ${review.id}`}
-          value={kind}
-          onChange={(e) => onKind(e.target.value as "preview" | "recap")}
-        >
-          <option value="preview">赛前前瞻</option>
-          <option value="recap">赛后复盘</option>
-        </select>
         <button
           className="secondary-button"
           disabled={busy}
-          onClick={() => onDecide("ignore", kind)}
+          onClick={() => onDecide("ignore")}
         >
           不关联此场
         </button>
         <button
           className="primary-button"
           disabled={busy}
-          onClick={() => onDecide("confirm", kind)}
+          onClick={() => onDecide("confirm")}
         >
           <Check size={15} />
           确认关联

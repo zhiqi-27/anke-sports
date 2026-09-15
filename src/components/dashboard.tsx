@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
+import { BrandMark } from "./brand-mark";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Basketball,
   CalendarBlank,
   Star,
   YoutubeLogo,
@@ -65,14 +65,14 @@ const CalendarView = dynamic(() => import("./calendar-view"), {
 const navigation = [
   { id: "calendar", label: "日历", icon: CalendarBlank },
   { id: "following", label: "我的关注", icon: Star },
-  { id: "creators", label: "创作者", icon: YoutubeLogo },
+  { id: "creators", label: "直播和创作者内容", icon: Play },
   { id: "subscription", label: "日历订阅", icon: Broadcast },
   { id: "settings", label: "设置", icon: GearSix },
 ];
 const pageInfo: Record<string, [string, string]> = {
   calendar: ["比赛日历", ""],
   following: ["我的关注", "选择球队或赛事。"],
-  creators: ["创作者", "把 YouTube 原视频链接附到对应比赛。"],
+  creators: ["直播和创作者内容", "选择直播方，并把创作者内容附到对应比赛。"],
   subscription: ["日历订阅", "复制地址，在 Apple 或 Google 日历中添加。"],
   settings: ["设置", ""],
   maintenance: ["直播入口维护", "核对来源、场次与兼容性证据。"],
@@ -258,6 +258,7 @@ export function Dashboard({ page }: { page: string }) {
     watch_region: null,
     spoiler_free: true,
     transparent: true,
+    broadcast_platforms: {},
   });
   const [importText, setImportText] = useState("");
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(
@@ -307,6 +308,7 @@ export function Dashboard({ page }: { page: string }) {
         watch_region: null,
         spoiler_free: true,
         transparent: true,
+        broadcast_platforms: {},
       });
       pendingGuestFollows.current = null;
     }
@@ -423,7 +425,7 @@ export function Dashboard({ page }: { page: string }) {
     return (
       <div className="boot-screen" role="status" aria-live="polite">
         <span className="brand-icon">
-          <Basketball weight="duotone" size={26} />
+          <BrandMark size={32} />
         </span>
         <span className="loader" />
         <span>正在准备你的体育日历</span>
@@ -438,7 +440,7 @@ export function Dashboard({ page }: { page: string }) {
       <aside className="sidebar">
         <Link href="/calendar" className="brand" aria-label="Anke Sports 首页">
           <span className="brand-icon">
-            <Basketball weight="duotone" size={26} />
+            <BrandMark size={32} />
           </span>
           <span>
             Anke <b>Sports</b>
@@ -1018,6 +1020,23 @@ export function Dashboard({ page }: { page: string }) {
                   <option value="GB">英国</option>
                   <option value="JP">日本</option>
                   <option value="HK">中国香港</option>
+                  <optgroup label="欧洲">
+                    <option value="IE">爱尔兰</option>
+                    <option value="FR">法国</option>
+                    <option value="DE">德国</option>
+                    <option value="AT">奥地利</option>
+                    <option value="CH">瑞士</option>
+                    <option value="IT">意大利</option>
+                    <option value="ES">西班牙</option>
+                    <option value="PT">葡萄牙</option>
+                    <option value="NL">荷兰</option>
+                    <option value="BE">比利时</option>
+                    <option value="DK">丹麦</option>
+                    <option value="FI">芬兰</option>
+                    <option value="NO">挪威</option>
+                    <option value="SE">瑞典</option>
+                    <option value="PL">波兰</option>
+                  </optgroup>
                 </select>
               </Setting>
               <Setting
@@ -1278,7 +1297,7 @@ export function Dashboard({ page }: { page: string }) {
                 <X size={20} />
               </button>
               <div className="login-symbol">
-                <Basketball size={38} weight="duotone" />
+                <BrandMark size={48} />
               </div>
               <h2>保存关注与订阅</h2>
               <p>登录后创建持续更新的个人体育日历。</p>
@@ -1364,7 +1383,6 @@ export function Dashboard({ page }: { page: string }) {
               event={selected}
               sources={sources}
               timezone={timezone}
-              spoilerFree={preferences.spoiler_free}
               onClose={close}
               onAdd={() => requireUser(() => setAdding(true))}
               onToggle={() =>
@@ -1557,7 +1575,6 @@ function EventDrawer({
   event,
   sources,
   timezone,
-  spoilerFree,
   onClose,
   onAdd,
   onToggle,
@@ -1568,7 +1585,6 @@ function EventDrawer({
   event: SportEvent;
   sources: Source[];
   timezone: string;
-  spoilerFree: boolean;
   onClose: () => void;
   onAdd: () => void;
   onToggle: () => void;
@@ -1673,12 +1689,13 @@ function EventDrawer({
       <div className="drawer-links">
         {[
           ["live", "观看直播"],
-          ["preview", "赛前前瞻"],
-          ["recap", "赛后复盘"],
+          ["video", "相关视频"],
         ].map(([kind, title]) => {
           const links = event.links.filter(
             (l) =>
-              l.kind === kind || (kind === "live" && l.kind === "watch_along"),
+              l.kind === kind ||
+              (kind === "live" && l.kind === "watch_along") ||
+              (kind === "video" && ["preview", "recap"].includes(l.kind)),
           );
           const Icon = kind === "live" ? Broadcast : YoutubeLogo;
           return (
@@ -1695,13 +1712,31 @@ function EventDrawer({
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(event) => {
+                        if (
+                          link.broadcast?.mobile_opening ===
+                            "verified_https_app_link" &&
+                          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+                        ) {
+                          event.preventDefault();
+                          window.location.assign(link.url);
+                        }
+                      }}
                     >
                       <strong>
-                        {kind === "recap" && spoilerFree
-                          ? `${link.creator || link.platform} · 赛后复盘`
+                        {kind === "video"
+                          ? (link.content_labels?.length
+                              ? link.content_labels
+                              : link.kind === "preview"
+                                ? ["🔎赛前内容"]
+                                : link.kind === "recap"
+                                  ? ["🎬赛后内容"]
+                                  : ["🔗相关视频"]
+                            ).join(" · ")
                           : link.title}
                         <ArrowUpRight size={15} />
                       </strong>
+                      {kind === "video" && <small>{link.url}</small>}
                       <small>
                         {link.creator || link.platform} ·{" "}
                         {link.origin === "manual"
@@ -1719,6 +1754,14 @@ function EventDrawer({
                             : link.kind === "watch_along"
                               ? "同步解说，无比赛画面 · 观看条件与地区未验证"
                               : "手动添加，观看条件与地区未验证"}
+                        </small>
+                      )}
+                      {kind === "live" && link.broadcast && (
+                        <small>
+                          {link.broadcast.mobile_opening ===
+                          "verified_https_app_link"
+                            ? `手机将尝试在 ${link.broadcast.platform_name} App 打开，未安装则打开网页`
+                            : `在 ${link.broadcast.platform_name} 官方网页打开`}
                         </small>
                       )}
                     </a>
@@ -1790,18 +1833,20 @@ function EventDrawer({
                         )}
                       </details>
                     )}
-                    <button
-                      className="icon-button"
-                      aria-label={`${link.pinned ? "已固定" : "固定链接"} ${link.title}`}
-                      title={link.pinned ? "已固定" : "固定链接"}
-                      disabled={busy || link.pinned}
-                      onClick={() => onPin(link.id)}
-                    >
-                      <PushPin
-                        size={13}
-                        weight={link.pinned ? "fill" : "regular"}
-                      />
-                    </button>
+                    {!link.broadcast && (
+                      <button
+                        className="icon-button"
+                        aria-label={`${link.pinned ? "已固定" : "固定链接"} ${link.title}`}
+                        title={link.pinned ? "已固定" : "固定链接"}
+                        disabled={busy || link.pinned}
+                        onClick={() => onPin(link.id)}
+                      >
+                        <PushPin
+                          size={13}
+                          weight={link.pinned ? "fill" : "regular"}
+                        />
+                      </button>
+                    )}
                     <button
                       className="icon-button"
                       aria-label={`移除链接 ${link.title}`}
@@ -1817,11 +1862,9 @@ function EventDrawer({
                   <span>
                     {kind === "live"
                       ? "暂无已确认的本场直播入口"
-                      : kind === "preview"
-                        ? "暂无明确对应本场的前瞻视频"
-                        : "暂无对应本场的复盘链接"}
+                      : "暂无明确对应本场的视频"}
                   </span>
-                  {kind === "preview" && (
+                  {kind === "video" && (
                     <Link href="/creators" onClick={onClose}>
                       管理创作者 <ArrowUpRight size={12} />
                     </Link>
@@ -1879,7 +1922,7 @@ function AddLinkForm({
 }) {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [kind, setKind] = useState("preview");
+  const [kind, setKind] = useState("video");
   const [localError, setLocalError] = useState("");
   return (
     <form
@@ -1914,8 +1957,7 @@ function AddLinkForm({
       <label className="form-label">
         类型
         <select value={kind} onChange={(e) => setKind(e.target.value)}>
-          <option value="preview">赛前前瞻</option>
-          <option value="recap">赛后复盘</option>
+          <option value="video">相关视频</option>
           <option value="live">直播入口</option>
           <option value="watch_along">同步解说，无比赛画面</option>
         </select>

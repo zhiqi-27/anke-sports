@@ -85,6 +85,17 @@ textarea::placeholder {
 }
 select {
   cursor: pointer;
+  color-scheme: dark;
+}
+/* Native popup menus need their own foreground/background pair. */
+select option,
+select optgroup {
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+}
+select option:checked {
+  background-color: var(--color-surface-selected);
+  color: var(--color-accent);
 }
 input {
   min-width: 0;
@@ -1750,6 +1761,60 @@ dialog.is-closing::backdrop {
 
 .creators-page .creator-row {
   flex-wrap: wrap;
+}
+.broadcast-preferences {
+  padding: var(--space-6);
+  margin-bottom: var(--space-8);
+  border: var(--rule-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.broadcast-preferences .section-toolbar p {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.broadcast-region-field,
+.broadcast-league-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+.broadcast-region-field {
+  padding: var(--space-4) 0;
+  border-bottom: var(--rule-thin) solid var(--color-content-divider);
+}
+.broadcast-region-field > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.broadcast-region-field select,
+.broadcast-league-row select {
+  min-width: 240px;
+}
+.broadcast-league-list {
+  margin-bottom: var(--space-4);
+}
+.broadcast-league-row {
+  padding: var(--space-4) 0;
+  border-bottom: var(--rule-thin) solid var(--color-content-divider);
+}
+.broadcast-league-row > span {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.broadcast-league-row small,
+.broadcast-region-empty {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+.broadcast-region-empty {
+  padding: var(--space-6) 0;
 }
 .creators-page .creator-summary {
   flex: 1;
