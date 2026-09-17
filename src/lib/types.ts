@@ -8,14 +8,13 @@ export type EventLink = Schemas["LinkView"];
 export type SportEvent = Schemas["EventView"];
 export type Preferences = Schemas["Preferences-Output"];
 export type Follow = Schemas["Follow"];
-export type CreatorFollow = Schemas["CreatorFollow-Output"];
 export type Config = Schemas["Config-Output"];
 export type CalendarUser = Schemas["CalendarUserView"];
 export type AccountDeletion = Schemas["AccountDeletionView"];
 export type ServiceStatus = Schemas["ServiceStatusView"];
 export type ImportPreview = Schemas["ImportPreviewView"];
+export type ManualEventSource = Schemas["ManualEventSource"];
+export type CalendarSource = Schemas["CalendarSourceView"];
+export type CalendarMembership = Schemas["CalendarMembershipView"];
 
-export type CreatorIdentity = Schemas["CreatorIdentity"];
-export type CreatorRemovalImpact = Schemas["CreatorRemovalImpact"];
-export type Review = Schemas["ReviewView"];
 export type FollowPreviewView = Schemas["FollowPreviewView"];

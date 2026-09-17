@@ -101,12 +101,15 @@
   gap: var(--space-3);
 }
 .connections-section {
-  margin: var(--space-8) 0;
+  margin: var(--space-8) 0 0;
+  padding-top: var(--space-6);
+  border-top: var(--rule-thin) solid var(--color-content-divider);
 }
-.connections-section > h2 {
+.connections-section > h3 {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  font-size: 13px;
 }
 .connections-empty {
   border: var(--rule-thin) solid var(--color-border);

@@ -177,14 +177,6 @@ export function FollowPreview({
                   </p>
                 ),
             )}
-            {preview.removed_creators.length > 0 && (
-              <p>
-                <strong>同步取消创作者</strong>
-                {preview.removed_creators
-                  .map((creator) => creator.name)
-                  .join("、")}
-              </p>
-            )}
           </div>
           <div className="follow-impact-counts">
             <div>
@@ -203,7 +195,7 @@ export function FollowPreview({
           <p className="follow-impact-context">
             变更后日历包含 <strong>{preview.result_count} 场</strong>比赛。
             {preview.historical_retained > 0 &&
-              `其中 ${preview.historical_retained} 场历史比赛继续保留，可追加复盘。`}
+              `其中 ${preview.historical_retained} 场历史比赛继续保留。`}
             {preview.undated_count > 0 &&
               `另有 ${preview.undated_count} 场尚无日期，确定日期后再加入。`}
           </p>

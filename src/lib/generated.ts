@@ -329,23 +329,6 @@ export interface paths {
         patch: operations["preferences_api_v1_me_preferences_patch"];
         trace?: never;
     };
-    "/api/v1/events/{event_id}/selection": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Selection */
-        put: operations["selection_api_v1_events__event_id__selection_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/events/{event_id}/links": {
         parameters: {
             query?: never;
@@ -374,126 +357,6 @@ export interface paths {
         put?: never;
         /** Block */
         post: operations["block_api_v1_me_links__link_id__block_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/creators/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Creator Resolve */
-        post: operations["creator_resolve_api_v1_me_creators_resolve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/creators": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Creator Add */
-        post: operations["creator_add_api_v1_me_creators_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/creators/{channel_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Creator Delete */
-        delete: operations["creator_delete_api_v1_me_creators__channel_id__delete"];
-        options?: never;
-        head?: never;
-        /** Creator Update */
-        patch: operations["creator_update_api_v1_me_creators__channel_id__patch"];
-        trace?: never;
-    };
-    "/api/v1/me/creators/{channel_id}/impact": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Creator Impact */
-        get: operations["creator_impact_api_v1_me_creators__channel_id__impact_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/creators/{channel_id}/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Creator Refresh */
-        post: operations["creator_refresh_api_v1_me_creators__channel_id__refresh_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Reviews */
-        get: operations["reviews_api_v1_me_reviews_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/reviews/{match_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Review Decide */
-        post: operations["review_decide_api_v1_me_reviews__match_id__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -721,25 +584,6 @@ export interface components {
             /** External Cache */
             external_cache: string;
         };
-        /** AddCreator */
-        AddCreator: {
-            /** Url */
-            url: string;
-            /** Scope Keys */
-            scope_keys: string[];
-            /**
-             * Preview
-             * @default true
-             */
-            preview: boolean;
-            /**
-             * Recap
-             * @default true
-             */
-            recap: boolean;
-            /** Expected Revision */
-            expected_revision: number;
-        };
         /** AddLink */
         AddLink: {
             /** Url */
@@ -753,7 +597,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "live" | "video" | "preview" | "recap" | "watch_along";
+            kind: "live" | "watch_along";
         };
         /** BroadcastAction */
         BroadcastAction: {
@@ -920,6 +764,25 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** CalendarMembershipView */
+        CalendarMembershipView: {
+            /** Sources */
+            sources: components["schemas"]["CalendarSourceView"][];
+            /** Can Remove */
+            can_remove: boolean;
+        };
+        /** CalendarSourceView */
+        CalendarSourceView: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "follow" | "manual";
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+        };
         /** CalendarUserView */
         CalendarUserView: {
             /**
@@ -934,8 +797,6 @@ export interface components {
             /** Revision */
             revision: number;
             config: components["schemas"]["Config-Output"];
-            /** Creators */
-            creators: components["schemas"]["CreatorView"][];
             feed: components["schemas"]["FeedView"];
         };
         /** Config */
@@ -948,11 +809,9 @@ export interface components {
             schema_version: 1;
             /** Follows */
             follows?: components["schemas"]["Follow"][];
-            /** Creators */
-            creators?: components["schemas"]["CreatorFollow-Input"][];
             preferences?: components["schemas"]["Preferences-Input"];
-            /** Event Overrides */
-            event_overrides?: components["schemas"]["EventOverride"][];
+            /** Manual Events */
+            manual_events?: components["schemas"]["ManualEventSource"][];
             /** Link Overrides */
             link_overrides?: components["schemas"]["LinkOverride"][];
         };
@@ -966,11 +825,9 @@ export interface components {
             schema_version: 1;
             /** Follows */
             follows: components["schemas"]["Follow"][];
-            /** Creators */
-            creators: components["schemas"]["CreatorFollow-Output"][];
             preferences: components["schemas"]["Preferences-Output"];
-            /** Event Overrides */
-            event_overrides: components["schemas"]["EventOverride"][];
+            /** Manual Events */
+            manual_events: components["schemas"]["ManualEventSource"][];
             /** Link Overrides */
             link_overrides: components["schemas"]["LinkOverride"][];
         };
@@ -1030,100 +887,6 @@ export interface components {
             /** Note */
             note: string;
         };
-        /** CreatorFollow */
-        "CreatorFollow-Input": {
-            /** Channel Id */
-            channel_id: string;
-            /** Scope Keys */
-            scope_keys?: string[];
-            /**
-             * Preview
-             * @default true
-             */
-            preview: boolean;
-            /**
-             * Recap
-             * @default true
-             */
-            recap: boolean;
-            /**
-             * Enabled
-             * @default true
-             */
-            enabled: boolean;
-        };
-        /** CreatorFollow */
-        "CreatorFollow-Output": {
-            /** Channel Id */
-            channel_id: string;
-            /** Scope Keys */
-            scope_keys: string[];
-            /**
-             * Preview
-             * @default true
-             */
-            preview: boolean;
-            /**
-             * Recap
-             * @default true
-             */
-            recap: boolean;
-            /**
-             * Enabled
-             * @default true
-             */
-            enabled: boolean;
-        };
-        /** CreatorIdentity */
-        CreatorIdentity: {
-            /** Channel Id */
-            channel_id: string;
-            /** Name */
-            name: string;
-            /** Url */
-            url: string;
-        };
-        /** CreatorRemovalImpact */
-        CreatorRemovalImpact: {
-            /** Automatic Removed */
-            automatic_removed: number;
-            /** Manual Retained */
-            manual_retained: number;
-            /** Revision */
-            revision: number;
-        };
-        /** CreatorView */
-        CreatorView: {
-            /** Channel Id */
-            channel_id: string;
-            /** Scope Keys */
-            scope_keys: string[];
-            /**
-             * Preview
-             * @default true
-             */
-            preview: boolean;
-            /**
-             * Recap
-             * @default true
-             */
-            recap: boolean;
-            /**
-             * Enabled
-             * @default true
-             */
-            enabled: boolean;
-            /** Name */
-            name: string;
-            /** Last Error */
-            last_error: string;
-            /** Sync Status */
-            sync_status: string;
-            /** Last Synced At */
-            last_synced_at: string | null;
-            /** Websub Status */
-            websub_status: string;
-        };
         /** DeviceEvidence */
         DeviceEvidence: {
             /** Expected Revision */
@@ -1171,16 +934,6 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
-        /** EventOverride */
-        EventOverride: {
-            /** Event Key */
-            event_key: string;
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "include" | "exclude";
-        };
         /** EventView */
         EventView: {
             /** Id */
@@ -1219,6 +972,7 @@ export interface components {
             demo: boolean;
             /** Included */
             included: boolean;
+            calendar?: components["schemas"]["CalendarMembershipView"] | null;
             /** Links */
             links: components["schemas"]["LinkView"][];
             /** Description */
@@ -1248,26 +1002,19 @@ export interface components {
         Follow: {
             /**
              * Type
-             * @enum {string}
+             * @constant
              */
-            type: "team" | "competition" | "event" | "series";
+            type: "team";
             /** Source Key */
             source_key: string;
-        };
-        /** FollowChangeCreator */
-        FollowChangeCreator: {
-            /** Channel Id */
-            channel_id: string;
-            /** Name */
-            name: string;
         };
         /** FollowChangeSource */
         FollowChangeSource: {
             /**
              * Type
-             * @enum {string}
+             * @constant
              */
-            type: "team" | "competition" | "event" | "series";
+            type: "team";
             /** Source Key */
             source_key: string;
             /** Name */
@@ -1313,8 +1060,6 @@ export interface components {
             added_sources: components["schemas"]["FollowChangeSource"][];
             /** Removed Sources */
             removed_sources: components["schemas"]["FollowChangeSource"][];
-            /** Removed Creators */
-            removed_creators: components["schemas"]["FollowChangeCreator"][];
             added: components["schemas"]["FollowImpactGroup"];
             removed: components["schemas"]["FollowImpactGroup"];
             retained: components["schemas"]["FollowImpactGroup"];
@@ -1401,12 +1146,8 @@ export interface components {
             title: string;
             /** Kind */
             kind: string;
-            /** Content Labels */
-            content_labels?: string[];
             /** Platform */
             platform: string;
-            /** Creator */
-            creator: string;
             /** Origin */
             origin: string;
             /** Access */
@@ -1418,15 +1159,13 @@ export interface components {
             /** Created At */
             created_at: string;
         };
-        /** OverrideInput */
-        OverrideInput: {
-            /** Expected Revision */
-            expected_revision: number;
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "include" | "exclude" | "reset";
+        /**
+         * ManualEventSource
+         * @description A personal calendar source independent from team follows.
+         */
+        ManualEventSource: {
+            /** Event Id */
+            event_id: string;
         };
         /** ParticipantView */
         ParticipantView: {
@@ -1468,8 +1207,6 @@ export interface components {
             broadcast_platforms?: {
                 [key: string]: string;
             };
-            /** Content Search Windows */
-            content_search_windows?: ("before_24h" | "before_3h" | "after_3h" | "after_18h")[];
         };
         /** Preferences */
         "Preferences-Output": {
@@ -1500,8 +1237,6 @@ export interface components {
             broadcast_platforms: {
                 [key: string]: string;
             };
-            /** Content Search Windows */
-            content_search_windows: ("before_24h" | "before_3h" | "after_3h" | "after_18h")[];
         };
         /** ProviderView */
         ProviderView: {
@@ -1551,59 +1286,6 @@ export interface components {
             /** Local Only */
             local_only: boolean;
         };
-        /** ResolveCreator */
-        ResolveCreator: {
-            /** Url */
-            url: string;
-        };
-        /** ReviewDecision */
-        ReviewDecision: {
-            /**
-             * Decision
-             * @enum {string}
-             */
-            decision: "confirm" | "ignore";
-            /** Kind */
-            kind?: ("preview" | "recap") | null;
-            /** Expected Updated At */
-            expected_updated_at: string;
-        };
-        /** ReviewList */
-        ReviewList: {
-            /** Items */
-            items: components["schemas"]["ReviewView"][];
-        };
-        /** ReviewView */
-        ReviewView: {
-            /** Id */
-            id: string;
-            /** Video Id */
-            video_id: string;
-            /** Title */
-            title: string;
-            /** Url */
-            url: string;
-            /** Creator */
-            creator: string;
-            /** Published At */
-            published_at: string;
-            /** Event Id */
-            event_id: string;
-            /** Event Title */
-            event_title: string;
-            /** Starts At */
-            starts_at: string | null;
-            /** Kind */
-            kind: string;
-            /** Content Labels */
-            content_labels?: string[];
-            /** Reason Codes */
-            reason_codes: string[];
-            /** Rule Version */
-            rule_version: string;
-            /** Updated At */
-            updated_at: string;
-        };
         /** SaveFollows */
         SaveFollows: {
             /** Expected Revision */
@@ -1621,7 +1303,6 @@ export interface components {
         };
         /** ServiceStatusView */
         ServiceStatusView: {
-            youtube_budget: components["schemas"]["YouTubeBudgetView"];
             /** Local Preview */
             local_preview: boolean;
             /** Firebase Configured */
@@ -1657,19 +1338,6 @@ export interface components {
             /** Demo */
             demo: boolean;
         };
-        /** UpdateCreator */
-        UpdateCreator: {
-            /** Expected Revision */
-            expected_revision: number;
-            /** Scope Keys */
-            scope_keys: string[];
-            /** Preview */
-            preview: boolean;
-            /** Recap */
-            recap: boolean;
-            /** Enabled */
-            enabled: boolean;
-        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1682,34 +1350,6 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
-        };
-        /** YouTubeBudgetView */
-        YouTubeBudgetView: {
-            /** Configured */
-            configured: boolean;
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "unconfigured" | "available" | "waiting";
-            /** Daily Limit */
-            daily_limit: number;
-            /** Reserved Units */
-            reserved_units: number;
-            /** Available Units */
-            available_units: number | null;
-            /** Reset At */
-            reset_at: string | null;
-            /** Resume At */
-            resume_at: string | null;
-            /** Search Daily Limit */
-            search_daily_limit: number;
-            /** Search Reserved Calls */
-            search_reserved_calls: number;
-            /** Search Available Calls */
-            search_available_calls: number | null;
-            /** Search Resume At */
-            search_resume_at: string | null;
         };
     };
     responses: never;
@@ -2344,41 +1984,6 @@ export interface operations {
             };
         };
     };
-    selection_api_v1_events__event_id__selection_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                event_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OverrideInput"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EventView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     add_link_api_v1_events__event_id__links_post: {
         parameters: {
             query?: never;
@@ -2428,260 +2033,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    creator_resolve_api_v1_me_creators_resolve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveCreator"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatorIdentity"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    creator_add_api_v1_me_creators_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "idempotency-key"?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddCreator"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CalendarUserView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    creator_delete_api_v1_me_creators__channel_id__delete: {
-        parameters: {
-            query: {
-                expected_revision: number;
-                confirmed?: boolean;
-            };
-            header?: never;
-            path: {
-                channel_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CalendarUserView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    creator_update_api_v1_me_creators__channel_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channel_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCreator"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CalendarUserView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    creator_impact_api_v1_me_creators__channel_id__impact_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channel_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatorRemovalImpact"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    creator_refresh_api_v1_me_creators__channel_id__refresh_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                channel_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reviews_api_v1_me_reviews_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReviewList"];
-                };
-            };
-        };
-    };
-    review_decide_api_v1_me_reviews__match_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                match_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReviewDecision"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {

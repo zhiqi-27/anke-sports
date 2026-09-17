@@ -14,11 +14,7 @@ export function useAnke() {
   const [accountReady, setAccountReady] = useState(false);
   const userRequest = useRef(0);
   const statusReady = status !== null;
-  const personalPending = Boolean(
-    user &&
-    (user.feed.status === "updating" ||
-      user.creators.some((c) => c.enabled && c.sync_status === "syncing")),
-  );
+  const personalPending = Boolean(user && user.feed.status === "updating");
   const refresh = useCallback(() => setEpoch((x) => x + 1), []);
   const refreshUser = useCallback(async () => {
     const request = ++userRequest.current;
@@ -86,25 +82,16 @@ export function useAnke() {
     const waitingProvider = status?.providers.some(
       (p) => p.activity === "waiting",
     );
-    const waitingYouTube = status?.youtube_budget?.state === "waiting";
     if (
       !accountReady ||
-      (!personalPending &&
-        !activeProvider &&
-        !waitingProvider &&
-        !waitingYouTube)
+      (!personalPending && !activeProvider && !waitingProvider)
     )
       return;
     let cancelled = false;
     const timer = setInterval(
       () => {
         void refreshUser();
-        if (
-          activeProvider ||
-          waitingProvider ||
-          personalPending ||
-          waitingYouTube
-        )
+        if (activeProvider || waitingProvider || personalPending)
           void api<ServiceStatus>("/status")
             .then((next) => {
               if (!cancelled) {
@@ -122,7 +109,7 @@ export function useAnke() {
             })
             .catch(() => {});
       },
-      activeProvider || (personalPending && !waitingYouTube) ? 2000 : 30000,
+      activeProvider || personalPending ? 2000 : 30000,
     );
     return () => {
       cancelled = true;

@@ -132,9 +132,7 @@ export default function CalendarView({
   const guestSources = useMemo(
     () =>
       sources.filter(
-        (source) =>
-          (source.kind === "competition" && source.sport === "racing") ||
-          (source.kind === "team" && source.sport !== "racing"),
+        (source) => source.kind === "team",
       ),
     [sources],
   );

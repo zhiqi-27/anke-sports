@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Broadcast, GlobeHemisphereWest } from "@phosphor-icons/react";
+import {
+  Broadcast,
+  CaretDown,
+  GlobeHemisphereWest,
+} from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import type { Preferences } from "@/lib/types";
+import { SelectMenu } from "./select-menu";
 
 type BroadcastPlatform = {
   id: string;
@@ -51,8 +56,10 @@ type Props = {
 
 export function BroadcastPreferences({ preferences, onChange }: Props) {
   const [platforms, setPlatforms] = useState<BroadcastPlatform[]>([]);
+  const [expanded, setExpanded] = useState(Boolean(preferences.watch_region));
   const region = preferences.watch_region || "";
   const draft = preferences.broadcast_platforms || {};
+  const regionName = regions.find(([code]) => code === region)?.[1];
 
   useEffect(() => {
     api<{ items: BroadcastPlatform[] }>("/platforms")
@@ -79,82 +86,115 @@ export function BroadcastPreferences({ preferences, onChange }: Props) {
       className="broadcast-preferences"
       aria-labelledby="broadcast-preferences-title"
     >
-      <div className="section-toolbar">
-        <div>
-          <span className="eyebrow">直播</span>
-          <h2 id="broadcast-preferences-title">按地区和联赛选择直播方</h2>
-          <p>赛事详情使用这里的偏好；个人日历每场只保留一个直播链接。</p>
-        </div>
-        <Broadcast size={28} weight="duotone" />
-      </div>
-      <label className="broadcast-region-field">
-        <span>
-          <GlobeHemisphereWest size={16} /> 观看地区
+      <button
+        type="button"
+        className="broadcast-summary"
+        aria-expanded={expanded}
+        aria-controls="broadcast-preferences-content"
+        onClick={() => setExpanded((value) => !value)}
+      >
+        <span className="broadcast-summary-icon">
+          <Broadcast size={20} weight="duotone" />
         </span>
-        <select
-          aria-label="直播观看地区"
-          value={region}
-          onChange={(event) =>
-            onChange({
-              ...preferences,
-              watch_region: event.target.value || null,
-            })
-          }
+        <span>
+          <b id="broadcast-preferences-title">直播方偏好</b>
+          <small>
+            {regionName
+              ? `${regionName} · 可按联赛覆盖自动选择`
+              : "默认自动选择；可按观看地区自定义"}
+          </small>
+        </span>
+        <CaretDown className="broadcast-summary-caret" size={16} />
+      </button>
+      {expanded && (
+        <div
+          className="broadcast-preferences-content"
+          id="broadcast-preferences-content"
         >
-          <option value="">选择地区</option>
-          {regions.map(([code, name]) => (
-            <option value={code} key={code}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </label>
-      {region ? (
-        <div className="broadcast-league-list">
-          {regionalRights.map(({ competitionId, platforms: choices }) => {
-            const preferenceKey = `${region}:${competitionId}`;
-            return (
-              <label className="broadcast-league-row" key={competitionId}>
-                <span>
-                  <b>{competitions[competitionId]}</b>
-                  <small>
-                    {choices.length
-                      ? `${choices.length} 个已核验版权方`
-                      : "当前地区尚无已核验版权方"}
-                  </small>
-                </span>
-                <select
-                  aria-label={`${competitions[competitionId]}首选直播方`}
-                  disabled={!choices.length}
-                  value={draft[preferenceKey] || ""}
-                  onChange={(event) =>
-                    onChange({
-                      ...preferences,
-                      broadcast_platforms: {
-                        ...draft,
-                        [preferenceKey]: event.target.value,
-                      },
-                    })
-                  }
-                >
-                  <option value="">自动选择</option>
-                  {choices.map((platform) => (
-                    <option key={platform.id} value={platform.id}>
-                      {platform.name}
-                      {platform.mobile_opening === "verified_https_app_link"
-                        ? " · 支持 App Link"
-                        : " · 官方网页"}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            );
-          })}
+          <div className="broadcast-region-field">
+            <span>
+              <GlobeHemisphereWest size={16} /> 观看地区
+            </span>
+            <SelectMenu
+              ariaLabel="直播观看地区"
+              value={region}
+              placeholder="选择地区"
+              className="broadcast-select-menu"
+              searchable
+              searchPlaceholder="搜索国家或地区"
+              groups={[
+                {
+                  options: [
+                    { value: "", label: "自动（不指定地区）" },
+                    ...regions.map(([value, label]) => ({ value, label })),
+                  ],
+                },
+              ]}
+              onChange={(value) =>
+                onChange({ ...preferences, watch_region: value || null })
+              }
+            />
+          </div>
+          {region ? (
+            <div className="broadcast-league-list">
+              {regionalRights.map(({ competitionId, platforms: choices }) => {
+                const preferenceKey = `${region}:${competitionId}`;
+                return (
+                  <div className="broadcast-league-row" key={competitionId}>
+                    <span>
+                      <b>{competitions[competitionId]}</b>
+                      <small>
+                        {choices.length
+                          ? `${choices.length} 个已核验版权方`
+                          : "当前地区尚无已核验版权方"}
+                      </small>
+                    </span>
+                    <SelectMenu
+                      ariaLabel={`${competitions[competitionId]}首选直播方`}
+                      disabled={!choices.length}
+                      value={draft[preferenceKey] || ""}
+                      placeholder={choices.length ? "自动选择" : "暂无版权方"}
+                      className="broadcast-select-menu"
+                      groups={[
+                        {
+                          options: [
+                            {
+                              value: "",
+                              label: "自动选择",
+                              description: "按已核验版权顺序选择",
+                            },
+                            ...choices.map((platform) => ({
+                              value: platform.id,
+                              label: platform.name,
+                              description:
+                                platform.mobile_opening ===
+                                "verified_https_app_link"
+                                  ? "支持 App Link"
+                                  : "官方网页",
+                            })),
+                          ],
+                        },
+                      ]}
+                      onChange={(value) =>
+                        onChange({
+                          ...preferences,
+                          broadcast_platforms: {
+                            ...draft,
+                            [preferenceKey]: value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="broadcast-region-empty">
+              选择观看地区后，可按联赛覆盖自动选择。
+            </p>
+          )}
         </div>
-      ) : (
-        <p className="broadcast-region-empty">
-          先选择观看地区，再按联赛设置直播方。
-        </p>
       )}
     </section>
   );

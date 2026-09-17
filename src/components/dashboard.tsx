@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarBlank,
   Star,
-  YoutubeLogo,
   Broadcast,
   GearSix,
   GithubLogo,
@@ -35,6 +34,7 @@ import {
   WarningCircle,
   SoccerBall,
   SlidersHorizontal,
+  ArrowCounterClockwise,
 } from "@phosphor-icons/react";
 import { api, deleteAccount, download, logout } from "@/lib/api";
 import type {
@@ -48,7 +48,6 @@ import type {
 import { BroadcastManager } from "./broadcast-manager";
 import { BroadcastPreferences } from "./broadcast-preferences";
 import { FollowPreview } from "./follow-preview";
-import { CreatorManager } from "./creator-manager";
 import { ConnectionManager } from "./connections";
 import { GoogleSignIn } from "./google-sign-in";
 import { useAnke } from "@/hooks/use-anke";
@@ -67,7 +66,6 @@ const CalendarView = dynamic(() => import("./calendar-view"), {
 const navigation = [
   { id: "calendar", label: "日历", icon: CalendarBlank },
   { id: "following", label: "我的关注", icon: Star },
-  { id: "creators", label: "视频内容", icon: Play },
   { id: "subscription", label: "日历订阅", icon: Broadcast },
   { id: "settings", label: "设置", icon: GearSix },
 ];
@@ -82,18 +80,32 @@ const timezoneOptions = [
 ].map((value) => ({ value, label: value }));
 const pageInfo: Record<string, [string, string]> = {
   calendar: ["比赛日历", ""],
-  following: ["我的关注", "选择球队或赛事。"],
-  creators: ["视频内容", ""],
+  following: ["我的关注", "选择球队或车队。"],
   subscription: ["日历订阅", "复制地址，在 Apple 或 Google 日历中添加。"],
   settings: ["设置", ""],
   maintenance: ["直播入口维护", "核对来源、场次与兼容性证据。"],
 };
 
-function canFollowDirectly(source: Source) {
-  return (
-    (source.kind === "team" && source.sport !== "racing") ||
-    (source.kind === "competition" && source.sport === "racing")
+function recordSignature(value: Record<string, string>) {
+  return JSON.stringify(
+    Object.entries(value).sort(([left], [right]) => left.localeCompare(right)),
   );
+}
+
+function preferenceChangeCount(current: Preferences, saved?: Preferences) {
+  if (!saved) return 0;
+  return [
+    current.timezone !== saved.timezone,
+    current.spoiler_free !== saved.spoiler_free,
+    current.transparent !== saved.transparent,
+    current.watch_region !== saved.watch_region,
+    recordSignature(current.broadcast_platforms) !==
+      recordSignature(saved.broadcast_platforms),
+  ].filter(Boolean).length;
+}
+
+function canFollowDirectly(source: Source) {
+  return source.kind === "team";
 }
 
 function FollowSourceCard({
@@ -231,10 +243,10 @@ export function Dashboard({ page }: { page: string }) {
       sources.filter(
         (source) =>
           source.kind === "competition" &&
-          source.sport !== "racing" &&
           sources.some(
             (candidate) =>
-              candidate.kind === "team" && candidate.sport === source.sport,
+              candidate.kind === "team" &&
+              candidate.sport === source.sport,
           ),
       ),
     [sources],
@@ -242,6 +254,7 @@ export function Dashboard({ page }: { page: string }) {
   const selectedLeague = leagueDirectories.find(
     (league) => league.id === selectedLeagueId,
   );
+  const selectedTeamNoun = selectedLeague?.sport === "racing" ? "车队" : "球队";
   const selectedLeagueTeams = useMemo(() => {
     if (!selectedLeague) return [];
     const query = followSearch.trim().toLowerCase();
@@ -252,17 +265,6 @@ export function Dashboard({ page }: { page: string }) {
         (source.name + source.short_name).toLowerCase().includes(query),
     );
   }, [followSearch, followableSources, selectedLeague]);
-  const blockedFollowCount = useMemo(() => {
-    if (!user) return 0;
-    const blocked = new Set(
-      sources
-        .filter((source) => !canFollowDirectly(source))
-        .map((source) => source.id),
-    );
-    return user.config.follows.filter((follow) =>
-      blocked.has(follow.source_key),
-    ).length;
-  }, [sources, user]);
   const [preferences, setPreferences] = useState<Preferences>({
     timezone: "Asia/Shanghai",
     locale: "zh-CN",
@@ -270,13 +272,14 @@ export function Dashboard({ page }: { page: string }) {
     spoiler_free: true,
     transparent: true,
     broadcast_platforms: {},
-    content_search_windows: ["before_24h", "after_3h"],
   });
   const [importText, setImportText] = useState("");
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(
     null,
   );
   const [importMode, setImportMode] = useState("merge");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importError, setImportError] = useState("");
   const [confirm, setConfirm] = useState<"rotate" | "delete" | null>(null);
   const [accountNotice, setAccountNotice] = useState("");
   const previousAccount = useRef<string | null>(null);
@@ -308,6 +311,8 @@ export function Dashboard({ page }: { page: string }) {
       setImportText("");
       setImportPreview(null);
       setImportMode("merge");
+      setImportOpen(false);
+      setImportError("");
       setFollowSearch("");
       setSelectedLeagueId("");
       setFollowSaving(false);
@@ -321,7 +326,6 @@ export function Dashboard({ page }: { page: string }) {
         spoiler_free: true,
         transparent: true,
         broadcast_platforms: {},
-        content_search_windows: ["before_24h", "after_3h"],
       });
       pendingGuestFollows.current = null;
     }
@@ -362,6 +366,37 @@ export function Dashboard({ page }: { page: string }) {
       pendingGuestFollows.current = null;
     }
   }, [user?.revision, user?.id]); // Preferences refresh only after authoritative configuration changes.
+  const preferenceChanges = preferenceChangeCount(
+    preferences,
+    user?.config.preferences,
+  );
+  const preferencesDirty = preferenceChanges > 0;
+  useEffect(() => {
+    if (!preferencesDirty) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    const confirmInternalNavigation = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const link = target.closest<HTMLAnchorElement>("a[href]");
+      if (!link || link.target === "_blank" || link.hasAttribute("download"))
+        return;
+      const destination = new URL(link.href, window.location.href);
+      if (destination.href === window.location.href) return;
+      if (!window.confirm("你有尚未保存的设置。确定要离开吗？")) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    document.addEventListener("click", confirmInternalNavigation, true);
+    return () => {
+      window.removeEventListener("beforeunload", warnBeforeLeaving);
+      document.removeEventListener("click", confirmInternalNavigation, true);
+    };
+  }, [preferencesDirty]);
   useEffect(() => {
     if (!sources.length) return;
     const blocked = new Set(
@@ -412,7 +447,7 @@ export function Dashboard({ page }: { page: string }) {
         ? current.filter((x) => x.source_key !== source.id)
         : [
             ...current,
-            { type: source.kind as Follow["type"], source_key: source.id },
+            { type: "team", source_key: source.id },
           ],
     );
   const followChanged =
@@ -473,15 +508,12 @@ export function Dashboard({ page }: { page: string }) {
                 weight={page === item.id ? "fill" : "regular"}
               />
               <span>{item.label}</span>
-              {item.id === "creators" && user && user.creators.length > 0 && (
-                <small>{user.creators.length}</small>
-              )}
             </Link>
           ))}
         </nav>
         <div className="sidebar-follows">
           <div className="sidebar-heading">
-            <span>我的球队与赛事</span>
+            <span>我的关注</span>
             <Link href="/following" aria-label="添加关注">
               <Plus size={16} />
             </Link>
@@ -567,16 +599,20 @@ export function Dashboard({ page }: { page: string }) {
             <b>{navigation.find((n) => n.id === page)?.label}</b>
           </div>
           <div className="topbar-actions">
-            <GlobeHemisphereWest size={16} />
-            <SelectMenu
-              ariaLabel="临时显示时区（不保存）"
-              title="仅改变当前页面显示；默认时区请在设置中保存"
-              value={timezone}
-              placeholder="选择时区"
-              className="select-menu--quiet topbar-timezone-menu"
-              groups={[{ options: timezoneOptions }]}
-              onChange={setTimezone}
-            />
+            {page !== "settings" && (
+              <>
+                <GlobeHemisphereWest size={16} />
+                <SelectMenu
+                  ariaLabel="临时显示时区（不保存）"
+                  title="仅改变当前页面显示；默认时区请在设置中保存"
+                  value={timezone}
+                  placeholder="选择时区"
+                  className="select-menu--quiet topbar-timezone-menu"
+                  groups={[{ options: timezoneOptions }]}
+                  onChange={setTimezone}
+                />
+              </>
+            )}
             <Link className="primary-button" href="/subscription">
               <CalendarCheck size={17} />
               订阅日历
@@ -642,8 +678,8 @@ export function Dashboard({ page }: { page: string }) {
           <div className="management-page">
             <div className="section-toolbar">
               <div>
-                <h2>球队与赛事</h2>
-                <p>F1 可整体关注；英超、NBA 请选择球队。</p>
+                <h2>选择球队或车队</h2>
+                <p>F1、英超和NBA均选择具体球队或车队。</p>
               </div>
               <button
                 className="primary-button"
@@ -667,33 +703,7 @@ export function Dashboard({ page }: { page: string }) {
             </div>
             <section className="source-section">
               <h3>
-                关注赛事
-                <small>
-                  {
-                    followableSources.filter(
-                      (source) => source.kind === "competition",
-                    ).length
-                  }
-                </small>
-              </h3>
-              <div className="source-grid">
-                {followableSources
-                  .filter((source) => source.kind === "competition")
-                  .map((source) => (
-                    <FollowSourceCard
-                      key={source.id}
-                      source={source}
-                      checked={followDraft.some(
-                        (follow) => follow.source_key === source.id,
-                      )}
-                      onToggle={() => toggleFollow(source)}
-                    />
-                  ))}
-              </div>
-            </section>
-            <section className="source-section">
-              <h3>
-                按联赛选择球队
+                按赛事选择球队或车队
                 <small>{leagueDirectories.length}</small>
               </h3>
               <div className="league-picker">
@@ -701,7 +711,8 @@ export function Dashboard({ page }: { page: string }) {
                   const expanded = league.id === selectedLeagueId;
                   const teamCount = followableSources.filter(
                     (source) =>
-                      source.kind === "team" && source.sport === league.sport,
+                      source.kind === "team" &&
+                      source.sport === league.sport,
                   ).length;
                   const selectedCount = followDraft.filter((follow) =>
                     followableSources.some(
@@ -729,7 +740,7 @@ export function Dashboard({ page }: { page: string }) {
                       <span>
                         <b>{league.name}</b>
                         <small>
-                          {teamCount} 支球队
+                          {teamCount} 支{league.sport === "racing" ? "车队" : "球队"}
                           {selectedCount ? ` · 已选 ${selectedCount}` : ""}
                         </small>
                       </span>
@@ -745,10 +756,12 @@ export function Dashboard({ page }: { page: string }) {
                   aria-live="polite"
                 >
                   <div className="league-team-toolbar">
-                    <strong>{selectedLeague.short_name} 球队</strong>
+                    <strong>
+                      {selectedLeague.short_name} {selectedTeamNoun}
+                    </strong>
                     <label className="search-field">
                       <span className="sr-only">
-                        搜索{selectedLeague.short_name}球队
+                        搜索{selectedLeague.short_name}{selectedTeamNoun}
                       </span>
                       <SlidersHorizontal size={18} />
                       <input
@@ -756,7 +769,7 @@ export function Dashboard({ page }: { page: string }) {
                         onChange={(event) =>
                           setFollowSearch(event.target.value)
                         }
-                        placeholder={`搜索${selectedLeague.short_name}球队`}
+                        placeholder={`搜索${selectedLeague.short_name}${selectedTeamNoun}`}
                       />
                     </label>
                   </div>
@@ -773,22 +786,17 @@ export function Dashboard({ page }: { page: string }) {
                     ))}
                   </div>
                   {!selectedLeagueTeams.length && (
-                    <p className="league-picker-empty">没有找到对应球队。</p>
+                    <p className="league-picker-empty">
+                      没有找到对应{selectedTeamNoun}。
+                    </p>
                   )}
                 </div>
               ) : (
-                <p className="league-picker-empty">选择一个联赛后查看球队。</p>
+                <p className="league-picker-empty">
+                  选择一个赛事或联赛后查看球队或车队。
+                </p>
               )}
             </section>
-            {blockedFollowCount > 0 && (
-              <div className="info-note follow-migration-note" role="status">
-                <WarningCircle size={18} />
-                <span>
-                  检测到 {blockedFollowCount}{" "}
-                  个旧的整联赛关注；预览并保存后会按新规则移除。
-                </span>
-              </div>
-            )}
             {!followableSources.length && (
               <Empty
                 icon={<Star size={34} />}
@@ -803,18 +811,6 @@ export function Dashboard({ page }: { page: string }) {
               </span>
             </div>
           </div>
-        )}
-        {page === "creators" && (
-          <CreatorManager
-            budget={status?.youtube_budget}
-            key={user?.id || "guest"}
-            user={user}
-            sources={sources}
-            epoch={epoch}
-            busy={busy}
-            run={run}
-            requireUser={requireUser}
-          />
         )}
         {page === "subscription" && (
           <div className="management-page subscription-page">
@@ -981,284 +977,273 @@ export function Dashboard({ page }: { page: string }) {
         )}
         {page === "settings" && (
           <div className="management-page settings-page">
-            <h2>日历偏好</h2>
-            <div className="settings-list">
-              <Setting title="日历时区" text="影响日期与开赛时间的显示。">
-                <select
-                  aria-label="保存的日历时区"
-                  value={preferences.timezone}
-                  onChange={(e) =>
-                    setPreferences({ ...preferences, timezone: e.target.value })
-                  }
-                >
-                  {[
-                    "Asia/Shanghai",
-                    "America/New_York",
-                    "America/Los_Angeles",
-                    "Europe/London",
-                    "Europe/Paris",
-                    "Asia/Tokyo",
-                    "UTC",
-                  ].map((t) => (
-                    <option key={t}>{t}</option>
-                  ))}
-                </select>
-              </Setting>
-              <Setting
-                title="防剧透"
-                text="用通用标签替代日历描述里的复盘标题。"
+            <p className="settings-intro">
+              偏好修改后统一保存；导出、导入和连接管理会独立执行。
+            </p>
+
+            {preferencesDirty && (
+              <div
+                className="settings-save-bar"
+                role="region"
+                aria-label="未保存的设置"
               >
-                <Toggle
-                  label="防剧透"
-                  checked={preferences.spoiler_free}
-                  onChange={(x) =>
-                    setPreferences({ ...preferences, spoiler_free: x })
-                  }
-                />
-              </Setting>
-              <Setting
-                title="不占用忙碌时间"
-                text="比赛显示在日历中，不阻挡其他安排。"
-              >
-                <Toggle
-                  label="不占用忙碌时间"
-                  checked={preferences.transparent}
-                  onChange={(x) =>
-                    setPreferences({ ...preferences, transparent: x })
-                  }
-                />
-              </Setting>
-              <Setting title="视频搜索时间" text="最多选择两个时间。">
-                <div className="content-search-options">
-                  {[
-                    ["before_24h", "赛前 24 小时"],
-                    ["before_3h", "赛前 3 小时"],
-                    ["after_3h", "预计结束后 3 小时"],
-                    ["after_18h", "预计结束后 18 小时"],
-                  ].map(([value, label]) => {
-                    const selected =
-                      preferences.content_search_windows.includes(
-                        value as (typeof preferences.content_search_windows)[number],
-                      );
-                    return (
-                      <label key={value}>
-                        <input
-                          type="checkbox"
-                          checked={selected}
-                          disabled={
-                            !selected &&
-                            preferences.content_search_windows.length >= 2
-                          }
-                          onChange={(event) =>
-                            setPreferences({
-                              ...preferences,
-                              content_search_windows: event.target.checked
-                                ? [
-                                    ...preferences.content_search_windows,
-                                    value as (typeof preferences.content_search_windows)[number],
-                                  ]
-                                : preferences.content_search_windows.filter(
-                                    (item) => item !== value,
-                                  ),
-                            })
-                          }
-                        />
-                        {label}
-                      </label>
-                    );
-                  })}
+                <div>
+                  <b>{preferenceChanges} 项设置尚未保存</b>
+                  <span>保存后会更新个人日历订阅。</span>
                 </div>
-              </Setting>
-            </div>
-            <BroadcastPreferences
-              preferences={preferences}
-              onChange={setPreferences}
-            />
-            <button
-              className="primary-button"
-              disabled={busy}
-              onClick={() =>
-                requireUser(() =>
-                  run(
-                    () =>
-                      mutate("/me/preferences", "PATCH", {
-                        expected_revision: user!.revision,
-                        preferences,
-                      }),
-                    savedMessage,
-                  ),
-                )
-              }
-            >
-              保存设置
-            </button>
-            <h2 className="section-gap">个人配置</h2>
-            <div className="settings-list">
-              <Setting
-                title="导出配置"
-                text="包含关注、视频搜索时间和个人规则，不包含账号凭据或私人订阅地址。"
-              >
-                <button
-                  className="secondary-button"
-                  disabled={!user}
-                  onClick={() =>
-                    run(() =>
-                      download("/me/config/export", "anke-sports-config.json"),
-                    )
-                  }
-                >
-                  <DownloadSimple size={16} />
-                  导出 JSON
-                </button>
-              </Setting>
-            </div>
-            <details className="import-panel">
-              <summary>导入已有配置</summary>
-              <textarea
-                aria-label="配置 JSON"
-                placeholder="粘贴 Anke Sports 配置 JSON"
-                value={importText}
-                onChange={(e) => {
-                  setImportText(e.target.value);
-                  setImportPreview(null);
-                }}
-              />
-              <div className="import-actions">
-                <fieldset className="choice-group">
-                  <legend className="sr-only">导入方式</legend>
-                  {[
-                    ["merge", "合并现有配置"],
-                    ["replace", "替换现有配置"],
-                  ].map(([value, label]) => (
-                    <label className="choice-option" key={value}>
-                      <input
-                        type="radio"
-                        name="import-mode"
-                        value={value}
-                        checked={importMode === value}
-                        onChange={() => {
-                          setImportMode(value);
-                          setImportPreview(null);
-                        }}
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </fieldset>
-                <button
-                  className="secondary-button"
-                  disabled={!user || !importText || busy}
-                  onClick={() =>
-                    run(async () =>
-                      setImportPreview(
-                        await api<ImportPreview>("/me/config/import", {
-                          method: "POST",
-                          body: JSON.stringify({
-                            config: JSON.parse(importText),
-                            mode: importMode,
-                            dry_run: true,
-                            expected_revision: user!.revision,
-                          }),
-                        }),
-                      ),
-                    )
-                  }
-                >
-                  预览差异
-                </button>
-              </div>
-              {importPreview && (
-                <div className="import-result">
-                  <p>
-                    新增 {importPreview.added} 项，移除 {importPreview.removed}{" "}
-                    项，无法解析 {importPreview.unresolved.length} 项。
-                  </p>
-                  {importPreview.unresolved.length > 0 && (
-                    <p>{importPreview.unresolved.join("、")}</p>
-                  )}
+                <div className="settings-save-actions">
+                  <button
+                    className="secondary-button"
+                    disabled={busy}
+                    onClick={() => {
+                      setPreferences(user!.config.preferences);
+                    }}
+                  >
+                    <ArrowCounterClockwise size={16} />
+                    取消修改
+                  </button>
                   <button
                     className="primary-button"
-                    disabled={busy || !!importPreview.unresolved.length}
+                    disabled={busy}
                     onClick={() =>
-                      run(
-                        () =>
-                          mutate("/me/config/import", "POST", {
-                            config: JSON.parse(importText),
-                            mode: importMode,
-                            dry_run: false,
-                            expected_revision: importPreview.revision,
-                            confirmation: importPreview.confirmation,
-                          }),
-                        () => {
-                          setImportPreview(null);
-                          setImportText("");
-                          savedMessage();
-                        },
+                      requireUser(() =>
+                        run(
+                          () =>
+                            mutate("/me/preferences", "PATCH", {
+                              expected_revision: user!.revision,
+                              preferences,
+                            }),
+                          savedMessage,
+                        ),
                       )
                     }
                   >
-                    确认导入
+                    <Check size={16} />
+                    保存 {preferenceChanges} 项
                   </button>
                 </div>
-              )}
-            </details>
-            <h2 className="section-gap">数据源与集成</h2>
-            <div className="settings-list">
-              {status?.providers
-                .filter((p) => p.id !== "youtube")
-                .map((p) => (
-                  <Setting
-                    key={p.id}
-                    title={
-                      p.id === "jolpica"
-                        ? "F1 · Jolpica"
-                        : p.id === "balldontlie"
-                          ? "NBA · BALLDONTLIE"
-                          : "足球 · football-data.org"
+              </div>
+            )}
+
+            <section
+              className="settings-section"
+              aria-labelledby="calendar-settings-title"
+            >
+              <div className="settings-section-heading">
+                <span className="eyebrow">日历显示</span>
+                <h2 id="calendar-settings-title">日期与事件呈现</h2>
+                <p>控制个人日历中的时间、标题和忙碌状态。</p>
+              </div>
+              <div className="settings-list">
+                <Setting
+                  title="日历时区"
+                  text="保存到账号，并用于日期与开赛时间。"
+                >
+                  <SelectMenu
+                    ariaLabel="保存的日历时区"
+                    value={preferences.timezone}
+                    placeholder="选择时区"
+                    className="settings-select-menu"
+                    groups={[{ options: timezoneOptions }]}
+                    onChange={(value) =>
+                      setPreferences({ ...preferences, timezone: value })
                     }
-                    text={
-                      (p.error
-                        ? `上次更新未完成：${p.error}`
-                        : p.last_success
-                          ? `上次获取：${new Date(p.last_success).toLocaleString("zh-CN")}`
-                          : "尚未获取真实赛程") +
-                      (p.activity === "queued" || p.activity === "running"
-                        ? " · 后台正在处理"
-                        : p.activity === "waiting"
-                          ? " · 已排队，等待重试"
-                          : "") +
-                      (p.next_attempt_at &&
-                      new Date(p.next_attempt_at).getTime() > Date.now()
-                        ? ` · 最早重试：${new Date(p.next_attempt_at).toLocaleString("zh-CN")}`
-                        : "")
+                  />
+                </Setting>
+                <Setting
+                  title="防剧透"
+                  text="用通用标签替代日历描述里的复盘标题。"
+                >
+                  <Toggle
+                    label="防剧透"
+                    checked={preferences.spoiler_free}
+                    onChange={(value) =>
+                      setPreferences({ ...preferences, spoiler_free: value })
+                    }
+                  />
+                </Setting>
+                <Setting
+                  title="不占用忙碌时间"
+                  text="比赛显示在日历中，不阻挡其他安排。"
+                >
+                  <Toggle
+                    label="不占用忙碌时间"
+                    checked={preferences.transparent}
+                    onChange={(value) =>
+                      setPreferences({ ...preferences, transparent: value })
+                    }
+                  />
+                </Setting>
+              </div>
+            </section>
+
+            <section
+              className="settings-section"
+              aria-labelledby="content-settings-title"
+            >
+              <div className="settings-section-heading">
+                <span className="eyebrow">内容与观看</span>
+                <h2 id="content-settings-title">直播入口</h2>
+                <p>设置赛事详情优先展示的直播方。</p>
+              </div>
+              <BroadcastPreferences
+                preferences={preferences}
+                onChange={setPreferences}
+              />
+            </section>
+
+            <section
+              className="settings-section"
+              aria-labelledby="data-settings-title"
+            >
+              <div className="settings-section-heading">
+                <span className="eyebrow">数据与连接</span>
+                <h2 id="data-settings-title">配置、数据源与授权</h2>
+                <p>这些操作独立执行，不受页面偏好的保存按钮影响。</p>
+              </div>
+              <div className="settings-action-grid">
+                <div className="settings-action-card">
+                  <DownloadSimple size={21} />
+                  <div>
+                    <h3>导出配置</h3>
+                    <p>
+                      下载关注和个人规则，不包含凭据或私人订阅地址。
+                    </p>
+                  </div>
+                  <button
+                    className="secondary-button"
+                    disabled={!user}
+                    onClick={() =>
+                      run(() =>
+                        download(
+                          "/me/config/export",
+                          "anke-sports-config.json",
+                        ),
+                      )
                     }
                   >
-                    {status.local_preview && (
-                      <button
-                        className="secondary-button"
-                        disabled={!user || busy}
-                        onClick={() =>
-                          run(
-                            () =>
-                              mutate(`/local/providers/${p.id}/sync`, "POST"),
-                            () =>
-                              flash("已加入后台任务；完成后可切换真实赛程查看"),
-                          )
-                        }
-                      >
-                        <ArrowClockwise size={15} />
-                        获取赛程
-                      </button>
-                    )}
-                  </Setting>
-                ))}
-            </div>
-            <ConnectionManager key={user?.id || "guest"} userId={user?.id} />
-            <div className="settings-list danger-zone">
-              <Setting
-                title="删除账号与个人数据"
-                text="删除关注、私人链接与应用授权，停止私人订阅。系统日历中的缓存需要在那里删除。"
+                    导出 JSON
+                  </button>
+                </div>
+                <div className="settings-action-card">
+                  <ArrowClockwise size={21} />
+                  <div>
+                    <h3>导入已有配置</h3>
+                    <p>先预览差异，再选择合并或替换当前配置。</p>
+                  </div>
+                  <button
+                    className="secondary-button"
+                    disabled={!user}
+                    onClick={() => {
+                      setImportError("");
+                      setImportOpen(true);
+                    }}
+                  >
+                    开始导入
+                  </button>
+                </div>
+              </div>
+              <div
+                className="provider-status"
+                aria-labelledby="provider-status-title"
               >
+                <div className="provider-status-heading">
+                  <div>
+                    <h3 id="provider-status-title">赛程数据源</h3>
+                    <p>只读运行状态，不是个人设置。</p>
+                  </div>
+                </div>
+                {status?.providers.map((provider) => {
+                    const active =
+                      provider.activity === "queued" ||
+                      provider.activity === "running";
+                    const waiting = provider.activity === "waiting";
+                    const state = provider.error
+                      ? "error"
+                      : active
+                        ? "active"
+                        : waiting
+                          ? "waiting"
+                          : provider.last_success
+                            ? "ready"
+                            : "idle";
+                    const stateLabel = provider.error
+                      ? "更新异常"
+                      : active
+                        ? "正在更新"
+                        : waiting
+                          ? "等待重试"
+                          : provider.last_success
+                            ? "运行正常"
+                            : "等待首次获取";
+                    const name =
+                      provider.id === "jolpica"
+                        ? "F1 · Jolpica"
+                        : provider.id === "balldontlie"
+                          ? "NBA · BALLDONTLIE"
+                          : "足球 · football-data.org";
+                    return (
+                      <div className="provider-row" key={provider.id}>
+                        <div>
+                          <h4>{name}</h4>
+                          <p>
+                            {provider.error
+                              ? provider.error
+                              : waiting && provider.next_attempt_at
+                                ? `最早重试：${new Date(provider.next_attempt_at).toLocaleString("zh-CN")}`
+                                : provider.last_success
+                                  ? `上次获取：${new Date(provider.last_success).toLocaleString("zh-CN")}`
+                                  : "尚未获取真实赛程"}
+                          </p>
+                        </div>
+                        <span className="provider-state" data-state={state}>
+                          {stateLabel}
+                        </span>
+                        {status.local_preview && (
+                          <button
+                            className="secondary-button"
+                            disabled={!user || busy}
+                            onClick={() =>
+                              run(
+                                () =>
+                                  mutate(
+                                    `/local/providers/${provider.id}/sync`,
+                                    "POST",
+                                  ),
+                                () =>
+                                  flash(
+                                    "已加入后台任务；完成后可切换真实赛程查看",
+                                  ),
+                              )
+                            }
+                          >
+                            <ArrowClockwise size={15} />
+                            获取赛程
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+              <ConnectionManager key={user?.id || "guest"} userId={user?.id} />
+            </section>
+
+            <section
+              className="settings-section danger-section"
+              aria-labelledby="account-settings-title"
+            >
+              <div className="settings-section-heading">
+                <span className="eyebrow">账号</span>
+                <h2 id="account-settings-title">删除账号与个人数据</h2>
+                <p>
+                  删除关注、私人链接与应用授权，并停止私人订阅。系统日历中的缓存仍需在那里删除。
+                </p>
+              </div>
+              <div className="danger-action-row">
+                <div>
+                  <h3>{user?.display_name || "当前账号"}</h3>
+                  <p>此操作不可撤销，继续前会再次确认。</p>
+                </div>
                 <button
                   className="danger-button"
                   disabled={!user || status?.local_preview}
@@ -1266,8 +1251,8 @@ export function Dashboard({ page }: { page: string }) {
                 >
                   删除账号
                 </button>
-              </Setting>
-            </div>
+              </div>
+            </section>
           </div>
         )}
       </main>
@@ -1405,17 +1390,6 @@ export function Dashboard({ page }: { page: string }) {
               timezone={timezone}
               onClose={close}
               onAdd={() => requireUser(() => setAdding(true))}
-              onToggle={() =>
-                requireUser(() =>
-                  run(async () => {
-                    await mutate(`/events/${selected.id}/selection`, "PUT", {
-                      state: selected.included ? "exclude" : "include",
-                      expected_revision: user!.revision,
-                    });
-                    await reloadEvent();
-                  }, savedMessage),
-                )
-              }
               onPin={(id) =>
                 requireUser(() =>
                   run(
@@ -1468,6 +1442,156 @@ export function Dashboard({ page }: { page: string }) {
                 )
               }
             />
+          )}
+        </Modal>
+      )}
+      {importOpen && (
+        <Modal title="导入已有配置" wide onClose={() => setImportOpen(false)}>
+          {(close) => (
+            <>
+              <button
+                className="dialog-close"
+                aria-label="关闭导入配置"
+                disabled={busy}
+                onClick={close}
+              >
+                <X size={20} />
+              </button>
+              <span className="eyebrow">数据迁移</span>
+              <h2>导入 Anke Sports 配置</h2>
+              <p>
+                粘贴之前导出的 JSON。我们会先显示差异，不会直接修改当前配置。
+              </p>
+              <label className="import-field">
+                <span>配置 JSON</span>
+                <textarea
+                  aria-invalid={!!importError || undefined}
+                  aria-describedby={
+                    importError ? "import-json-error" : "import-json-help"
+                  }
+                  placeholder={'例如：{ "version": 1, ... }'}
+                  value={importText}
+                  onChange={(event) => {
+                    setImportText(event.target.value);
+                    setImportPreview(null);
+                    setImportError("");
+                  }}
+                />
+                {importError ? (
+                  <span
+                    className="field-error"
+                    id="import-json-error"
+                    role="alert"
+                  >
+                    <WarningCircle size={15} /> {importError}
+                  </span>
+                ) : (
+                  <small id="import-json-help">
+                    仅支持 Anke Sports 导出的 JSON 文件内容。
+                  </small>
+                )}
+              </label>
+              <fieldset className="choice-group import-mode-field">
+                <legend>导入方式</legend>
+                {[
+                  ["merge", "合并现有配置"],
+                  ["replace", "替换现有配置"],
+                ].map(([value, label]) => (
+                  <label className="choice-option" key={value}>
+                    <input
+                      type="radio"
+                      name="import-mode"
+                      value={value}
+                      checked={importMode === value}
+                      onChange={() => {
+                        setImportMode(value);
+                        setImportPreview(null);
+                      }}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+              {importPreview && (
+                <div className="import-result" role="status">
+                  <b>预览完成</b>
+                  <p>
+                    新增 {importPreview.added} 项，移除 {importPreview.removed}{" "}
+                    项， 无法解析 {importPreview.unresolved.length} 项。
+                  </p>
+                  {!!importPreview.unresolved.length && (
+                    <p>{importPreview.unresolved.join("、")}</p>
+                  )}
+                </div>
+              )}
+              <div className="modal-actions">
+                <button
+                  className="secondary-button"
+                  disabled={busy}
+                  onClick={close}
+                >
+                  取消
+                </button>
+                {!importPreview ? (
+                  <button
+                    className="primary-button"
+                    disabled={!user || !importText.trim() || busy}
+                    onClick={() => {
+                      let config: unknown;
+                      try {
+                        config = JSON.parse(importText);
+                      } catch {
+                        setImportError(
+                          "JSON 格式无法解析，请检查引号、逗号和括号是否完整。",
+                        );
+                        return;
+                      }
+                      setImportError("");
+                      void run(async () =>
+                        setImportPreview(
+                          await api<ImportPreview>("/me/config/import", {
+                            method: "POST",
+                            body: JSON.stringify({
+                              config,
+                              mode: importMode,
+                              dry_run: true,
+                              expected_revision: user!.revision,
+                            }),
+                          }),
+                        ),
+                      );
+                    }}
+                  >
+                    预览差异
+                  </button>
+                ) : (
+                  <button
+                    className="primary-button"
+                    disabled={busy || !!importPreview.unresolved.length}
+                    onClick={() =>
+                      void run(
+                        () =>
+                          mutate("/me/config/import", "POST", {
+                            config: JSON.parse(importText),
+                            mode: importMode,
+                            dry_run: false,
+                            expected_revision: importPreview.revision,
+                            confirmation: importPreview.confirmation,
+                          }),
+                        () => {
+                          setImportPreview(null);
+                          setImportText("");
+                          setImportOpen(false);
+                          savedMessage();
+                        },
+                      )
+                    }
+                  >
+                    确认导入
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </Modal>
       )}
@@ -1597,7 +1721,6 @@ function EventDrawer({
   timezone,
   onClose,
   onAdd,
-  onToggle,
   onBlock,
   onPin,
   busy,
@@ -1607,7 +1730,6 @@ function EventDrawer({
   timezone: string;
   onClose: () => void;
   onAdd: () => void;
-  onToggle: () => void;
   onBlock: (id: string) => void;
   onPin: (id: string) => void;
   busy: boolean;
@@ -1689,39 +1811,17 @@ function EventDrawer({
           预计 {event.duration} 分钟
         </span>
       </div>
-      <button
-        className={`drawer-follow ${event.included ? "included" : ""}`}
-        disabled={busy}
-        onClick={onToggle}
-      >
-        {event.included ? (
-          <>
-            <CalendarCheck size={18} />
-            已加入个人日历
-          </>
-        ) : (
-          <>
-            <Plus size={18} />
-            加入个人日历
-          </>
-        )}
-      </button>
       <div className="drawer-links">
-        {[
-          ["live", "观看直播"],
-          ["video", "相关视频"],
-        ].map(([kind, title]) => {
+        {[["live", "观看直播"]].map(([kind, title]) => {
           const links = event.links.filter(
             (l) =>
               l.kind === kind ||
-              (kind === "live" && l.kind === "watch_along") ||
-              (kind === "video" && ["preview", "recap"].includes(l.kind)),
+              (kind === "live" && l.kind === "watch_along"),
           );
-          const Icon = kind === "live" ? Broadcast : YoutubeLogo;
           return (
             <section key={kind}>
               <h3>
-                <Icon size={19} />
+                <Broadcast size={19} />
                 {title}
                 <span>{links.length || ""}</span>
               </h3>
@@ -1744,21 +1844,11 @@ function EventDrawer({
                       }}
                     >
                       <strong>
-                        {kind === "video"
-                          ? (link.content_labels?.length
-                              ? link.content_labels
-                              : link.kind === "preview"
-                                ? ["🔎赛前内容"]
-                                : link.kind === "recap"
-                                  ? ["🎬赛后内容"]
-                                  : ["🔗相关视频"]
-                            ).join(" · ")
-                          : link.title}
+                        {link.title}
                         <ArrowUpRight size={15} />
                       </strong>
-                      {kind === "video" && <small>{link.url}</small>}
                       <small>
-                        {link.creator || link.platform} ·{" "}
+                        {link.platform} ·{" "}
                         {link.origin === "manual"
                           ? "手动添加"
                           : link.origin === "confirmed"
@@ -1767,16 +1857,14 @@ function EventDrawer({
                               ? "官方审核"
                               : "自动关联"}
                       </small>
-                      {kind === "live" && (
-                        <small>
-                          {link.broadcast
-                            ? `${link.broadcast.content_label} · ${link.broadcast.access_label} · ${link.broadcast.region_label}`
-                            : link.kind === "watch_along"
-                              ? "同步解说，无比赛画面 · 观看条件与地区未验证"
-                              : "手动添加，观看条件与地区未验证"}
-                        </small>
-                      )}
-                      {kind === "live" && link.broadcast && (
+                      <small>
+                        {link.broadcast
+                          ? `${link.broadcast.content_label} · ${link.broadcast.access_label} · ${link.broadcast.region_label}`
+                          : link.kind === "watch_along"
+                            ? "同步解说，无比赛画面 · 观看条件与地区未验证"
+                            : "手动添加，观看条件与地区未验证"}
+                      </small>
+                      {link.broadcast && (
                         <small>
                           {link.broadcast.mobile_opening ===
                           "verified_https_app_link"
@@ -1879,16 +1967,7 @@ function EventDrawer({
                 ))
               ) : (
                 <div className="link-empty">
-                  <span>
-                    {kind === "live"
-                      ? "暂无已确认的本场直播入口"
-                      : "暂无明确对应本场的视频"}
-                  </span>
-                  {kind === "video" && (
-                    <Link href="/creators" onClick={onClose}>
-                      查看视频内容 <ArrowUpRight size={12} />
-                    </Link>
-                  )}
+                  <span>暂无已确认的本场直播入口</span>
                 </div>
               )}
             </section>
@@ -1905,7 +1984,7 @@ function EventDrawer({
           日历描述预览 <CaretRight size={14} />
         </summary>
         {!event.description_in_feed && (
-          <p>本场尚未加入个人日历，以下是内容预览。</p>
+          <p>本场尚未纳入个人日历，以下为预览。</p>
         )}
         <pre>{event.description}</pre>
       </details>
@@ -1942,7 +2021,7 @@ function AddLinkForm({
 }) {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [kind, setKind] = useState("video");
+  const [kind, setKind] = useState("live");
   const [localError, setLocalError] = useState("");
   return (
     <form
@@ -1961,23 +2040,22 @@ function AddLinkForm({
       >
         <X size={20} />
       </button>
-      <h2>把原链接放在这场比赛里。</h2>
+      <h2>把直播入口放在这场比赛里。</h2>
       <p>{event.title}</p>
       <label className="form-label">
-        内容链接
+        直播入口链接
         <input
           type="url"
           required
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=…"
+          placeholder="https://example.com/live/…"
           autoFocus
         />
       </label>
       <fieldset className="choice-group form-choice-field">
         <legend>类型</legend>
         {[
-          ["video", "相关视频"],
           ["live", "直播入口"],
           ["watch_along", "同步解说，无比赛画面"],
         ].map(([value, label]) => (
@@ -1998,7 +2076,7 @@ function AddLinkForm({
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="保留原视频标题"
+          placeholder="例如：官方直播入口"
           maxLength={300}
         />
       </label>

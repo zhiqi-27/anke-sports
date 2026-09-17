@@ -12,7 +12,7 @@ import type { CalendarUser, ServiceStatus } from "@/lib/types";
 type Consent = components["schemas"]["ConsentRequestView"];
 type Connection = components["schemas"]["ConnectionView"];
 const permissions: Record<string, [string, string]> = {
-  "calendar:read": ["查看我的日历", "读取关注、赛程、视频内容与已保存的链接。"],
+  "calendar:read": ["查看我的日历", "读取关注、赛程与已保存的观看链接。"],
   "calendar:write": ["管理关注与链接", "修改关注、管理比赛链接和导入配置。"],
   "feed:read": [
     "读取私人订阅地址",
@@ -262,9 +262,9 @@ export function ConnectionManager({ userId }: { userId?: string }) {
   }
   return (
     <section className="connections-section">
-      <h2>
+      <h3>
         <PlugsConnected size={22} /> 已连接的应用
-      </h2>
+      </h3>
       <p className="connection-muted">管理外部 Agent 对日历的访问。</p>
       {error && (
         <p className="connection-error" role="alert">

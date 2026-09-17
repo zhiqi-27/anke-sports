@@ -6,7 +6,6 @@ export function generateStaticParams() {
     [],
     ["calendar"],
     ["following"],
-    ["creators"],
     ["subscription"],
     ["settings"],
     ["maintenance"],
@@ -23,7 +22,6 @@ export default async function Page({
     ![
       "calendar",
       "following",
-      "creators",
       "subscription",
       "settings",
       "maintenance",
