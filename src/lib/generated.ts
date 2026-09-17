@@ -278,6 +278,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/calendar/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Calendar Event */
+        post: operations["add_calendar_event_api_v1_me_calendar_events__event_id__post"];
+        /** Remove Calendar Event */
+        delete: operations["remove_calendar_event_api_v1_me_calendar_events__event_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/follows/preview": {
         parameters: {
             query?: never;
@@ -763,6 +781,11 @@ export interface components {
             audit: {
                 [key: string]: unknown;
             }[];
+        };
+        /** CalendarEventChange */
+        CalendarEventChange: {
+            /** Expected Revision */
+            expected_revision: number;
         };
         /** CalendarMembershipView */
         CalendarMembershipView: {
@@ -1879,6 +1902,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarUserView"];
+                };
+            };
+        };
+    };
+    add_calendar_event_api_v1_me_calendar_events__event_id__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarEventChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarUserView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_calendar_event_api_v1_me_calendar_events__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarEventChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarUserView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
