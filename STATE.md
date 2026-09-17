@@ -1,6 +1,6 @@
 # Anke Sports · 客户端状态
 
-> 2026-09-17范围覆盖：不做微信、YouTube视频/AI匹配；新增手动单场增删，关注自动比赛不可单删，MCP同等支持。无需兼容1.0前版本。A 范围清理与生成客户端契约已部署到开发环境；B 后端已在云仓本地候选完成并同步生成类型，尚未部署；C 的 Web/MCP 行为尚未实现或验收。见[1.0定义](<../anke-sports 文档/Anke_Sports_1.0定义.md>)。
+> 2026-09-17范围覆盖：不做微信、YouTube视频/AI匹配；新增手动单场增删，关注自动比赛不可单删，MCP同等支持。无需兼容1.0前版本。A 范围清理与生成客户端契约已部署到开发环境；B 后端已部署并完成线上回读，客户端已同步生成类型；C 的 Web/MCP 行为尚未实现或验收。见[1.0定义](<../anke-sports 文档/Anke_Sports_1.0定义.md>)。
 
 更新：2026-09-17。当前入口：[工作区STATE](../STATE.md)、[实施计划](<../anke-sports 文档/Anke_Sports_实施计划.md>)。
 
@@ -14,4 +14,4 @@ F1关注已部署为只能选择具体车队，F1赛事本身仅作目录分组�
 
 既有视频发布记录仅作历史证据，不再代表当前产品范围。微信仍只有方案。
 
-剩余：手动单场增删 UI 及来源状态展示、MCP 对等工具属于后续 C；B 后端本轮仅完成本地候选，未推送或部署。等待并回读Jolpica车队目录刷新；全新登录、真实偏好保存/Feed更新、直播链接设备验证及正式发布回归仍待完成。双仓本地回归已通过：服务端243 passed / 2 skipped，Web typecheck与合同生成通过。发布记录见[worker/a-scope-deployment-2026-09-17.md](worker/a-scope-deployment-2026-09-17.md)及云仓[B 本地候选证据](../anke-sports-cloud/evidence/manual-calendar-backend-2026-09-17.md)。
+剩余：手动单场增删 UI 及来源状态展示、MCP 对等工具属于后续 C；本轮未部署前端，因为没有 Web 交互改动。等待并回读Jolpica车队目录刷新；全新登录、真实偏好保存/Feed更新、直播链接设备验证及正式发布回归仍待完成。双仓本地回归已通过：服务端243 passed / 2 skipped，Web typecheck与合同生成通过。发布记录见[worker/a-scope-deployment-2026-09-17.md](worker/a-scope-deployment-2026-09-17.md)及云仓[B 候选与开发部署证据](../anke-sports-cloud/evidence/manual-calendar-backend-2026-09-17.md)。
