@@ -4,7 +4,7 @@
 
 更新：2026-09-18。当前入口：[工作区STATE](../STATE.md)、[实施计划](<../anke-sports 文档/Anke_Sports_实施计划.md>)。
 
-2026-09-18 赛果标题前端契约已同步到本地代码，尚未部署：设置页文案改为“隐藏关注球队最近一场完赛结果”，显示逻辑由服务端按关注球队分别计算；OpenAPI 生成类型已更新，Web `typecheck` 与生产构建通过。
+2026-09-18 赛果标题前端契约已推送并部署到开发 Web：设置页文案为“隐藏关注球队最近一场完赛结果”，显示逻辑由服务端按关注球队分别计算；OpenAPI 生成类型已更新。提交 `330a885`，Worker 版本 `8aab3517-1c70-43de-887d-b7f91aad679b`，Web `typecheck`、生产构建与 Wrangler dry-run 通过。见[赛果标题开发部署记录](worker/spoiler-result-deployment-2026-09-18.md)。
 
 2026-09-18 球队日历已发布到开发 Worker：侧栏关注球队可打开 `/calendar?team=<source_id>`，球队页隐藏范围切换并显示该球队跨赛事赛程；事件参与者支持直接携带队徽。Worker `5353ebbd-ce13-4514-ad16-4edd049b2003`，构建、dry-run、公网代理和已登录 Liverpool 球队日历入口回读通过；正式环境未变更。见[球队日历 Web 部署记录](worker/team-calendar-deployment-2026-09-18.md)。
 
@@ -24,7 +24,7 @@
 
 2026-09-18 日历订阅页侧栏空状态已移除“添加你喜欢的球队”入口，保留侧栏标题右侧“添加关注”。Worker `6aaf037b-4878-4a1d-8f69-46089abb5243`，构建、dry-run 和已登录订阅页回读通过；后端、正式环境与 Git 未变更。见[订阅页侧栏入口发布记录](worker/subscription-sidebar-empty-state-deployment-2026-09-18.md)。
 
-本轮未 push Git；最新开发发布为 Worker `5353ebbd-ce13-4514-ad16-4edd049b2003`。此前删除视频产品能力与登录日历范围改动已部署。
+最新开发发布为 Worker `8aab3517-1c70-43de-887d-b7f91aad679b`；本轮已推送 Git。此前删除视频产品能力与登录日历范围改动已部署。
 
 当前开发环境已经移除视频导航、页面、设置关联项和事件抽屉中的视频展示，也移除旧单场 `selection` 调用；普通直播与陪看链接继续保留。公共订阅、Chrome、Skill均不在范围。
 
