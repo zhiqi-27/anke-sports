@@ -20,6 +20,7 @@ import {
 import { api } from "@/lib/api";
 import type { Source, SportEvent } from "@/lib/types";
 import {
+  defaultCompetitionSourceId,
   defaultScheduleSourceId,
   ScheduleSourcePicker,
 } from "./schedule-source-picker";
@@ -93,9 +94,15 @@ interface Props {
   sources: Source[];
   epoch: number;
   signedIn: boolean;
+  teamSourceId?: string;
+  teamSource?: Source;
   onEvent: (e: SportEvent) => void;
   onFollowing: () => void;
 }
+
+type CalendarScope = "followed" | "all";
+
+const calendarScopeStorageKey = "anke-calendar-scope";
 
 export default function CalendarView({
   dataset,
@@ -103,6 +110,8 @@ export default function CalendarView({
   sources,
   epoch,
   signedIn,
+  teamSourceId = "",
+  teamSource,
   onEvent,
   onFollowing,
 }: Props) {
@@ -121,6 +130,8 @@ export default function CalendarView({
   const [items, setItems] = useState<SportEvent[]>([]);
   const [loadedDataset, setLoadedDataset] = useState("");
   const [guestSourceId, setGuestSourceId] = useState("");
+  const [allSourceId, setAllSourceId] = useState("");
+  const [scope, setScope] = useState<CalendarScope>("followed");
   const [sport, setSport] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -129,6 +140,7 @@ export default function CalendarView({
   const [nextState, setNextState] = useState<
     "idle" | "loading" | "complete" | "error"
   >("idle");
+  const teamCalendar = Boolean(teamSourceId && teamSource?.kind === "team");
   const guestSources = useMemo(
     () =>
       sources.filter(
@@ -136,6 +148,33 @@ export default function CalendarView({
       ),
     [sources],
   );
+  const allFilterSources = useMemo(
+    () =>
+      sources.filter(
+        (source) => source.kind === "team" || source.kind === "competition",
+      ),
+    [sources],
+  );
+  const sourceById = useMemo(
+    () => new Map(sources.map((source) => [source.id, source])),
+    [sources],
+  );
+  const defaultAllSourceId = useMemo(
+    () => defaultCompetitionSourceId(allFilterSources),
+    [allFilterSources],
+  );
+  const allMatches = signedIn && scope === "all";
+  useEffect(() => {
+    if (!signedIn) {
+      setScope("followed");
+      return;
+    }
+    setScope(
+      window.localStorage.getItem(calendarScopeStorageKey) === "all"
+        ? "all"
+        : "followed",
+    );
+  }, [signedIn]);
   useEffect(() => {
     if (signedIn || !guestSources.length) return;
     setGuestSourceId((current) => {
@@ -143,6 +182,14 @@ export default function CalendarView({
       return defaultScheduleSourceId(guestSources) || guestSources[0].id;
     });
   }, [dataset, guestSources, signedIn]);
+  useEffect(() => {
+    if (
+      allSourceId &&
+      allFilterSources.some((source) => source.id === allSourceId)
+    )
+      return;
+    if (defaultAllSourceId) setAllSourceId(defaultAllSourceId);
+  }, [allFilterSources, allSourceId, defaultAllSourceId]);
   const guestSource = guestSources.find(
     (source) => source.id === guestSourceId,
   );
@@ -173,7 +220,14 @@ export default function CalendarView({
   );
   useEffect(() => {
     if (!range.from) return;
-    if (!signedIn && !guestSourceId) {
+    if (!teamCalendar && signedIn && scope === "all" && !defaultAllSourceId) {
+      setItems([]);
+      setLoadedDataset("");
+      setLoading(true);
+      setError("");
+      return;
+    }
+    if (!teamCalendar && !signedIn && !guestSourceId) {
       setItems([]);
       setLoadedDataset(dataset);
       setLoading(false);
@@ -183,11 +237,19 @@ export default function CalendarView({
     const abort = new AbortController();
     setLoading(true);
     setError("");
+    const followed = !teamCalendar && signedIn && scope === "followed";
+    const sourceId = teamCalendar
+      ? teamSourceId
+      : followed
+      ? ""
+      : signedIn
+        ? allSourceId || defaultAllSourceId
+        : guestSourceId;
     const query = new URLSearchParams({
       ...range,
       dataset,
-      followed: String(signedIn),
-      source_id: signedIn ? "" : guestSourceId,
+      followed: String(followed),
+      source_id: sourceId,
     });
     async function loadPages() {
       const items: SportEvent[] = [];
@@ -214,15 +276,26 @@ export default function CalendarView({
         if (!abort.signal.aborted) setLoading(false);
       });
     return () => abort.abort();
-  }, [range, dataset, guestSourceId, signedIn, epoch]);
+  }, [
+    range,
+    dataset,
+    guestSourceId,
+    allSourceId,
+    defaultAllSourceId,
+    signedIn,
+    scope,
+    teamCalendar,
+    teamSourceId,
+    epoch,
+  ]);
   const shown = useMemo(
     () =>
       (loadedDataset === dataset ? items : []).filter(
         (e) =>
-          (!signedIn || !sport || sport === e.sport) &&
+          (!signedIn || teamCalendar || !sport || sport === e.sport) &&
           e.title.toLowerCase().includes(search.toLowerCase()),
       ),
-    [items, loadedDataset, dataset, signedIn, sport, search],
+    [items, loadedDataset, dataset, signedIn, sport, search, teamCalendar],
   );
   useEffect(() => {
     if (
@@ -231,7 +304,7 @@ export default function CalendarView({
       shown.length ||
       search ||
       !range.to ||
-      (!signedIn && !guestSourceId)
+      (!teamCalendar && !signedIn && !guestSourceId)
     ) {
       setNextEvent(null);
       setNextState("idle");
@@ -241,12 +314,20 @@ export default function CalendarView({
     const from = new Date(range.to);
     const to = new Date(from);
     to.setUTCDate(to.getUTCDate() + 180);
+    const followed = !teamCalendar && signedIn && scope === "followed";
+    const sourceId = teamCalendar
+      ? teamSourceId
+      : followed
+      ? ""
+      : signedIn
+        ? allSourceId || defaultAllSourceId
+        : guestSourceId;
     const query = new URLSearchParams({
       from: from.toISOString(),
       to: to.toISOString(),
       dataset,
-      followed: String(signedIn),
-      source_id: signedIn ? "" : guestSourceId,
+      followed: String(followed),
+      source_id: sourceId,
       limit: "500",
     });
     setNextEvent(null);
@@ -284,12 +365,17 @@ export default function CalendarView({
     dataset,
     error,
     guestSourceId,
+    allSourceId,
+    defaultAllSourceId,
     loading,
     range.to,
     search,
     shown.length,
     signedIn,
+    scope,
     sport,
+    teamCalendar,
+    teamSourceId,
   ]);
   const fcEvents = useMemo(
     () =>
@@ -334,6 +420,11 @@ export default function CalendarView({
   const changeView = (value: string) => {
     setView(value);
     if (value !== "agenda") controller.changeView(value);
+  };
+  const changeScope = (value: CalendarScope) => {
+    setScope(value);
+    setSport("");
+    window.localStorage.setItem(calendarScopeStorageKey, value);
   };
   const groups = useMemo(() => {
     const grouped: Record<string, SportEvent[]> = {};
@@ -390,7 +481,40 @@ export default function CalendarView({
         </div>
       </div>
       <div className="calendar-filters">
-        {signedIn ? (
+        {teamCalendar ? (
+          <a className="calendar-team-back" href="/calendar">
+            返回我的日历
+          </a>
+        ) : signedIn ? (
+          <div className="calendar-scope" aria-label="比赛范围">
+            <button
+              type="button"
+              aria-pressed={scope === "followed"}
+              className={scope === "followed" ? "active" : ""}
+              onClick={() => changeScope("followed")}
+            >
+              我的关注
+            </button>
+            <button
+              type="button"
+              aria-pressed={scope === "all"}
+              className={scope === "all" ? "active" : ""}
+              onClick={() => changeScope("all")}
+            >
+              全部比赛
+            </button>
+          </div>
+        ) : null}
+        {!teamCalendar && signedIn && scope === "all" ? (
+          <ScheduleSourcePicker
+            sources={sources}
+            selectedSourceId={allSourceId}
+            onSelect={setAllSourceId}
+            allowAll
+            searchable
+            className="calendar-source-picker calendar-all-source-picker"
+          />
+        ) : !teamCalendar && signedIn ? (
           <SelectMenu
             ariaLabel="筛选运动"
             value={sport}
@@ -409,14 +533,14 @@ export default function CalendarView({
             ]}
             onChange={setSport}
           />
-        ) : (
+        ) : !teamCalendar ? (
           <ScheduleSourcePicker
             sources={sources}
             selectedSourceId={guestSourceId}
             onSelect={setGuestSourceId}
             className="calendar-source-picker"
           />
-        )}
+        ) : null}
         <label className="calendar-search">
           <MagnifyingGlass size={16} />
           <input
@@ -553,13 +677,19 @@ export default function CalendarView({
                       {timeOf(e, timezone)}
                       <small>{leagueOf(e, sources)}</small>
                     </span>
-                    {e.participants.length ? (
+                    {e.sport === "racing" ? (
+                      <span className="racing-title">
+                        <FlagCheckered size={28} />
+                        <b>{e.title}</b>
+                      </span>
+                    ) : e.participants.length ? (
                       <span className="agenda-teams">
                         {e.participants.map((p) => (
                           <span key={p.id}>
                             <TeamMark
                               short={p.short_name}
                               color={p.color}
+                              logoUrl={p.logo_url || sourceById.get(p.id)?.logo_url}
                               small
                             />
                             <b>{p.name}</b>
@@ -572,9 +702,6 @@ export default function CalendarView({
                         <b>{e.title}</b>
                       </span>
                     )}
-                    <span className="agenda-venue">
-                      {e.venue || "场馆待公布"}
-                    </span>
                     <CaretRight size={18} />
                   </button>
                 ))}
@@ -587,19 +714,25 @@ export default function CalendarView({
         <div className="calendar-empty">
           <CalendarBlank size={30} />
           <strong>
-            {!signedIn && !guestSourceId
+            {search
+              ? "没有找到对应比赛"
+              : teamCalendar
+                ? `${teamSource?.name || "这支球队"}在这个时间段暂无赛程`
+                : !signedIn && !guestSourceId
               ? "请选择一支球队"
-              : search
-                ? "没有找到对应比赛"
                 : signedIn
-                  ? "这个时间段还没有关注的比赛"
+                  ? allMatches
+                    ? "这个时间段还没有已接入比赛"
+                    : "这个时间段还没有关注的比赛"
                   : `${guestSource?.name || "所选对象"}在这个时间段暂无赛程`}
           </strong>
           <span>
-            {!signedIn && !guestSourceId
+            {search
+              ? "换一个关键词，或清除运动筛选后再试。"
+              : teamCalendar
+                ? "已接入的其他赛事也会显示在这里。"
+                : !signedIn && !guestSourceId
               ? "选择 NBA 或英超球队后，这里会显示对应赛程。"
-              : search
-                ? "换一个关键词，或清除运动筛选后再试。"
                 : nextState === "loading"
                   ? "正在查找下一场比赛…"
                   : nextEvent
@@ -622,7 +755,7 @@ export default function CalendarView({
                       ? "暂时无法查询下一场比赛，可切换日期后再试。"
                       : "已检查随后 180 天的已接入赛程，暂时没有匹配比赛。"}
           </span>
-          {signedIn && (
+          {signedIn && !teamCalendar && (
             <button className="text-button" onClick={onFollowing}>
               管理我的关注
             </button>

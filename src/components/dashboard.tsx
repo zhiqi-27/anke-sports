@@ -16,7 +16,6 @@ import {
   GlobeHemisphereWest,
   Check,
   LinkSimple,
-  MapPin,
   Clock,
   Copy,
   DownloadSimple,
@@ -38,6 +37,7 @@ import {
 } from "@phosphor-icons/react";
 import { api, deleteAccount, download, logout } from "@/lib/api";
 import type {
+  AuthProfile,
   Config,
   Follow,
   ImportPreview,
@@ -80,7 +80,7 @@ const timezoneOptions = [
 ].map((value) => ({ value, label: value }));
 const pageInfo: Record<string, [string, string]> = {
   calendar: ["比赛日历", ""],
-  following: ["我的关注", "选择球队或车队。"],
+  following: ["我的关注", ""],
   subscription: ["日历订阅", "复制地址，在 Apple 或 Google 日历中添加。"],
   settings: ["设置", ""],
   maintenance: ["直播入口维护", "核对来源、场次与兼容性证据。"],
@@ -106,6 +106,81 @@ function preferenceChangeCount(current: Preferences, saved?: Preferences) {
 
 function canFollowDirectly(source: Source) {
   return source.kind === "team";
+}
+
+const competitionLogoUrls: Record<string, string> = {
+  "jolpica:f1":
+    "https://www.formula1.com/etc/designs/fom-website/images/f1_logo.svg",
+  "balldontlie:nba": "https://cdn.simpleicons.org/nba/F3B56A",
+  "football-data:PL": "https://cdn.simpleicons.org/premierleague/B3A0E2",
+};
+
+function profileInitials(name: string) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "A";
+  if (words.length > 1) return `${words[0][0]}${words[1][0]}`.toUpperCase();
+  return Array.from(words[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function prepareAvatar(file: File) {
+  if (!file.type.startsWith("image/")) {
+    return Promise.reject(new Error("请选择图片文件"));
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return Promise.reject(new Error("图片不能超过 5MB"));
+  }
+  return new Promise<string>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const scale = Math.min(
+        1,
+        256 / Math.max(image.naturalWidth, image.naturalHeight),
+      );
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) {
+        reject(new Error("头像处理失败，请重试"));
+        return;
+      }
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("头像处理失败，请重试"));
+    };
+    image.src = objectUrl;
+  });
+}
+
+function ProfileAvatar({
+  profile,
+  name,
+  large = false,
+}: {
+  profile: AuthProfile | null;
+  name: string;
+  large?: boolean;
+}) {
+  return (
+    <span className={`avatar${large ? " avatar-large" : ""}`}>
+      <span>{profileInitials(name)}</span>
+      {profile?.photoURL && (
+        <img
+          src={profile.photoURL}
+          alt=""
+          aria-hidden="true"
+          onError={(event) => {
+            event.currentTarget.hidden = true;
+          }}
+        />
+      )}
+    </span>
+  );
 }
 
 function FollowSourceCard({
@@ -207,6 +282,7 @@ export function Dashboard({ page }: { page: string }) {
   const state = useAnke();
   const {
     user,
+    profile,
     accountReady,
     sources,
     dataset,
@@ -216,12 +292,20 @@ export function Dashboard({ page }: { page: string }) {
     error,
     setError,
     run,
+    saveProfile,
     refresh,
   } = state;
   const [timezone, setTimezone] = useState("Asia/Shanghai");
   const [selected, setSelected] = useState<SportEvent | null>(null);
+  const [teamSourceId, setTeamSourceId] = useState("");
   const [login, setLogin] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({
+    displayName: "",
+  });
+  const [avatarDraft, setAvatarDraft] = useState("");
+  const [avatarPreparing, setAvatarPreparing] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState("");
   const [toastClosing, setToastClosing] = useState(false);
@@ -283,6 +367,36 @@ export function Dashboard({ page }: { page: string }) {
   const [confirm, setConfirm] = useState<"rotate" | "delete" | null>(null);
   const [accountNotice, setAccountNotice] = useState("");
   const previousAccount = useRef<string | null>(null);
+  const accountName = profile?.displayName || user?.display_name || "Anke Sports 用户";
+  const profileAvailable = Boolean(
+    profile || (status?.firebase_configured && !status.local_preview),
+  );
+  useEffect(() => {
+    const syncTeamSource = () => {
+      setTeamSourceId(
+        page === "calendar"
+          ? new URL(window.location.href).searchParams.get("team") || ""
+          : "",
+      );
+    };
+    syncTeamSource();
+    window.addEventListener("popstate", syncTeamSource);
+    return () => window.removeEventListener("popstate", syncTeamSource);
+  }, [page]);
+  const teamCalendarSource = useMemo(
+    () =>
+      sources.find(
+        (source) => source.id === teamSourceId && source.kind === "team",
+      ),
+    [sources, teamSourceId],
+  );
+  useEffect(() => {
+    if (!accountOpen || !user) return;
+    setProfileDraft({
+      displayName: profile?.displayName || user.display_name || "",
+    });
+    setAvatarDraft("");
+  }, [accountOpen, profile?.displayName, profile?.photoURL, user?.display_name]);
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem("anke-account-deleted");
@@ -317,6 +431,10 @@ export function Dashboard({ page }: { page: string }) {
       setSelectedLeagueId("");
       setFollowSaving(false);
       setAdding(false);
+      setProfileDraft({ displayName: "" });
+      setAvatarDraft("");
+      setAvatarPreparing(false);
+      setProfileSaving(false);
       setConfirm(null);
       setTimezone("Asia/Shanghai");
       setPreferences({
@@ -459,16 +577,79 @@ export function Dashboard({ page }: { page: string }) {
         a.source_key.localeCompare(b.source_key),
       ),
     );
-  const mutate = (path: string, method: string, data?: unknown) =>
+  const mutate = (
+    path: string,
+    method: string,
+    data?: unknown,
+    headers?: HeadersInit,
+  ) =>
     api(path, {
       method,
+      headers,
       body: data === undefined ? undefined : JSON.stringify(data),
     });
   const reloadEvent = async () => {
     if (selected) setSelected(await api<SportEvent>(`/events/${selected.id}`));
     refresh();
   };
+  const changeManualCalendar = (
+    method: "POST" | "DELETE",
+    message: string,
+  ) => {
+    requireUser(() => {
+      const eventId = selected?.id;
+      if (!eventId) return;
+      const expectedRevision = user!.revision;
+      void run(
+        async () => {
+          await mutate(
+            `/me/calendar/events/${eventId}`,
+            method,
+            { expected_revision: expectedRevision },
+            { "Idempotency-Key": crypto.randomUUID() },
+          );
+          setSelected(await api<SportEvent>(`/events/${eventId}`));
+        },
+        () => flash(message),
+      );
+    });
+  };
   const savedMessage = () => flash("已保存，订阅源更新中");
+  const chooseAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setAvatarPreparing(true);
+    setError("");
+    try {
+      setAvatarDraft(await prepareAvatar(file));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "头像处理失败，请重试");
+    } finally {
+      setAvatarPreparing(false);
+    }
+  };
+  const saveProfileSettings = async () => {
+    const displayName = profileDraft.displayName.trim();
+    if (!displayName || displayName.length > 80) {
+      setError("请输入 1 至 80 个字符的显示名称");
+      return;
+    }
+    setProfileSaving(true);
+    setError("");
+    try {
+      await saveProfile({
+        displayName,
+        photoURL: avatarDraft || profile?.photoURL || null,
+      });
+      setAvatarDraft("");
+      flash("个人资料已保存");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "个人资料保存失败，请重试");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
   if (!accountReady) {
     return (
       <div className="boot-screen" role="status" aria-live="polite">
@@ -528,7 +709,11 @@ export function Dashboard({ page }: { page: string }) {
               )
               .slice(0, 7)
               .map((s) => (
-                <div key={s.id} className="mini-follow">
+                <a
+                  key={s.id}
+                  className="mini-follow"
+                  href={`/calendar?team=${encodeURIComponent(s.id)}`}
+                >
                   <TeamMark
                     short={s.short_name}
                     color={s.color}
@@ -536,14 +721,11 @@ export function Dashboard({ page }: { page: string }) {
                     small
                   />
                   <span>{s.name}</span>
-                </div>
+                </a>
               ))
           ) : (
             <div className="sidebar-empty">
               <span>尚未关注球队或赛事。</span>
-              <Link href="/following">
-                添加你喜欢的球队 <Plus size={12} />
-              </Link>
             </div>
           )}
         </div>
@@ -576,9 +758,13 @@ export function Dashboard({ page }: { page: string }) {
             aria-expanded={user ? accountOpen : undefined}
             onClick={() => (user ? setAccountOpen(true) : setLogin(true))}
           >
-            <span className="avatar">{user ? "A" : <SignIn size={20} />}</span>
+            {user ? (
+              <ProfileAvatar profile={profile} name={accountName} />
+            ) : (
+              <span className="avatar"><SignIn size={20} /></span>
+            )}
             <span>
-              <b>{user?.display_name || "登录 Anke Sports"}</b>
+              <b>{user ? accountName : "登录 Anke Sports"}</b>
               <small>
                 {user
                   ? status?.local_preview
@@ -626,28 +812,28 @@ export function Dashboard({ page }: { page: string }) {
         )}
         <div className="page-heading">
           <div>
-            <h1>{pageInfo[page][0]}</h1>
+            <h1>
+              {page === "calendar" && teamCalendarSource
+                ? `${teamCalendarSource.name} 日历`
+                : pageInfo[page][0]}
+            </h1>
             {pageInfo[page][1] && <p>{pageInfo[page][1]}</p>}
           </div>
-          <div className="dataset-control">
-            {status?.local_preview ? (
-              <>
-                <span className={dataset === "demo" ? "demo-dot" : ""}>
-                  {dataset === "demo" ? "演示数据" : "已接入赛程"}
-                </span>
-                <select
-                  aria-label="赛程数据"
-                  value={dataset}
-                  onChange={(e) => state.changeDataset(e.target.value)}
-                >
-                  <option value="demo">演示赛程</option>
-                  <option value="real">真实赛程</option>
-                </select>
-              </>
-            ) : (
-              <span>已接入赛事</span>
-            )}
-          </div>
+          {status?.local_preview && (
+            <div className="dataset-control">
+              <span className={dataset === "demo" ? "demo-dot" : ""}>
+                {dataset === "demo" ? "演示数据" : "已接入赛程"}
+              </span>
+              <select
+                aria-label="赛程数据"
+                value={dataset}
+                onChange={(e) => state.changeDataset(e.target.value)}
+              >
+                <option value="demo">演示赛程</option>
+                <option value="real">真实赛程</option>
+              </select>
+            </div>
+          )}
         </div>
         {error && (
           <div className="error-banner" role="alert">
@@ -668,6 +854,8 @@ export function Dashboard({ page }: { page: string }) {
             sources={sources}
             epoch={epoch}
             signedIn={!!user}
+            teamSourceId={teamSourceId}
+            teamSource={teamCalendarSource}
             onEvent={openEvent}
             onFollowing={() => {
               window.location.href = "/following";
@@ -679,7 +867,6 @@ export function Dashboard({ page }: { page: string }) {
             <div className="section-toolbar">
               <div>
                 <h2>选择球队或车队</h2>
-                <p>F1、英超和NBA均选择具体球队或车队。</p>
               </div>
               <button
                 className="primary-button"
@@ -736,6 +923,9 @@ export function Dashboard({ page }: { page: string }) {
                       <TeamMark
                         short={league.short_name}
                         color={league.color}
+                        logoUrl={
+                          league.logo_url || competitionLogoUrls[league.id]
+                        }
                       />
                       <span>
                         <b>{league.name}</b>
@@ -1052,7 +1242,7 @@ export function Dashboard({ page }: { page: string }) {
                 </Setting>
                 <Setting
                   title="防剧透"
-                  text="用通用标签替代日历描述里的复盘标题。"
+                  text="隐藏关注球队最近一场完赛结果。"
                 >
                   <Toggle
                     label="防剧透"
@@ -1084,7 +1274,7 @@ export function Dashboard({ page }: { page: string }) {
               <div className="settings-section-heading">
                 <span className="eyebrow">内容与观看</span>
                 <h2 id="content-settings-title">直播入口</h2>
-                <p>设置赛事详情优先展示的直播方。</p>
+                <p>保存后，赛事详情优先打开该直播方；已核验链接会尝试直达移动端 App。</p>
               </div>
               <BroadcastPreferences
                 preferences={preferences}
@@ -1241,7 +1431,7 @@ export function Dashboard({ page }: { page: string }) {
               </div>
               <div className="danger-action-row">
                 <div>
-                  <h3>{user?.display_name || "当前账号"}</h3>
+                  <h3>{accountName}</h3>
                   <p>此操作不可撤销，继续前会再次确认。</p>
                 </div>
                 <button
@@ -1356,13 +1546,57 @@ export function Dashboard({ page }: { page: string }) {
               >
                 <X size={20} />
               </button>
-              <span className="eyebrow">当前账号</span>
-              <h2>{user.display_name || "Anke Sports 用户"}</h2>
-              <p>退出前会先保留你的关注、订阅地址与个人设置。</p>
-              <div className="modal-actions">
-                <button className="secondary-button" onClick={close}>
-                  继续使用
-                </button>
+              <div className="account-profile-heading">
+                <label className="avatar-upload">
+                  <ProfileAvatar
+                    profile={
+                      avatarDraft
+                        ? { displayName: accountName, photoURL: avatarDraft }
+                        : profile
+                    }
+                    name={accountName}
+                    large
+                  />
+                  <span>
+                    {avatarPreparing ? "处理中" : "上传头像"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={avatarPreparing || profileSaving}
+                    onChange={(event) => void chooseAvatar(event)}
+                  />
+                </label>
+              </div>
+              {profileAvailable ? (
+                <>
+                  <label className="form-label">
+                    显示名称
+                    <input
+                      value={profileDraft.displayName}
+                      maxLength={80}
+                      onChange={(event) =>
+                        setProfileDraft({
+                          ...profileDraft,
+                          displayName: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                </>
+              ) : (
+                <p>本机体验账号没有 Google 个人资料，正式登录后可在这里修改。</p>
+              )}
+              <div className="modal-actions account-bottom-actions">
+                {profileAvailable && (
+                  <button
+                    className="primary-button"
+                    disabled={profileSaving || avatarPreparing}
+                    onClick={() => void saveProfileSettings()}
+                  >
+                    {profileSaving ? "保存中" : "保存资料"}
+                  </button>
+                )}
                 <button
                   className="danger-button"
                   disabled={busy}
@@ -1389,7 +1623,13 @@ export function Dashboard({ page }: { page: string }) {
               sources={sources}
               timezone={timezone}
               onClose={close}
-              onAdd={() => requireUser(() => setAdding(true))}
+              onAddToCalendar={() =>
+                changeManualCalendar("POST", "已手动加入个人日历")
+              }
+              onRemoveFromCalendar={() =>
+                changeManualCalendar("DELETE", "已移除这场手动加入的比赛")
+              }
+              onAddLink={() => requireUser(() => setAdding(true))}
               onPin={(id) =>
                 requireUser(() =>
                   run(
@@ -1720,7 +1960,9 @@ function EventDrawer({
   sources,
   timezone,
   onClose,
-  onAdd,
+  onAddToCalendar,
+  onRemoveFromCalendar,
+  onAddLink,
   onBlock,
   onPin,
   busy,
@@ -1729,11 +1971,16 @@ function EventDrawer({
   sources: Source[];
   timezone: string;
   onClose: () => void;
-  onAdd: () => void;
+  onAddToCalendar: () => void;
+  onRemoveFromCalendar: () => void;
+  onAddLink: () => void;
   onBlock: (id: string) => void;
   onPin: (id: string) => void;
   busy: boolean;
 }) {
+  const manuallyIncluded = Boolean(
+    event.calendar?.sources.some((source) => source.type === "manual"),
+  );
   const eventDate = event.starts_at
     ? new Intl.DateTimeFormat("zh-CN", {
         timeZone: timezone,
@@ -1766,7 +2013,7 @@ function EventDrawer({
                   <TeamMark
                     short={p.short_name}
                     color={p.color}
-                    logoUrl={source?.logo_url}
+                    logoUrl={p.logo_url || source?.logo_url}
                   />
                   <b>{p.name}</b>
                   <small>{i === 0 ? "客队" : "主队"}</small>
@@ -1803,13 +2050,40 @@ function EventDrawer({
           {timezone}
         </span>
         <span>
-          <MapPin size={15} />
-          {event.venue || "场馆尚未公布"}
-        </span>
-        <span>
           <Clock size={15} />
           预计 {event.duration} 分钟
         </span>
+      </div>
+      <div className="drawer-calendar-action">
+        <button
+          className={`drawer-follow ${event.included ? "included" : ""}`}
+          disabled={busy || event.included}
+          onClick={onAddToCalendar}
+        >
+          {event.included ? (
+            <>
+              <CalendarCheck size={18} />
+              {manuallyIncluded ? "已手动加入个人日历" : "已加入个人日历"}
+            </>
+          ) : (
+            <>
+              <Plus size={18} />
+              手动加入个人日历
+            </>
+          )}
+        </button>
+        {!event.included && (
+          <small>只加入这一场比赛，不会关注整支球队。</small>
+        )}
+        {event.calendar?.can_remove && (
+          <button
+            className="text-button drawer-remove-calendar"
+            disabled={busy}
+            onClick={onRemoveFromCalendar}
+          >
+            移除这场比赛
+          </button>
+        )}
       </div>
       <div className="drawer-links">
         {[["live", "观看直播"]].map(([kind, title]) => {
@@ -1826,8 +2100,11 @@ function EventDrawer({
                 <span>{links.length || ""}</span>
               </h3>
               {links.length ? (
-                links.map((link) => (
-                  <div className="content-link" key={link.id}>
+                links.map((link, index) => (
+                  <div
+                    className={`content-link${index === 0 ? " content-link-primary" : ""}`}
+                    key={link.id}
+                  >
                     <a
                       href={link.url}
                       target="_blank"
@@ -1847,6 +2124,9 @@ function EventDrawer({
                         {link.title}
                         <ArrowUpRight size={15} />
                       </strong>
+                      {index === 0 && (
+                        <small className="content-link-priority">优先入口</small>
+                      )}
                       <small>
                         {link.platform} ·{" "}
                         {link.origin === "manual"
@@ -1854,37 +2134,44 @@ function EventDrawer({
                           : link.origin === "confirmed"
                             ? "已人工确认"
                             : link.origin === "official"
-                              ? "官方审核"
+                              ? link.broadcast?.content_label === "官方直播产品"
+                                ? "官方产品"
+                                : "官方审核"
                               : "自动关联"}
                       </small>
-                      <small>
-                        {link.broadcast
-                          ? `${link.broadcast.content_label} · ${link.broadcast.access_label} · ${link.broadcast.region_label}`
-                          : link.kind === "watch_along"
-                            ? "同步解说，无比赛画面 · 观看条件与地区未验证"
-                            : "手动添加，观看条件与地区未验证"}
-                      </small>
-                      {link.broadcast && (
+                      {link.broadcast?.content_label !== "官方直播产品" && (
                         <small>
-                          {link.broadcast.mobile_opening ===
-                          "verified_https_app_link"
-                            ? `手机将尝试在 ${link.broadcast.platform_name} App 打开，未安装则打开网页`
-                            : `在 ${link.broadcast.platform_name} 官方网页打开`}
+                          {link.broadcast
+                            ? `${link.broadcast.content_label} · ${link.broadcast.access_label} · ${link.broadcast.region_label}`
+                            : "手动添加，观看条件与地区未验证"}
                         </small>
                       )}
+                      {link.broadcast &&
+                        link.broadcast.content_label !== "官方直播产品" && (
+                          <small>
+                            {link.broadcast.mobile_opening ===
+                            "verified_https_app_link"
+                              ? `移动端优先尝试在 ${link.broadcast.platform_name} App 打开，未安装则打开网页`
+                              : `在 ${link.broadcast.platform_name} 官方网页打开`}
+                          </small>
+                        )}
                     </a>
                     {link.broadcast && (
                       <details className="broadcast-evidence">
                         <summary>来源与核验记录</summary>
                         <p>
-                          来源核验：
+                          {link.broadcast.content_label === "官方直播产品"
+                            ? "版权矩阵核对："
+                            : "来源核验："}
                           {new Date(
                             link.broadcast.reviewed_at,
                           ).toLocaleDateString("zh-CN")}{" "}
                           · 到期复查：
-                          {new Date(
-                            link.broadcast.valid_until,
-                          ).toLocaleDateString("zh-CN")}
+                          {link.broadcast.valid_until
+                            ? new Date(
+                                link.broadcast.valid_until,
+                              ).toLocaleDateString("zh-CN")
+                            : "按版权方矩阵维护"}
                         </p>
                         <a
                           href={link.broadcast.evidence_url}
@@ -1893,14 +2180,6 @@ function EventDrawer({
                         >
                           查看官方来源 ↗
                         </a>
-                        <p>
-                          网页检查：
-                          {link.broadcast.network_status === "reachable"
-                            ? "网页可达，不代表可播放"
-                            : link.broadcast.network_status === "not_checked"
-                              ? "尚未检查"
-                              : "存在访问限制或待复查"}
-                        </p>
                         {link.broadcast.device_tests.length ? (
                           link.broadcast.device_tests.map((test, i) => (
                             <p key={i}>
@@ -1934,11 +2213,7 @@ function EventDrawer({
                               条件：{String(test.conditions)}。仅代表此次观察。
                             </p>
                           ))
-                        ) : (
-                          <p>
-                            尚无本链接的实际设备观察，不承诺App内具体内容直达。
-                          </p>
-                        )}
+                        ) : null}
                       </details>
                     )}
                     {!link.broadcast && (
@@ -1955,26 +2230,29 @@ function EventDrawer({
                         />
                       </button>
                     )}
-                    <button
-                      className="icon-button"
-                      aria-label={`移除链接 ${link.title}`}
-                      disabled={busy}
-                      onClick={() => onBlock(link.id)}
-                    >
-                      <X size={13} />
-                    </button>
+                    {link.origin === "manual" && (
+                      <button
+                        className="icon-button"
+                        aria-label={`移除手动链接 ${link.title}`}
+                        disabled={busy}
+                        onClick={() => onBlock(link.id)}
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
                 <div className="link-empty">
                   <span>暂无已确认的本场直播入口</span>
+                  <small>按地区和直播偏好自动选择官方产品；也可手动附加并覆盖。</small>
                 </div>
               )}
             </section>
           );
         })}
       </div>
-      <button className="add-link-button" onClick={onAdd}>
+      <button className="add-link-button" onClick={onAddLink}>
         <LinkSimple size={17} />
         手动附加链接
         <Plus size={15} />
@@ -2016,20 +2294,18 @@ function AddLinkForm({
   submit: (data: {
     url: string;
     title: string;
-    kind: string;
   }) => Promise<boolean>;
 }) {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [kind, setKind] = useState("live");
   const [localError, setLocalError] = useState("");
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
         setLocalError("");
-        const ok = await submit({ url, title, kind });
-        if (!ok) setLocalError("链接未保存，请检查地址与平台支持。");
+        const ok = await submit({ url, title });
+        if (!ok) setLocalError("链接未保存，请检查是否为安全的 HTTPS 网页地址。");
       }}
     >
       <button
@@ -2053,24 +2329,6 @@ function AddLinkForm({
           autoFocus
         />
       </label>
-      <fieldset className="choice-group form-choice-field">
-        <legend>类型</legend>
-        {[
-          ["live", "直播入口"],
-          ["watch_along", "同步解说，无比赛画面"],
-        ].map(([value, label]) => (
-          <label className="choice-option" key={value}>
-            <input
-              type="radio"
-              name="link-kind"
-              value={value}
-              checked={kind === value}
-              onChange={() => setKind(value)}
-            />
-            {label}
-          </label>
-        ))}
-      </fieldset>
       <label className="form-label">
         标题（可选）
         <input

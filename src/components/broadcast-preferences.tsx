@@ -18,6 +18,8 @@ type BroadcastPlatform = {
     competition_id: string;
     regions: string[];
     valid_through: string | null;
+    product_url?: string | null;
+    product_title?: string | null;
   }[];
 };
 
@@ -74,7 +76,8 @@ export function BroadcastPreferences({ preferences, onChange }: Props) {
           platform.rights.some(
             (right) =>
               right.competition_id === competitionId &&
-              right.regions.includes(region),
+              right.regions.includes(region) &&
+              Boolean(right.product_url),
           ),
         ),
       })),
@@ -101,7 +104,7 @@ export function BroadcastPreferences({ preferences, onChange }: Props) {
           <small>
             {regionName
               ? `${regionName} · 可按联赛覆盖自动选择`
-              : "默认自动选择；可按观看地区自定义"}
+              : "默认添加候选版权方的直播产品；可按观看地区自定义"}
           </small>
         </span>
         <CaretDown className="broadcast-summary-caret" size={16} />
@@ -145,8 +148,8 @@ export function BroadcastPreferences({ preferences, onChange }: Props) {
                       <b>{competitions[competitionId]}</b>
                       <small>
                         {choices.length
-                          ? `${choices.length} 个已核验版权方`
-                          : "当前地区尚无已核验版权方"}
+                          ? `${choices.length} 个可用直播产品`
+                          : "当前地区暂无可用直播产品"}
                       </small>
                     </span>
                     <SelectMenu
@@ -161,7 +164,7 @@ export function BroadcastPreferences({ preferences, onChange }: Props) {
                             {
                               value: "",
                               label: "自动选择",
-                              description: "按已核验版权顺序选择",
+                              description: "按版权方产品顺序选择",
                             },
                             ...choices.map((platform) => ({
                               value: platform.id,
@@ -169,7 +172,7 @@ export function BroadcastPreferences({ preferences, onChange }: Props) {
                               description:
                                 platform.mobile_opening ===
                                 "verified_https_app_link"
-                                  ? "支持 App Link"
+                                  ? "移动端 App 直达"
                                   : "官方网页",
                             })),
                           ],
@@ -191,7 +194,7 @@ export function BroadcastPreferences({ preferences, onChange }: Props) {
             </div>
           ) : (
             <p className="broadcast-region-empty">
-              选择观看地区后，可按联赛覆盖自动选择。
+              选择观看地区后，日历会按联赛版权覆盖自动添加直播产品。
             </p>
           )}
         </div>

@@ -1,7 +1,17 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, ApiError } from "@/lib/api";
-import type { CalendarUser, ServiceStatus, Source } from "@/lib/types";
+import {
+  api,
+  ApiError,
+  readAuthProfile,
+  saveAuthProfile,
+} from "@/lib/api";
+import type {
+  AuthProfile,
+  CalendarUser,
+  ServiceStatus,
+  Source,
+} from "@/lib/types";
 
 export function useAnke() {
   const [user, setUser] = useState<CalendarUser | null>(null);
@@ -12,6 +22,7 @@ export function useAnke() {
   const [epoch, setEpoch] = useState(0);
   const [busy, setBusy] = useState(false);
   const [accountReady, setAccountReady] = useState(false);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
   const userRequest = useRef(0);
   const statusReady = status !== null;
   const personalPending = Boolean(user && user.feed.status === "updating");
@@ -51,6 +62,25 @@ export function useAnke() {
         .then(setStatus)
         .catch(() => {});
   }, [refreshUser, epoch]);
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setProfile(null);
+      return () => {
+        active = false;
+      };
+    }
+    void readAuthProfile()
+      .then((next) => {
+        if (active) setProfile(next);
+      })
+      .catch(() => {
+        if (active) setProfile(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
   useEffect(() => {
     const revisit = () => {
       void refreshUser();
@@ -142,8 +172,14 @@ export function useAnke() {
     setDataset(value);
     localStorage.setItem("anke-dataset", value);
   };
+  const saveProfile = useCallback(async (next: AuthProfile) => {
+    const saved = await saveAuthProfile(next);
+    setProfile(saved);
+    return saved;
+  }, []);
   return {
     user,
+    profile,
     accountReady,
     status,
     dataset,
@@ -154,6 +190,7 @@ export function useAnke() {
     busy,
     refresh,
     run,
+    saveProfile,
     changeDataset,
   };
 }

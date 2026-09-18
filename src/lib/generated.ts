@@ -611,11 +611,6 @@ export interface components {
              * @default
              */
             title: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "live" | "watch_along";
         };
         /** BroadcastAction */
         BroadcastAction: {
@@ -736,7 +731,7 @@ export interface components {
             /** Reviewed At */
             reviewed_at: string;
             /** Valid Until */
-            valid_until: string;
+            valid_until: string | null;
             /** Network Status */
             network_status: string;
             /** Network Checked At */
@@ -957,6 +952,21 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /**
+         * EventResult
+         * @description A completed two-sided result in participant/title order.
+         */
+        EventResult: {
+            /** Away Score */
+            away_score: number;
+            /** Home Score */
+            home_score: number;
+            /**
+             * Winner
+             * @enum {string}
+             */
+            winner: "away" | "home" | "draw";
+        };
         /** EventView */
         EventView: {
             /** Id */
@@ -985,6 +995,7 @@ export interface components {
             status: string;
             /** Participants */
             participants: components["schemas"]["ParticipantView"][];
+            result?: components["schemas"]["EventResult"] | null;
             /** Provider */
             provider: string;
             /** Source Url */
@@ -1200,6 +1211,8 @@ export interface components {
             short_name: string;
             /** Color */
             color: string;
+            /** Logo Url */
+            logo_url?: string | null;
         };
         /** Preferences */
         "Preferences-Input": {

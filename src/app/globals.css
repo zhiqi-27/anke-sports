@@ -304,6 +304,9 @@ a svg {
   margin-bottom: var(--space-4);
   color: var(--color-text-muted);
 }
+.mini-follow:hover {
+  color: var(--color-text);
+}
 .mini-follow > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -336,6 +339,9 @@ a svg {
   padding: var(--space-5) 0 0;
 }
 .avatar {
+  position: relative;
+  flex: 0 0 auto;
+  overflow: hidden;
   width: 30px;
   height: 30px;
   border-radius: var(--radius-full);
@@ -345,6 +351,61 @@ a svg {
   align-items: center;
   justify-content: center;
   font-size: 13px;
+}
+.avatar > span {
+  position: relative;
+  z-index: 1;
+}
+.avatar > img {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--color-surface-raised);
+}
+.avatar-large {
+  width: 76px;
+  height: 76px;
+  font-size: 22px;
+}
+.account-profile-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: center;
+  margin: var(--space-2) 0 var(--space-6);
+}
+.avatar-upload {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  flex: 0 0 auto;
+  color: var(--color-accent);
+  font-size: 10px;
+  cursor: pointer;
+}
+.avatar-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+.avatar-upload:hover .avatar,
+.avatar-upload:focus-within .avatar {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.account-bottom-actions {
+  justify-content: center;
+  margin-top: var(--space-8);
 }
 .account-button b {
   display: block;
@@ -462,6 +523,13 @@ a svg {
   font-size: 12px;
   margin-top: var(--space-2);
   color: var(--color-text-disabled);
+}
+.calendar-team-back {
+  color: var(--color-text-subtle);
+  font-size: 12px;
+}
+.calendar-team-back:hover {
+  color: var(--color-accent);
 }
 .dataset-control {
   display: flex;
@@ -1739,6 +1807,27 @@ dialog.is-closing::backdrop {
   color: var(--color-surface-raised);
   border-color: var(--color-text-muted);
 }
+.drawer-calendar-action {
+  margin: var(--space-6) 0 var(--space-8);
+}
+.drawer-calendar-action .drawer-follow {
+  margin: 0;
+}
+.drawer-calendar-action > small {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--color-text-disabled);
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: center;
+}
+.drawer-remove-calendar {
+  justify-content: center;
+  width: 100%;
+  margin-top: var(--space-2);
+  color: var(--color-text-disabled);
+  font-size: 11px;
+}
 .drawer-links section {
   margin: var(--space-7) 0;
 }
@@ -1767,6 +1856,13 @@ dialog.is-closing::backdrop {
   color: var(--color-text-disabled);
   line-height: 1.8;
 }
+.link-empty small {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-disabled);
+  font-size: 10px;
+  line-height: 1.6;
+}
 .link-empty a {
   display: flex;
   align-items: center;
@@ -1784,6 +1880,9 @@ dialog.is-closing::backdrop {
   border-radius: var(--radius-sm);
   margin-top: var(--space-3);
   border: var(--rule-thin) solid var(--color-surface-raised);
+}
+.content-link-primary {
+  border-color: var(--color-accent);
 }
 .content-link a {
   flex: 1;
@@ -1806,6 +1905,9 @@ dialog.is-closing::backdrop {
   margin-top: var(--space-2);
   color: var(--color-text-disabled);
   font-size: 10px;
+}
+.content-link-priority {
+  color: var(--color-accent) !important;
 }
 .content-link .icon-button {
   width: 18px;

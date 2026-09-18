@@ -17,4 +17,9 @@ export type ManualEventSource = Schemas["ManualEventSource"];
 export type CalendarSource = Schemas["CalendarSourceView"];
 export type CalendarMembership = Schemas["CalendarMembershipView"];
 
+export type AuthProfile = {
+  displayName: string;
+  photoURL: string | null;
+};
+
 export type FollowPreviewView = Schemas["FollowPreviewView"];

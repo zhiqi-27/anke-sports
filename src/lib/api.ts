@@ -1,10 +1,11 @@
 import { getApps, initializeApp } from "firebase/app";
-import type { AccountDeletion, CalendarUser } from "./types";
+import type { AccountDeletion, AuthProfile, CalendarUser } from "./types";
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
+  updateProfile,
 } from "firebase/auth";
 
 function firebaseAuth() {
@@ -96,6 +97,34 @@ export async function googleLogin() {
   // A provider popup succeeding is not proof that our API accepts the identity.
   return api<CalendarUser>("/me/calendar");
 }
+
+export async function readAuthProfile(): Promise<AuthProfile | null> {
+  const auth = firebaseAuth();
+  if (!auth) return null;
+  await auth.authStateReady();
+  const user = auth.currentUser;
+  if (!user) return null;
+  return {
+    displayName: user.displayName?.trim() || "",
+    photoURL: user.photoURL || null,
+  };
+}
+
+export async function saveAuthProfile(input: AuthProfile) {
+  const auth = firebaseAuth();
+  if (!auth) throw new Error("Firebase 登录尚未配置");
+  await auth.authStateReady();
+  if (!auth.currentUser) throw new Error("登录状态已失效，请重新登录");
+  await updateProfile(auth.currentUser, {
+    displayName: input.displayName || null,
+    photoURL: input.photoURL || null,
+  });
+  return {
+    displayName: auth.currentUser.displayName?.trim() || "",
+    photoURL: auth.currentUser.photoURL || null,
+  } satisfies AuthProfile;
+}
+
 export async function logout() {
   const auth = firebaseAuth();
   if (auth) await signOut(auth);
